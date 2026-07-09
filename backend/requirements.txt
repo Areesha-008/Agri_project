@@ -18,9 +18,12 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
 
-# --- GIS / Earth Engine ---
-earthengine-api==1.1.2
+# --- GIS / Satellite data (CDSE / openEO) ---
+openeo==0.35.0
 shapely==2.0.6
+numpy==2.1.2
+tifffile==2024.9.20
+Pillow==10.4.0
 
 # --- Utilities ---
 python-dotenv==1.0.1

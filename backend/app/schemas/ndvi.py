@@ -23,7 +23,12 @@ class NdviStats(BaseModel):
 
 
 class NdviVisualization(BaseModel):
-    tile_url: str
+    image_url: str = Field(
+        ..., description="Absolute URL to the generated NDVI PNG overlay"
+    )
+    bounding_box: List[float] = Field(
+        ..., description="[west, south, east, north] extent for overlaying image_url on the map"
+    )
     palette: List[str]
     min_value: float
     max_value: float
@@ -31,8 +36,9 @@ class NdviVisualization(BaseModel):
 
 class NdviSourceInfo(BaseModel):
     collection: str
-    image_date: date
-    cloud_cover_percent: Optional[float] = None
+    date_range_start: date
+    date_range_end: date
+    max_cloud_cover_filter_percent: Optional[float] = None
 
 
 class NdviAnalyzeResponse(BaseModel):
