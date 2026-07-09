@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=False)
     API_V1_PREFIX: str = "/api/v1"
 
+    # Public base URL of this backend, used to build absolute links to
+    # generated static assets (e.g. NDVI PNG images) returned in API
+    # responses. e.g. http://localhost:8000 in dev, https://api.yourapp.com
+    # in production.
+    APP_BASE_URL: str = Field(default="http://localhost:8000")
+
     # CORS: the React frontend origin(s). Comma-separated in .env,
     # parsed into a list below.
     CORS_ORIGINS: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
@@ -50,23 +56,22 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
 
     # ------------------------------------------------------------------
-    # Google Earth Engine (Service Account auth)
+    # Copernicus Data Space Ecosystem (CDSE) — OAuth2 Client Credentials
     # ------------------------------------------------------------------
-    GEE_SERVICE_ACCOUNT_EMAIL: str = Field(
-        ..., description="e.g. gee-backend@your-project.iam.gserviceaccount.com"
+    CDSE_CLIENT_ID: str = Field(..., description="OAuth client ID from CDSE dashboard")
+    CDSE_CLIENT_SECRET: str = Field(..., description="OAuth client secret from CDSE dashboard")
+    CDSE_OPENEO_URL: str = Field(
+        default="openeo.dataspace.copernicus.eu",
+        description="openEO backend endpoint for CDSE",
     )
-    GEE_SERVICE_ACCOUNT_KEY_PATH: str = Field(
-        ..., description="Path to the GEE service account private key JSON file"
-    )
-    GEE_PROJECT_ID: str = Field(..., description="Google Cloud project ID linked to GEE")
 
     # ------------------------------------------------------------------
     # NDVI / Sentinel-2 processing defaults
     # ------------------------------------------------------------------
-    SENTINEL2_COLLECTION: str = Field(default="COPERNICUS/S2_SR_HARMONIZED")
+    SENTINEL2_COLLECTION: str = Field(default="SENTINEL2_L2A")
     MAX_CLOUD_COVER_PERCENT: float = Field(default=20.0)
     NDVI_SEARCH_WINDOW_DAYS: int = Field(
-        default=30, description="How far back to search for a cloud-free image"
+        default=30, description="Rolling date window to average cloud-free scenes over"
     )
 
     # ------------------------------------------------------------------

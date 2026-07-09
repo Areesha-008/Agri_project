@@ -12,8 +12,8 @@ class InvalidGeometryError(AppException):
         super().__init__(message, status_code=422)
 
 
-class EarthEngineError(AppException):
-    def __init__(self, message: str = "Earth Engine processing failed"):
+class SatelliteDataError(AppException):
+    def __init__(self, message: str = "Satellite data processing failed"):
         super().__init__(message, status_code=502)
 
 
