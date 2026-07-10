@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Nastaliq+Urdu:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#ECEAE3;font-family:Inter,'Noto Nastaliq Urdu',system-ui,sans-serif;color:#1e2b23}a{color:#1B4332;text-decoration:none}a:hover{color:#40916C}</style>
+</helmet>
+
+<div style="padding:44px;display:flex;flex-direction:column;gap:18px">
+<div>
+  <div style="font-size:15px;font-weight:800;color:#1B4332">Jadeed Kashtkar — mobile views</div>
+  <div style="font-size:12px;color:#6b7a6f;margin-top:2px">Android · 412×892 · bottom tab navigation with center Scan action</div>
+</div>
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 1 · DASHBOARD ============ -->
+<div data-screen-label="Mobile Dashboard" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#6b7a6f">01 · Dashboard</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="428,908">
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F4ED;font-family:Inter,system-ui,sans-serif">
+  <!-- header -->
+  <div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px">
+    <div style="width:36px;height:36px;border-radius:11px;background:#1B4332;display:grid;place-items:center;flex:none"><svg width="19" height="19" viewBox="0 0 18 18"><path d="M9 16 C9 9 12 5 16 3 C16 10 13 14 9 16 Z" fill="#95D5B2"></path><path d="M9 16 C9 11 7 7 3 5 C3 11 5.5 14.5 9 16 Z" fill="#40916C"></path></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:15px;font-weight:800;color:#1e2b23;letter-spacing:-.01em">Assalam-o-Alaikum, Ahmad</div>
+      <div style="font-size:11px;color:#8a927f">Wed 9 July · Faisalabad</div>
+    </div>
+    <div style="position:relative;width:36px;height:36px;border:1px solid #E2DECD;border-radius:10px;display:grid;place-items:center;background:#fff">
+      <svg width="16" height="16" viewBox="0 0 15 15" fill="none" stroke="#4a5a4f" stroke-width="1.5"><path d="M7.5 1.8 C5 1.8 4 3.8 4 6 C4 9 2.5 10 2.5 10 H12.5 C12.5 10 11 9 11 6 C11 3.8 10 1.8 7.5 1.8 Z"></path><path d="M6.3 12 C6.5 12.8 7 13.2 7.5 13.2 C8 13.2 8.5 12.8 8.7 12"></path></svg>
+      <span style="position:absolute;top:-5px;right:-5px;background:#D95D45;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px">2</span>
+    </div>
+  </div>
+  <!-- scroll content -->
+  <div style="flex:1;overflow:auto;padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0">
+    <!-- rust alert -->
+    <div style="display:flex;align-items:center;gap:11px;background:#FCEFE9;border:1px solid #F2D5C8;border-radius:14px;padding:11px 13px">
+      <div style="width:32px;height:32px;border-radius:10px;background:#D95D45;display:grid;place-items:center;flex:none"><svg width="15" height="15" viewBox="0 0 14 14"><path d="M7 1.5 L13 12 H1 Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"></path><path d="M7 5.5 V8.5 M7 10.4 V10.5" stroke="#fff" stroke-width="1.6"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:#8c3423">Rust risk 78% — Chak 42 JB</div>
+        <div style="font-size:11px;color:#a06147">Fungicide window closes Friday</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 10 10" style="flex:none"><path d="M3.5 2 L6.5 5 L3.5 8" fill="none" stroke="#a06147" stroke-width="1.6"></path></svg>
+    </div>
+    <!-- NDVI map card -->
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:13px;font-weight:700">Chak 42 JB — Wheat</div>
+        <div style="font-size:11px;font-weight:600;color:#2D6A4F">Open map →</div>
+      </div>
+      <div style="height:158px;border-radius:11px;position:relative;overflow:hidden;background:#1a2417">
+        <div style="position:absolute;left:-60px;top:-120px;width:768px;height:512px">
+          <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13373/23023" alt="" style="position:absolute;left:0;top:0;width:256px;height:256px;display:block">
+          <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13373/23024" alt="" style="position:absolute;left:256px;top:0;width:256px;height:256px;display:block">
+          <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13374/23023" alt="" style="position:absolute;left:0;top:256px;width:256px;height:256px;display:block">
+          <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13374/23024" alt="" style="position:absolute;left:256px;top:256px;width:256px;height:256px;display:block">
+        </div>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+          <defs><linearGradient id="mNdvi1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006400"></stop><stop offset=".55" stop-color="#9ACD32"></stop><stop offset="1" stop-color="#D2B48C"></stop></linearGradient></defs>
+          <polygon points="24 26, 56 14, 84 32, 74 82, 36 86, 18 56" fill="url(#mNdvi1)" opacity=".72" stroke="#fff" stroke-width="1.6" vector-effect="non-scaling-stroke"></polygon>
+        </svg>
+        <div style="position:absolute;left:10px;bottom:10px;background:rgba(20,28,22,.85);border-radius:7px;padding:5px 9px;color:#fff;font-size:9px">Sentinel-2 · 06 Jul · cloud 8%</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">MEAN</div><div style="font-size:15px;font-weight:800;color:#1B4332">0.62</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">AREA</div><div style="font-size:15px;font-weight:800">12.4 ha</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">HEALTH</div><div style="font-size:15px;font-weight:800;color:#40916C">74%</div></div>
+      </div>
+    </div>
+    <!-- weather strip -->
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:700">Weather</div><div style="font-size:10px;font-weight:700;color:#B07D2B;background:#FBF3E1;border:1px solid #F0E3C2;border-radius:6px;padding:2px 7px">MONSOON WATCH</div></div>
+      <div style="display:flex;gap:5px;font-size:10px;color:#6b7a6f;text-align:center">
+        <div style="flex:1;background:#F6F4ED;border-radius:8px;padding:7px 2px">Thu<div style="font-weight:800;color:#1e2b23;font-size:12px">39°</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:8px;padding:7px 2px">Fri<div style="font-weight:800;color:#1e2b23;font-size:12px">37°</div></div>
+        <div style="flex:1;background:#FBF3E1;border-radius:8px;padding:7px 2px">Sat<div style="font-weight:800;color:#B07D2B;font-size:12px">34°</div></div>
+        <div style="flex:1;background:#FBF3E1;border-radius:8px;padding:7px 2px">Sun<div style="font-weight:800;color:#B07D2B;font-size:12px">33°</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:8px;padding:7px 2px">Mon<div style="font-weight:800;color:#1e2b23;font-size:12px">35°</div></div>
+      </div>
+    </div>
+    <!-- mandi mini -->
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:4px"><div style="font-size:13px;font-weight:700">Mandi rates</div><div style="font-size:10px;color:#8a927f">PKR / 40 kg</div></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #F1EEE3;font-size:12.5px"><span style="flex:1;font-weight:600">Wheat</span><span style="font-weight:800">3,920</span><span style="color:#2D6A4F;font-weight:700;font-size:11px;width:44px;text-align:right">▲1.2%</span></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:12.5px"><span style="flex:1;font-weight:600">Cotton (phutti)</span><span style="font-weight:800">8,540</span><span style="color:#2D6A4F;font-weight:700;font-size:11px;width:44px;text-align:right">▲2.4%</span></div>
+    </div>
+  </div>
+  <!-- tab bar -->
+  <div style="flex:none;height:64px;background:#fff;border-top:1px solid #E7E3D6;display:flex;align-items:stretch;padding:0 6px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#1B4332"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="1.5" y="8.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="8.5" width="5" height="5" rx="1.2"></rect></svg><span style="font-size:9.5px;font-weight:700">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5 L7.5 2 L13 4.5 L7.5 7 Z"></path><path d="M2 8 L7.5 10.5 L13 8" opacity=".6"></path></svg><span style="font-size:9.5px;font-weight:600">Fields</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 L13.5 13.5"></path></svg><span style="font-size:9.5px;font-weight:600">Scan</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12 L5 8 L8 10 L13 3"></path><path d="M9.5 3 H13 V6.5"></path></svg><span style="font-size:9.5px;font-weight:600">Market</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5"></rect><path d="M5 5 H10 M5 7.5 H10 M5 10 H8"></path></svg><span style="font-size:9.5px;font-weight:600">Ledger</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ============ 2 · MY FIELDS ============ -->
+<div data-screen-label="Mobile My Fields" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#6b7a6f">02 · My Fields (map)</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="428,908">
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F4ED;font-family:Inter,system-ui,sans-serif">
+  <div style="flex:1;position:relative;overflow:hidden;background:#1a2417;min-height:0">
+    <div style="position:absolute;left:-58px;top:-20px;width:512px;height:768px">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13372/23023" alt="" style="position:absolute;left:0;top:0;width:256px;height:256px;display:block">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13372/23024" alt="" style="position:absolute;left:256px;top:0;width:256px;height:256px;display:block">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13373/23023" alt="" style="position:absolute;left:0;top:256px;width:256px;height:256px;display:block">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13373/23024" alt="" style="position:absolute;left:256px;top:256px;width:256px;height:256px;display:block">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13374/23023" alt="" style="position:absolute;left:0;top:512px;width:256px;height:256px;display:block">
+      <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/13374/23024" alt="" style="position:absolute;left:256px;top:512px;width:256px;height:256px;display:block">
+    </div>
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+      <defs><linearGradient id="mNdvi2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006400"></stop><stop offset=".55" stop-color="#9ACD32"></stop><stop offset="1" stop-color="#D2B48C"></stop></linearGradient></defs>
+      <polygon points="22 30, 52 20, 78 32, 70 62, 38 66, 18 50" fill="url(#mNdvi2)" opacity=".7" stroke="#fff" stroke-width="1.8" vector-effect="non-scaling-stroke"></polygon>
+      <polygon points="60 72, 88 68, 92 88, 64 92" fill="url(#mNdvi2)" opacity=".5" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke"></polygon>
+    </svg>
+    <!-- search / field chip -->
+    <div style="position:absolute;top:14px;left:14px;right:14px;display:flex;gap:8px">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:10px 13px;box-shadow:0 3px 12px rgba(0,0,0,.25);font-size:12.5px;font-weight:600;color:#2b3a30">
+        <span style="width:8px;height:8px;border-radius:50%;background:#40916C"></span>Chak 42 JB — Wheat · 12.4 ha
+        <svg width="10" height="10" viewBox="0 0 10 10" style="margin-left:auto"><path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="#6b7a6f" stroke-width="1.6"></path></svg>
+      </div>
+    </div>
+    <!-- layer pills -->
+    <div style="position:absolute;top:64px;left:14px;display:flex;gap:5px;font-size:10.5px;font-weight:600">
+      <span style="padding:6px 12px;border-radius:8px;background:#1B4332;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)">NDVI</span>
+      <span style="padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.92);color:#4a5a4f;box-shadow:0 2px 6px rgba(0,0,0,.3)">NDMI</span>
+      <span style="padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.92);color:#4a5a4f;box-shadow:0 2px 6px rgba(0,0,0,.3)">Satellite</span>
+    </div>
+    <!-- legend -->
+    <div style="position:absolute;left:14px;bottom:172px;background:rgba(20,28,22,.85);border-radius:9px;padding:8px 10px;color:#fff">
+      <div style="font-size:9px;color:rgba(255,255,255,.65);margin-bottom:4px">NDVI −0.2 → 0.9</div>
+      <div style="width:110px;height:6px;border-radius:3px;background:linear-gradient(90deg,#8B4513,#D2B48C,#F0E68C,#9ACD32,#228B22,#006400)"></div>
+    </div>
+    <!-- draw FAB -->
+    <div style="position:absolute;right:14px;bottom:172px;display:flex;align-items:center;gap:8px;background:#1B4332;border-radius:14px;padding:13px 17px;box-shadow:0 6px 18px rgba(27,67,50,.4)">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="#95D5B2" stroke-width="1.6"><path d="M3 12 L3 3 L12 3" stroke-dasharray="2.5 2"></path><circle cx="3" cy="12" r="1.8" fill="#95D5B2" stroke="none"></circle><circle cx="3" cy="3" r="1.8" fill="#95D5B2" stroke="none"></circle><circle cx="12" cy="3" r="1.8" fill="#95D5B2" stroke="none"></circle></svg>
+      <span style="font-size:12.5px;font-weight:700;color:#fff">Draw field</span>
+    </div>
+    <!-- bottom sheet -->
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:10px 16px 14px">
+      <div style="width:36px;height:4px;border-radius:2px;background:#E2DECD;margin:0 auto 10px"></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="flex:1;font-size:14px;font-weight:800">Chak 42 JB</span>
+        <span style="font-size:10.5px;font-weight:600;color:#2D6A4F;background:#EAF3EC;border-radius:5px;padding:2px 8px">Wheat</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">MEAN</div><div style="font-size:15px;font-weight:800;color:#1B4332">0.62</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">MIN</div><div style="font-size:15px;font-weight:800;color:#8B4513">0.18</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">MAX</div><div style="font-size:15px;font-weight:800;color:#228B22">0.84</div></div>
+        <div style="flex:1;background:#F6F4ED;border-radius:9px;padding:7px 9px"><div style="font-size:9.5px;color:#8a927f;font-weight:600">AREA</div><div style="font-size:15px;font-weight:800">12.4</div></div>
+      </div>
+      <div style="font-size:10px;color:#9aa290;margin-top:8px">Sentinel-2 L2A via CDSE · 06 Jul · cloud 8% · 10 m/px</div>
+    </div>
+  </div>
+  <!-- tab bar -->
+  <div style="flex:none;height:64px;background:#fff;border-top:1px solid #E7E3D6;display:flex;align-items:stretch;padding:0 6px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="1.5" y="8.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="8.5" width="5" height="5" rx="1.2"></rect></svg><span style="font-size:9.5px;font-weight:600">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#1B4332"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5 L7.5 2 L13 4.5 L7.5 7 Z"></path><path d="M2 8 L7.5 10.5 L13 8" opacity=".6"></path></svg><span style="font-size:9.5px;font-weight:700">Fields</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 L13.5 13.5"></path></svg><span style="font-size:9.5px;font-weight:600">Scan</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12 L5 8 L8 10 L13 3"></path><path d="M9.5 3 H13 V6.5"></path></svg><span style="font-size:9.5px;font-weight:600">Market</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5"></rect><path d="M5 5 H10 M5 7.5 H10 M5 10 H8"></path></svg><span style="font-size:9.5px;font-weight:600">Ledger</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ============ 3 · DISEASE SCANNER ============ -->
+<div data-screen-label="Mobile Disease Scanner" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#6b7a6f">03 · Disease Scanner (result)</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="428,908">
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F4ED;font-family:Inter,system-ui,sans-serif">
+  <div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#1e2b23" stroke-width="1.7"><path d="M9.5 2.5 L4.5 7.5 L9.5 12.5"></path></svg>
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Scan result</div>
+  </div>
+  <div style="flex:1;overflow:auto;padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0">
+    <div style="height:190px;border-radius:16px;border:1px solid #E7E3D6;background:repeating-linear-gradient(45deg,#EAF3EC 0 12px,#F6F4ED 12px 24px);display:grid;place-items:center;position:relative;flex:none">
+      <div style="font-family:ui-monospace,monospace;font-size:10.5px;color:#6b7a6f;background:#fff;border-radius:6px;padding:5px 10px">wheat leaf photo</div>
+      <div style="position:absolute;top:10px;right:10px;background:rgba(20,28,22,.8);color:#fff;border-radius:7px;padding:4px 9px;font-size:9.5px">Just now · camera</div>
+    </div>
+    <div style="background:#FCEFE9;border:1px solid #F2D5C8;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;border-radius:11px;background:#D95D45;display:grid;place-items:center;flex:none"><svg width="18" height="18" viewBox="0 0 14 14"><path d="M7 1.5 L13 12 H1 Z" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"></path><path d="M7 5.5 V8.5 M7 10.4 V10.5" stroke="#fff" stroke-width="1.4"></path></svg></div>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#8c3423">Leaf rust</div><div style="font-size:10.5px;color:#a06147;font-style:italic">Puccinia triticina · early stage</div></div>
+      <div style="text-align:center;flex:none"><div style="font-size:19px;font-weight:800;color:#8c3423">94.2%</div><div style="font-size:8.5px;color:#a06147;font-weight:700">CONFIDENCE</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12.5px;font-weight:700">Classification</div>
+      <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:104px;color:#4a5a4f;font-weight:600">Leaf rust</span><div style="flex:1;height:7px;border-radius:4px;background:#F1EEE3"><div style="width:94%;height:7px;border-radius:4px;background:#D95D45"></div></div><span style="width:38px;text-align:right;font-weight:700">94.2</span></div>
+      <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:104px;color:#4a5a4f;font-weight:600">Septoria blotch</span><div style="flex:1;height:7px;border-radius:4px;background:#F1EEE3"><div style="width:3%;height:7px;border-radius:4px;background:#E9B44C"></div></div><span style="width:38px;text-align:right;font-weight:700">3.1</span></div>
+      <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:104px;color:#4a5a4f;font-weight:600">Healthy tissue</span><div style="flex:1;height:7px;border-radius:4px;background:#F1EEE3"><div style="width:2%;height:7px;border-radius:4px;background:#40916C"></div></div><span style="width:38px;text-align:right;font-weight:700">1.8</span></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:9px;margin-bottom:12px">
+      <div style="font-size:12.5px;font-weight:700">Mitigation — from our genome lab</div>
+      <div style="display:flex;gap:9px;font-size:11.5px;line-height:1.5;color:#4a5a4f"><span style="width:19px;height:19px;border-radius:6px;background:#EAF3EC;color:#2D6A4F;font-weight:800;font-size:10px;display:grid;place-items:center;flex:none">1</span>Propiconazole 250 EC at 200 ml/acre within 48 hours — before Saturday's rain.</div>
+      <div style="display:flex;gap:9px;font-size:11.5px;line-height:1.5;color:#4a5a4f"><span style="width:19px;height:19px;border-radius:6px;background:#EAF3EC;color:#2D6A4F;font-weight:800;font-size:10px;display:grid;place-items:center;flex:none">2</span>Remove and burn heavily infected tillers from the NW quadrant.</div>
+      <div style="display:flex;gap:9px;font-size:11.5px;line-height:1.5;color:#4a5a4f"><span style="width:19px;height:19px;border-radius:6px;background:#EAF3EC;color:#2D6A4F;font-weight:800;font-size:10px;display:grid;place-items:center;flex:none">3</span>Next season: switch to rust-resistant NARC-2011 seed.</div>
+      <div style="display:flex;gap:9px;margin-top:4px">
+        <div style="flex:1;background:#1B4332;color:#fff;font-size:12.5px;font-weight:700;border-radius:11px;padding:12px;text-align:center">Log to ledger</div>
+        <div style="flex:1;background:#fff;border:1px solid #E2DECD;color:#1B4332;font-size:12.5px;font-weight:600;border-radius:11px;padding:12px;text-align:center;box-sizing:border-box">Scan again</div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;height:64px;background:#fff;border-top:1px solid #E7E3D6;display:flex;align-items:stretch;padding:0 6px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="1.5" y="8.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="8.5" width="5" height="5" rx="1.2"></rect></svg><span style="font-size:9.5px;font-weight:600">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5 L7.5 2 L13 4.5 L7.5 7 Z"></path><path d="M2 8 L7.5 10.5 L13 8" opacity=".6"></path></svg><span style="font-size:9.5px;font-weight:600">Fields</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#1B4332"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 L13.5 13.5"></path></svg><span style="font-size:9.5px;font-weight:700">Scan</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12 L5 8 L8 10 L13 3"></path><path d="M9.5 3 H13 V6.5"></path></svg><span style="font-size:9.5px;font-weight:600">Market</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5"></rect><path d="M5 5 H10 M5 7.5 H10 M5 10 H8"></path></svg><span style="font-size:9.5px;font-weight:600">Ledger</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ============ 4 · MARKET & WEATHER ============ -->
+<div data-screen-label="Mobile Market" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#6b7a6f">04 · Market &amp; Weather</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="428,908">
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F4ED;font-family:Inter,system-ui,sans-serif">
+  <div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px">
+    <div style="flex:1;font-size:16px;font-weight:800;letter-spacing:-.01em">Market &amp; Weather</div>
+    <div style="display:flex;background:#F1EEE3;border-radius:9px;padding:3px;font-size:10.5px;font-weight:600">
+      <span style="padding:5px 11px;border-radius:7px;background:#1B4332;color:#fff">Faisalabad</span>
+      <span style="padding:5px 11px;color:#6b7a6f">Lahore</span>
+    </div>
+  </div>
+  <div style="flex:1;overflow:auto;padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0">
+    <div style="display:flex;align-items:center;gap:11px;background:#FCEFE9;border:1px solid #F2D5C8;border-radius:14px;padding:11px 13px">
+      <div style="width:32px;height:32px;border-radius:10px;background:#D95D45;display:grid;place-items:center;flex:none"><svg width="15" height="15" viewBox="0 0 14 14"><path d="M7 1.5 L13 12 H1 Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"></path><path d="M7 5.5 V8.5 M7 10.4 V10.5" stroke="#fff" stroke-width="1.6"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:#8c3423">Stripe rust 78% · Whitefly 54%</div>
+        <div style="font-size:11px;color:#a06147">Humid + warm through Friday — scout fields now</div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;font-weight:700">7-day forecast</div><div style="font-size:10px;color:#8a927f">Updated 06:40</div></div>
+      <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:2px">
+        <div style="flex:none;width:86px;border-radius:12px;padding:11px 10px;background:#F6F4ED"><div style="font-size:10.5px;font-weight:700;color:#4a5a4f">Thu</div><div style="font-size:19px;font-weight:800;margin:2px 0">39°<span style="font-size:10.5px;color:#8a927f;font-weight:600">/28°</span></div><div style="font-size:9.5px;color:#6b7a6f;line-height:1.4">Sunny, hot<br>RH 62%</div></div>
+        <div style="flex:none;width:86px;border-radius:12px;padding:11px 10px;background:#F6F4ED"><div style="font-size:10.5px;font-weight:700;color:#4a5a4f">Fri</div><div style="font-size:19px;font-weight:800;margin:2px 0">37°<span style="font-size:10.5px;color:#8a927f;font-weight:600">/27°</span></div><div style="font-size:9.5px;color:#6b7a6f;line-height:1.4">Partly cloudy<br>RH 66%</div></div>
+        <div style="flex:none;width:86px;border-radius:12px;padding:11px 10px;background:#FBF3E1;border:1px solid #F0E3C2;box-sizing:border-box"><div style="font-size:10.5px;font-weight:700;color:#B07D2B">Sat</div><div style="font-size:19px;font-weight:800;margin:2px 0;color:#B07D2B">34°<span style="font-size:10.5px;color:#B07D2B;font-weight:600">/26°</span></div><div style="font-size:9.5px;color:#8B7C55;line-height:1.4">Monsoon rain<br>RH 84%</div></div>
+        <div style="flex:none;width:86px;border-radius:12px;padding:11px 10px;background:#FBF3E1;border:1px solid #F0E3C2;box-sizing:border-box"><div style="font-size:10.5px;font-weight:700;color:#B07D2B">Sun</div><div style="font-size:19px;font-weight:800;margin:2px 0;color:#B07D2B">33°<span style="font-size:10.5px;color:#B07D2B;font-weight:600">/25°</span></div><div style="font-size:9.5px;color:#8B7C55;line-height:1.4">Thunderstorms<br>RH 88%</div></div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:4px"><div style="font-size:13px;font-weight:700">Mandi rates</div><div style="font-size:10px;color:#8a927f">PKR / 40 kg</div></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F1EEE3;font-size:12.5px"><span style="width:9px;height:9px;border-radius:3px;background:#E9B44C;flex:none"></span><span style="flex:1;min-width:0"><b>Wheat</b> <span style="font-size:10.5px;color:#9aa290">گندم</span></span><span style="font-weight:800">3,920</span><span style="color:#2D6A4F;font-weight:700;font-size:11px;width:44px;text-align:right">▲1.2%</span></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F1EEE3;font-size:12.5px"><span style="width:9px;height:9px;border-radius:3px;background:#95D5B2;flex:none"></span><span style="flex:1;min-width:0"><b>Basmati paddy</b> <span style="font-size:10.5px;color:#9aa290">باسمتی</span></span><span style="font-weight:800">5,410</span><span style="color:#C1512F;font-weight:700;font-size:11px;width:44px;text-align:right">▼0.8%</span></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F1EEE3;font-size:12.5px"><span style="width:9px;height:9px;border-radius:3px;background:#F0E68C;flex:none"></span><span style="flex:1;min-width:0"><b>Cotton (phutti)</b> <span style="font-size:10.5px;color:#9aa290">پھٹی</span></span><span style="font-weight:800">8,540</span><span style="color:#2D6A4F;font-weight:700;font-size:11px;width:44px;text-align:right">▲2.4%</span></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F1EEE3;font-size:12.5px"><span style="width:9px;height:9px;border-radius:3px;background:#9ACD32;flex:none"></span><span style="flex:1;min-width:0"><b>Sugarcane</b> <span style="font-size:10.5px;color:#9aa290">گنا</span></span><span style="font-weight:800">462</span><span style="color:#2D6A4F;font-weight:700;font-size:11px;width:44px;text-align:right">▲0.4%</span></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 0;font-size:12.5px"><span style="width:9px;height:9px;border-radius:3px;background:#D2B48C;flex:none"></span><span style="flex:1;min-width:0"><b>Maize</b> <span style="font-size:10.5px;color:#9aa290">مکئی</span></span><span style="font-weight:800">2,350</span><span style="color:#C1512F;font-weight:700;font-size:11px;width:44px;text-align:right">▼1.1%</span></div>
+      <div style="font-size:9.5px;color:#9aa290;padding-top:4px">District market committee rates · confirm at mandi gate</div>
+    </div>
+  </div>
+  <div style="flex:none;height:64px;background:#fff;border-top:1px solid #E7E3D6;display:flex;align-items:stretch;padding:0 6px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="1.5" y="8.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="8.5" width="5" height="5" rx="1.2"></rect></svg><span style="font-size:9.5px;font-weight:600">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5 L7.5 2 L13 4.5 L7.5 7 Z"></path><path d="M2 8 L7.5 10.5 L13 8" opacity=".6"></path></svg><span style="font-size:9.5px;font-weight:600">Fields</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 L13.5 13.5"></path></svg><span style="font-size:9.5px;font-weight:600">Scan</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#1B4332"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12 L5 8 L8 10 L13 3"></path><path d="M9.5 3 H13 V6.5"></path></svg><span style="font-size:9.5px;font-weight:700">Market</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5"></rect><path d="M5 5 H10 M5 7.5 H10 M5 10 H8"></path></svg><span style="font-size:9.5px;font-weight:600">Ledger</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ============ 5 · LEDGER ============ -->
+<div data-screen-label="Mobile Ledger" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:600;color:#6b7a6f">05 · Digital Ledger</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="428,908">
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F4ED;font-family:Inter,system-ui,sans-serif">
+  <div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px">
+    <div style="flex:1;font-size:16px;font-weight:800;letter-spacing:-.01em">Digital Ledger</div>
+    <div style="font-size:11px;color:#8a927f">Chak 42 JB</div>
+  </div>
+  <div style="flex:1;overflow:auto;padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0;position:relative">
+    <div style="background:#1B4332;border-radius:16px;padding:14px;color:#fff;display:flex;gap:14px;flex:none">
+      <div style="flex:1"><div style="font-size:9.5px;color:#95D5B2;font-weight:700">FARM AREA</div><div style="font-size:17px;font-weight:800">45 ha</div></div>
+      <div style="flex:1"><div style="font-size:9.5px;color:#95D5B2;font-weight:700">AVG HEALTH</div><div style="font-size:17px;font-weight:800">69%</div></div>
+      <div style="flex:1"><div style="font-size:9.5px;color:#95D5B2;font-weight:700">ENTRIES</div><div style="font-size:17px;font-weight:800">5</div></div>
+      <div style="flex:none;align-self:center;background:#95D5B2;color:#1B4332;font-size:11px;font-weight:700;border-radius:9px;padding:8px 12px">PDF report</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E7E3D6;border-radius:16px;padding:16px 16px 8px;display:flex;flex-direction:column;margin-bottom:76px">
+      <div style="display:flex;gap:12px;padding-bottom:16px;position:relative">
+        <div style="display:flex;flex-direction:column;align-items:center;width:12px;flex:none"><div style="width:12px;height:12px;border-radius:50%;background:#40916C;outline:3px solid #F1EEE3"></div><div style="width:2px;flex:1;background:#F1EEE3;margin-top:4px"></div></div>
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:700">Applied NPK 20-20-0</span><span style="font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;background:#EAF3EC;color:#2D6A4F">Fertilizer</span></div><div style="font-size:11px;color:#6b7a6f;margin-top:1px">2 bags/acre · Chak 42 JB</div><div style="font-size:10px;color:#9aa290">Today 07:15</div></div>
+      </div>
+      <div style="display:flex;gap:12px;padding-bottom:16px;position:relative">
+        <div style="display:flex;flex-direction:column;align-items:center;width:12px;flex:none"><div style="width:12px;height:12px;border-radius:50%;background:#4E8DBF;outline:3px solid #F1EEE3"></div><div style="width:2px;flex:1;background:#F1EEE3;margin-top:4px"></div></div>
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:700">Irrigation run</span><span style="font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;background:#E7F0F7;color:#3A719B">Irrigation</span></div><div style="font-size:11px;color:#6b7a6f;margin-top:1px">4.5 hrs canal water · Chak 42 JB</div><div style="font-size:10px;color:#9aa290">Mon 18:40</div></div>
+      </div>
+      <div style="display:flex;gap:12px;padding-bottom:16px;position:relative">
+        <div style="display:flex;flex-direction:column;align-items:center;width:12px;flex:none"><div style="width:12px;height:12px;border-radius:50%;background:#B07D2B;outline:3px solid #F1EEE3"></div><div style="width:2px;flex:1;background:#F1EEE3;margin-top:4px"></div></div>
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:700">Leaf scan — healthy</span><span style="font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;background:#FBF3E1;color:#B07D2B">Scan</span></div><div style="font-size:11px;color:#6b7a6f;margin-top:1px">96% confidence · Basmati Block</div><div style="font-size:10px;color:#9aa290">Sun 11:02</div></div>
+      </div>
+      <div style="display:flex;gap:12px;padding-bottom:12px;position:relative">
+        <div style="display:flex;flex-direction:column;align-items:center;width:12px;flex:none"><div style="width:12px;height:12px;border-radius:50%;background:#C1512F;outline:3px solid #F1EEE3"></div></div>
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:700">Weedicide spray</span><span style="font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;background:#FCEFE9;color:#C1512F">Spray</span></div><div style="font-size:11px;color:#6b7a6f;margin-top:1px">Buctril Super 500 ml/acre · Chak 42 JB</div><div style="font-size:10px;color:#9aa290">28 Jun 09:10</div></div>
+      </div>
+    </div>
+    <!-- log FAB -->
+    <div style="position:sticky;bottom:14px;align-self:flex-end;display:flex;align-items:center;gap:8px;background:#1B4332;border-radius:14px;padding:13px 18px;box-shadow:0 6px 18px rgba(27,67,50,.4);margin-top:-64px;margin-right:2px">
+      <span style="font-size:16px;font-weight:700;color:#95D5B2;line-height:1">＋</span>
+      <span style="font-size:12.5px;font-weight:700;color:#fff">Log action</span>
+    </div>
+  </div>
+  <div style="flex:none;height:64px;background:#fff;border-top:1px solid #E7E3D6;display:flex;align-items:stretch;padding:0 6px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="1.5" width="5" height="5" rx="1.2"></rect><rect x="1.5" y="8.5" width="5" height="5" rx="1.2"></rect><rect x="8.5" y="8.5" width="5" height="5" rx="1.2"></rect></svg><span style="font-size:9.5px;font-weight:600">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4.5 L7.5 2 L13 4.5 L7.5 7 Z"></path><path d="M2 8 L7.5 10.5 L13 8" opacity=".6"></path></svg><span style="font-size:9.5px;font-weight:600">Fields</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 L13.5 13.5"></path></svg><span style="font-size:9.5px;font-weight:600">Scan</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9aa290"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12 L5 8 L8 10 L13 3"></path><path d="M9.5 3 H13 V6.5"></path></svg><span style="font-size:9.5px;font-weight:600">Market</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#1B4332"><svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="1.5" width="10" height="12" rx="1.5"></rect><path d="M5 5 H10 M5 7.5 H10 M5 10 H8"></path></svg><span style="font-size:9.5px;font-weight:700">Ledger</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>

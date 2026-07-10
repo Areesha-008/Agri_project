@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jadeed
+      POSTGRES_PASSWORD: jadeed
+      POSTGRES_DB: jadeed_kashtkar_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jadeed -d jadeed_kashtkar_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Overrides .env's localhost DATABASE_URL to point at the `db`
+      # service's Docker network hostname instead.
+      DATABASE_URL: postgresql://jadeed:jadeed@db:5432/jadeed_kashtkar_db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_static:/app/static
+
+  # Uncomment once the frontend is scaffolded (see GAPS.md / AUDIT.md —
+  # `/frontend` doesn't exist yet). Expects a frontend/Dockerfile exposing
+  # port 3000 and reading NEXT_PUBLIC_API_URL / NEXT_PUBLIC_MAP_TILES_KEY.
+  # frontend:
+  #   build: ./frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+  #     NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "3000:3000"
+
+volumes:
+  postgres_data:
+  backend_static:
