@@ -36,7 +36,10 @@ def get_current_user(
         raise credentials_exception
 
     payload = decode_access_token(token)
-    if payload is None:
+    if payload is None or payload.get("scope") is not None:
+        # Scoped tokens (e.g. password-reset) authenticate nothing beyond
+        # their own endpoint — reject here so a leaked reset link can't
+        # also be replayed as a Bearer access token.
         raise credentials_exception
 
     user_id = payload.get("sub")
@@ -60,7 +63,7 @@ def get_optional_current_user(
         return None
 
     payload = decode_access_token(token)
-    if payload is None:
+    if payload is None or payload.get("scope") is not None:
         return None
 
     user_id = payload.get("sub")

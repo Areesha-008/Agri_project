@@ -29,6 +29,8 @@ def field_to_response(field: Field) -> FieldResponse:
             coordinates=[[list(coord) for coord in ring] for ring in geojson_dict["coordinates"]],
         ),
         area_hectares=field.area_hectares,
+        district=field.district,
+        crop=field.crop,
         created_at=field.created_at,
         updated_at=field.updated_at,
     )
@@ -76,3 +78,14 @@ def get_field_or_404(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Fi
     if field is None:
         raise FieldNotFoundError()
     return field
+
+
+def delete_field(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> None:
+    """
+    Row-level delete; ndvi_history/ndvi_jobs/alerts/ledger_entries for this
+    field all have ON DELETE CASCADE foreign keys (see the Alembic
+    migrations), so Postgres cleans up the related rows itself.
+    """
+    field = get_field_or_404(db, user_id, field_id)
+    db.delete(field)
+    db.commit()

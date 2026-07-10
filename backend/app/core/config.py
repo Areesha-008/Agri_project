@@ -17,7 +17,7 @@ Why this exists:
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field, PostgresDsn, field_validator
+from pydantic import Field, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,9 +36,22 @@ class Settings(BaseSettings):
     # in production.
     APP_BASE_URL: str = Field(default="http://localhost:8000")
 
-    # CORS: the React frontend origin(s). Comma-separated in .env,
-    # parsed into a list below.
-    CORS_ORIGINS: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # Public base URL of the frontend, used to build password-reset links.
+    FRONTEND_URL: str = Field(default="http://localhost:3000")
+
+    # CORS: the React frontend origin(s). Comma-separated in .env.
+    #
+    # This is intentionally typed as `str`, not `List[str]`: pydantic-settings
+    # tries to JSON-decode any env var bound to a List[...] field *before*
+    # field validators run, so a plain comma-separated value (not a JSON
+    # array) raises a SettingsError at startup rather than reaching the
+    # validator below. Splitting via the `cors_origins_list` property instead
+    # sidesteps that entirely.
+    CORS_ORIGINS: str = Field(default="http://localhost:3000")
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     # ------------------------------------------------------------------
     # Database (PostgreSQL + PostGIS)
@@ -75,16 +88,24 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------
+    # Weather (Open-Meteo — free, keyless) & alert engine
+    # ------------------------------------------------------------------
+    OPEN_METEO_BASE_URL: str = Field(default="https://api.open-meteo.com/v1/forecast")
+    WEATHER_CACHE_TTL_SECONDS: int = Field(default=3600)
+    ALERT_SWEEP_INTERVAL_HOURS: int = Field(default=1)
+
+    # ------------------------------------------------------------------
+    # Disease scanner
+    # ------------------------------------------------------------------
+    INFERENCE_PROVIDER: str = Field(
+        default="demo", description="Which InferenceProvider implementation to use"
+    )
+    SCAN_IMAGES_DIR: str = Field(default="static/scan_images")
+
+    # ------------------------------------------------------------------
     # Logging
     # ------------------------------------------------------------------
     LOG_LEVEL: str = Field(default="INFO")
-
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def split_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

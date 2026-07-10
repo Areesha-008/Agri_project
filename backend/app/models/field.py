@@ -50,6 +50,12 @@ class Field(Base):
 
     area_hectares: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
+    # Used to look up a DistrictYieldBaseline row for crop health/yield
+    # projection (see services/crop_health_service.py). Nullable — a field
+    # without these falls back to the baseline table's DEFAULT row.
+    district: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    crop: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

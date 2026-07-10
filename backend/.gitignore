@@ -19,6 +19,13 @@ env/
 # DB
 *.sqlite3
 
+# Generated static assets (NDVI/NDMI PNGs, scan photos) — regenerated per
+# analysis/scan, not source.
+static/ndvi_images/*
+static/scan_images/*
+!static/ndvi_images/.gitkeep
+!static/scan_images/.gitkeep
+
 # Editors / OS
 .vscode/
 .idea/

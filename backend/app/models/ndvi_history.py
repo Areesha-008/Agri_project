@@ -42,6 +42,20 @@ class NdviHistory(Base):
     ndvi_min: Mapped[float] = mapped_column(Float, nullable=False)
     ndvi_max: Mapped[float] = mapped_column(Float, nullable=False)
 
+    # NDMI (moisture index) computed from the same scene/date window as the
+    # NDVI stats above. Nullable because rows written before NDMI support
+    # was added won't have these.
+    ndmi_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndmi_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndmi_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    # Absolute URLs to the rendered overlay PNGs (see
+    # services/satellite/visualization.py), so history rows are
+    # self-sufficient for the trend chart's map thumbnails without
+    # recomputing anything.
+    ndvi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ndmi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
     # Date of the Sentinel-2 image used for this computation (not when we
     # computed it — that's computed_at below). Distinguishing these matters:
     # a user might re-run analysis on the same underlying satellite image.

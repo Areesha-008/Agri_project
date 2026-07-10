@@ -32,6 +32,36 @@ class InvalidCredentialsError(AppException):
         super().__init__(message, status_code=401)
 
 
+class InvalidResetTokenError(AppException):
+    def __init__(self, message: str = "This reset link is invalid or has expired"):
+        super().__init__(message, status_code=400)
+
+
 class FieldNotFoundError(AppException):
     def __init__(self, message: str = "Field not found"):
         super().__init__(message, status_code=404)
+
+
+class JobNotFoundError(AppException):
+    def __init__(self, message: str = "Job not found"):
+        super().__init__(message, status_code=404)
+
+
+class WeatherServiceError(AppException):
+    def __init__(self, message: str = "Weather data temporarily unavailable"):
+        super().__init__(message, status_code=502)
+
+
+class AlertNotFoundError(AppException):
+    def __init__(self, message: str = "Alert not found"):
+        super().__init__(message, status_code=404)
+
+
+class ScanNotFoundError(AppException):
+    def __init__(self, message: str = "Scan not found"):
+        super().__init__(message, status_code=404)
+
+
+class InvalidImageError(AppException):
+    def __init__(self, message: str = "Invalid image upload"):
+        super().__init__(message, status_code=422)

@@ -35,3 +35,24 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+PASSWORD_RESET_EXPIRE_MINUTES = 30
+
+
+def create_password_reset_token(subject: str) -> str:
+    """
+    Scoped separately from create_access_token via the "scope" claim so a
+    leaked reset link can't also be replayed as a Bearer access token —
+    get_current_user rejects any token carrying a scope claim.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_EXPIRE_MINUTES)
+    to_encode = {"sub": subject, "exp": expire, "scope": "password_reset"}
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_password_reset_token(token: str) -> Optional[str]:
+    payload = decode_access_token(token)
+    if payload is None or payload.get("scope") != "password_reset":
+        return None
+    return payload.get("sub")

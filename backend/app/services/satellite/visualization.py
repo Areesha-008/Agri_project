@@ -36,7 +36,15 @@ def render_ndvi_png(
     rgb_palette = np.array([_hex_to_rgb(c) for c in palette], dtype="float32")
     n_colors = len(rgb_palette)
 
-    clipped = np.clip(ndvi_array, vmin, vmax)
+    # NaN survives np.clip/np.floor untouched, and casting NaN to int gives
+    # numpy's int64 sentinel (-9223372036854775808) instead of raising —
+    # which then blows up the palette index below. Substitute a real number
+    # for NaN pixels first; the alpha mask (computed from the original
+    # array) still makes them fully transparent regardless of this value.
+    nan_mask = np.isnan(ndvi_array)
+    safe_array = np.where(nan_mask, vmin, ndvi_array)
+
+    clipped = np.clip(safe_array, vmin, vmax)
     normalized = (clipped - vmin) / (vmax - vmin)  # 0..1
 
     # Map normalized value to a fractional palette index, then interpolate
@@ -51,7 +59,7 @@ def render_ndvi_png(
     rgb = lower_colors * (1 - frac) + upper_colors * frac
     rgb = rgb.astype("uint8")
 
-    alpha = np.where(np.isnan(ndvi_array), 0, 255).astype("uint8")
+    alpha = np.where(nan_mask, 0, 255).astype("uint8")
 
     rgba = np.dstack([rgb, alpha])
     Image.fromarray(rgba, mode="RGBA").save(output_path, format="PNG")

@@ -45,5 +45,9 @@ class NdviAnalyzeResponse(BaseModel):
     geometry: PolygonGeometry
     stats: NdviStats
     visualization: NdviVisualization
+    # NDMI (moisture index) computed alongside NDVI from the same scene.
+    # Optional so this response shape didn't need a breaking change.
+    ndmi_stats: Optional[NdviStats] = None
+    ndmi_visualization: Optional[NdviVisualization] = None
     source: NdviSourceInfo
     area_hectares: Optional[float] = None

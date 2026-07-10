@@ -31,3 +31,19 @@ class Token(BaseModel):
 class TokenPayload(BaseModel):
     sub: str
     exp: int
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class MessageResponse(BaseModel):
+    message: str
+    # Populated only when settings.DEBUG is true and no email provider is
+    # configured, so the reset link is reachable without a real inbox.
+    dev_reset_url: str | None = None

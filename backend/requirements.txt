@@ -5,6 +5,7 @@ uvicorn[standard]==0.30.6
 # --- Configuration ---
 pydantic==2.9.2
 pydantic-settings==2.5.2
+email-validator==2.2.0
 
 # --- Database ---
 sqlalchemy==2.0.35
@@ -27,3 +28,12 @@ Pillow==10.4.0
 
 # --- Utilities ---
 python-dotenv==1.0.1
+requests==2.34.2
+apscheduler==3.10.4
+
+# --- PDF generation (production report) ---
+# pydyf pinned below weasyprint's latest-resolved version: weasyprint 62.3 +
+# pydyf 0.12.x breaks (`Stream.transform` AttributeError at render time,
+# reproduced locally) — 0.11.0 is the last known-good pairing.
+weasyprint==62.3
+pydyf==0.11.0
