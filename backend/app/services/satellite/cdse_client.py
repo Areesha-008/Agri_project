@@ -13,6 +13,8 @@ relatively expensive, and NDVI requests can be frequent.
 import logging
 
 import openeo
+import requests
+from urllib3.util.retry import Retry
 
 from app.core.config import settings
 from app.exceptions.custom_exceptions import SatelliteDataError
@@ -20,6 +22,31 @@ from app.exceptions.custom_exceptions import SatelliteDataError
 logger = logging.getLogger("app")
 
 _connection: openeo.Connection | None = None
+
+
+def _build_resilient_session() -> requests.Session:
+    """
+    CDSE's openEO backend intermittently resets connections mid-request
+    (confirmed on their community forum as backend-side instability, not
+    something wrong on our end) — every NDVI/NDMI computation makes several
+    HTTP round-trips to it (collection metadata + two synchronous /result
+    downloads), and openeo.connect() otherwise hands back a plain
+    requests.Session with zero retries, so any one of those round-trips
+    hitting a blip fails the whole field draw. Retrying is safe here: every
+    call this session makes is a read/compute-only query, nothing creates
+    server-side state.
+    """
+    session = requests.Session()
+    retry = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[502, 503, 504],
+        allowed_methods=None,  # retry GET and POST alike (POST /result has no side effects here)
+    )
+    adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
 
 
 def initialize_cdse_connection() -> None:
@@ -35,7 +62,7 @@ def initialize_cdse_connection() -> None:
         return
 
     try:
-        connection = openeo.connect(settings.CDSE_OPENEO_URL)
+        connection = openeo.connect(settings.CDSE_OPENEO_URL, session=_build_resilient_session())
         connection.authenticate_oidc_client_credentials(
             client_id=settings.CDSE_CLIENT_ID,
             client_secret=settings.CDSE_CLIENT_SECRET,
