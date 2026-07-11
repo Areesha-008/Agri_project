@@ -90,6 +90,9 @@ class DemoInferenceProvider(InferenceProvider):
 def get_inference_provider() -> InferenceProvider:
     if settings.INFERENCE_PROVIDER == "demo":
         return DemoInferenceProvider()
+    if settings.INFERENCE_PROVIDER == "onnx":
+        from app.services.scanner.onnx_inference_provider import get_onnx_provider
+        return get_onnx_provider()          # cached singleton — loads the ONNX session once
     raise NotImplementedError(
         f"No InferenceProvider implementation for INFERENCE_PROVIDER={settings.INFERENCE_PROVIDER!r} "
         "yet — see GAPS.md Gap 5."
