@@ -13,11 +13,17 @@ export function Reveal({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [revealed, setRevealed] = useState(false);
+  // Default visible: content must never wait on JS/IntersectionObserver to become visible —
+  // that's what made "already on screen at load" sections (e.g. the features grid) feel like
+  // they were taking longer to appear than before this component existed. Only elements that
+  // are genuinely off-screen at mount get pre-hidden so they still animate in on scroll.
+  const [revealed, setRevealed] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.85) return;
+    setRevealed(false);
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
