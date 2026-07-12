@@ -55,7 +55,7 @@ docker compose up --build
 This starts `db` (postgis/postgis:16-3.4) and `backend` (migrates on
 container start, then serves on :8000). The `frontend` service is
 commented out in `docker-compose.yml` until `/frontend` is scaffolded
-(see GAPS.md / AUDIT.md) — uncomment it once `frontend/Dockerfile` exists.
+(see GAPS.md) — uncomment it once `frontend/Dockerfile` exists.
 
 No separate worker/queue container: background jobs (NDVI analysis, alert
 sweeps) run in-process via FastAPI `BackgroundTasks` + APScheduler (see

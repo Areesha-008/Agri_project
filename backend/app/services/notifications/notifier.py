@@ -39,8 +39,3 @@ class EmailNotifier(Notifier):
 
     def notify(self, user: "User", alert: "Alert") -> None:
         logger.info(f"[stub email notifier] would email {user.email}: {alert.title}")
-
-
-class NoOpNotifier(Notifier):
-    def notify(self, user: "User", alert: "Alert") -> None:
-        pass

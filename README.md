@@ -80,7 +80,6 @@ deployment notes are in [DEPLOY.md](DEPLOY.md).
 - [DEPLOY.md](DEPLOY.md) — local setup, Docker Compose, production deployment
 - [DISEASE_SCANNER.md](DISEASE_SCANNER.md) — disease scanner architecture and `InferenceProvider` seam
 - [GAPS.md](GAPS.md) — known gaps against the original design spec and how each was resolved
-- [AUDIT.md](AUDIT.md) — backend audit against the design handoff requirements
 
 ## Testing
 
