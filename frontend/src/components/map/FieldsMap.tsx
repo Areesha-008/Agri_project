@@ -146,8 +146,17 @@ export function FieldsMap({
       }
     }
 
-    if (map.isStyleLoaded()) render(map);
-    else map.once("load", () => render(map));
+    // "load" only fires once per map — for prop changes that arrive later
+    // (while the style is busy re-rendering) wait for the next "idle" instead.
+    if (map.isStyleLoaded()) {
+      render(map);
+      return;
+    }
+    const onIdle = () => render(map);
+    map.once("idle", onIdle);
+    return () => {
+      map.off("idle", onIdle);
+    };
   }, [fields, fieldGeometries, selectedFieldId, onSelectField]);
 
   // NDVI/NDMI raster overlay for the selected field.
@@ -175,8 +184,16 @@ export function FieldsMap({
       map.addLayer({ id: "ndvi-overlay-layer", type: "raster", source: sourceId, paint: { "raster-opacity": 0.85 } });
     }
 
-    if (map.isStyleLoaded()) apply(map);
-    else map.once("load", () => apply(map));
+    // Same once-per-lifetime "load" pitfall as the outlines effect above.
+    if (map.isStyleLoaded()) {
+      apply(map);
+      return;
+    }
+    const onIdle = () => apply(map);
+    map.once("idle", onIdle);
+    return () => {
+      map.off("idle", onIdle);
+    };
   }, [overlay, layer]);
 
   // Fly to selected field.

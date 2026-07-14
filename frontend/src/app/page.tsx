@@ -2,18 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Reveal } from "@/components/ui/Reveal";
 import { Logo, LogoMark } from "@/components/ui/Logo";
+import { LandingFieldAnalyzer } from "@/components/map/LandingFieldAnalyzer";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { DictionaryKey } from "@/lib/i18n/dictionary";
-
-const HeroMap = dynamic(() => import("@/components/map/HeroMap").then((m) => m.HeroMap), {
-  ssr: false,
-  loading: () => (
-    <div className="jk-contours-dark h-[400px] animate-pulse rounded-card-lg bg-[#1a2417]" />
-  ),
-});
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAP_TILES_KEY ?? "";
 const FIELDS_TILE_IMAGE = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/73.20,31.35,15,0/640x480@2x?access_token=${MAPBOX_TOKEN}`;
@@ -91,14 +84,6 @@ function StatCounter({ value, label }: { value: string; label: string }) {
       <div className="text-xl font-extrabold tabular-nums text-forest-900">{display}</div>
       <div className="text-[11.5px] text-ink-400">{label}</div>
     </div>
-  );
-}
-
-function TrustIcon({ path }: { path: string }) {
-  return (
-    <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d={path} />
-    </svg>
   );
 }
 
@@ -245,8 +230,8 @@ function Nav({ t }: { t: (key: DictionaryKey) => string }) {
         </a>
         <div className="flex-1" />
         <div className="hidden items-center gap-5.5 text-[13px] font-semibold text-ink-600 sm:flex">
-          <a href="#features" onClick={handleAnchorNav} className={NAV_LINK_CLASS}>{t("landingNavFeatures")}</a>
           <a href="#how" onClick={handleAnchorNav} className={NAV_LINK_CLASS}>{t("landingNavHow")}</a>
+          <a href="#features" onClick={handleAnchorNav} className={NAV_LINK_CLASS}>{t("landingNavFeatures")}</a>
           <a href="#mission" onClick={handleAnchorNav} className={NAV_LINK_CLASS}>{t("landingNavMission")}</a>
         </div>
         <LangToggle />
@@ -388,24 +373,42 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="jk-map-in">
-            <HeroMap />
+            <LandingFieldAnalyzer />
           </div>
         </div>
       </div>
 
-      {/* Trust strip */}
-      <div className="border-y border-border bg-cream-card">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-4 text-xs font-semibold text-ink-400">
-          <span className="tracking-wide">{t("landingPoweredBy")}</span>
-          {[
-            { label: "Copernicus Sentinel-2", path: "M7.5 1.5v2M7.5 11.5v2M1.5 7.5h2M11.5 7.5h2M4 4l1.4 1.4M9.6 9.6L11 11M11 4l-1.4 1.4M5.4 9.6L4 11M7.5 5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z" },
-            { label: "CDSE / openEO", path: "M2 11.5l3.5-5 2.5 3 2-4 3 6H2z" },
-            { label: "PostGIS geospatial engine", path: "M7.5 1.5c3 2.5 4.5 5 4.5 7.2A4.5 4.5 0 013 8.7c0-2.2 1.5-4.7 4.5-7.2z" },
-            { label: "Genome-backed disease models", path: "M4 2c3 1 3 3 0 4s-3 3 0 4M11 2c-3 1-3 3 0 4s3 3 0 4" },
-          ].map((item, i) => (
-            <Reveal key={item.label} index={i} className="flex items-center gap-1.5 text-ink-600">
-              <TrustIcon path={item.path} />
-              {item.label}
+      {/* How it works */}
+      <div id="how" className="mx-auto max-w-[1180px] scroll-mt-[70px] px-6 py-16">
+        <Reveal className="mb-9 text-center">
+          <div className="mb-2.5 text-xs font-bold tracking-[.12em] text-forest-500">{t("landingHowEyebrow")}</div>
+          <h2
+            className={`m-0 text-[26px] tracking-tight text-ink-900 ${
+              lang === "en" ? "font-display font-semibold" : "font-extrabold"
+            }`}
+          >
+            {t("landingHowTitle")}
+          </h2>
+        </Reveal>
+        <div className="jk-how-grid relative grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-4.5">
+          <div className="jk-how-connector absolute top-0 right-[16.6%] left-[16.6%] hidden border-t border-dashed border-mint-border-strong md:block" />
+          {STEPS.map((s, i) => (
+            <Reveal key={s.title} index={i}>
+              <div
+                tabIndex={0}
+                className="jk-how-step jk-focus group relative h-full rounded-card-lg border border-border bg-cream-card p-6 pt-14"
+              >
+                <div className="absolute left-6 top-0 flex -translate-y-1/2 items-center gap-2">
+                  <div className="grid h-12 w-12 flex-none place-items-center rounded-full border-2 border-cream-bg bg-forest-900 text-white shadow-[0_4px_10px_rgba(27,67,50,.28)] transition-transform duration-300 group-hover:scale-110 group-focus-visible:scale-110">
+                    <svg width="17" height="17" viewBox="0 0 15 15" fill="none" stroke="#95D5B2" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={s.path} />
+                    </svg>
+                  </div>
+                  <span className="text-[11px] font-extrabold tracking-[.08em] text-forest-500">STEP {i + 1}</span>
+                </div>
+                <div className="mb-1.5 text-[15px] font-bold">{s.title}</div>
+                <div className="text-[13px] leading-relaxed text-ink-500">{s.body}</div>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -426,44 +429,13 @@ export default function LandingPage() {
         </Reveal>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:auto-rows-[172px]">
-          {/* A · My Fields — live satellite thumbnail (2x2) */}
-          <Reveal index={0} className="h-[300px] lg:col-start-1 lg:row-start-1 lg:col-span-2 lg:row-span-2 lg:h-auto">
-            <CardSheen className="group h-full rounded-card-lg border border-border bg-[#1a2417] shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.18)]">
-              <img
-                src={FIELDS_TILE_IMAGE}
-                alt=""
-                className="absolute inset-0 h-full w-full scale-105 object-cover opacity-80 transition-transform duration-700 group-hover:scale-[1.15]"
-              />
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-                <polygon
-                  points="30 22, 62 14, 84 34, 74 66, 42 72, 24 48"
-                  fill="rgba(149,213,178,.3)"
-                  stroke="#95D5B2"
-                  strokeWidth="2"
-                  strokeDasharray="5 3"
-                  vectorEffect="non-scaling-stroke"
-                />
-              </svg>
-              <div className="absolute left-3.5 top-3.5 flex items-center gap-1.5 rounded-lg bg-white/94 px-2.5 py-1.5 text-[11px] font-bold text-forest-900 shadow-[0_2px_6px_rgba(0,0,0,.25)]">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-forest-500" />
-                Drawing boundary · 6 points
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c140e]/90 to-transparent px-4.5 pb-4 pt-10">
-                <div className="text-base font-extrabold text-white">My Fields — satellite field mapping</div>
-                <div className="mt-0.5 text-[12.5px] text-white/80">
-                  Draw a boundary once. Fresh Sentinel-2 imagery of your exact land every 5 days.
-                </div>
-              </div>
-            </CardSheen>
-          </Reveal>
-
           {/* B · NDVI & NDMI (1x2) */}
-          <Reveal index={1} className="lg:col-start-3 lg:row-start-1 lg:col-span-1 lg:row-span-2">
+          <Reveal index={0} className="lg:col-start-1 lg:row-start-1 lg:col-span-1 lg:row-span-2">
             <NdviCard />
           </Reveal>
 
           {/* C · Crop health gauge (1x1) */}
-          <Reveal index={2} className="lg:col-start-4 lg:row-start-1 lg:col-span-1 lg:row-span-1">
+          <Reveal index={1} className="lg:col-start-2 lg:row-start-1 lg:col-span-1 lg:row-span-1">
             <CardSheen className="flex h-full items-center gap-3.5 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
               <div
                 className="grid h-[74px] w-[74px] flex-none place-items-center rounded-full"
@@ -486,7 +458,7 @@ export default function LandingPage() {
           </Reveal>
 
           {/* D · Disease scanner (1x1) */}
-          <Reveal index={3} className="lg:col-start-4 lg:row-start-2 lg:col-span-1 lg:row-span-1">
+          <Reveal index={2} className="lg:col-start-2 lg:row-start-2 lg:col-span-1 lg:row-span-1">
             <CardSheen className="flex h-full flex-col justify-center gap-2.5 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
               <div className="flex items-center gap-2.5">
                 <div
@@ -516,7 +488,7 @@ export default function LandingPage() {
           </Reveal>
 
           {/* E · Weather & pest warnings (2x1) */}
-          <Reveal index={4} className="lg:col-start-1 lg:row-start-3 lg:col-span-2 lg:row-span-1">
+          <Reveal index={3} className="lg:col-start-3 lg:row-start-1 lg:col-span-2 lg:row-span-1">
             <CardSheen className="flex h-full flex-col justify-center gap-3 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-11 w-11 flex-none place-items-center rounded-xl border border-border bg-info-blue-bg">
@@ -556,7 +528,7 @@ export default function LandingPage() {
           </Reveal>
 
           {/* F · Mandi prices (2x1) */}
-          <Reveal index={5} className="lg:col-start-3 lg:row-start-3 lg:col-span-2 lg:row-span-1">
+          <Reveal index={4} className="lg:col-start-3 lg:row-start-2 lg:col-span-2 lg:row-span-1">
             <CardSheen className="flex h-full flex-col justify-center gap-2 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -593,7 +565,7 @@ export default function LandingPage() {
           </Reveal>
         </div>
 
-        <Reveal index={6} className="mt-4">
+        <Reveal index={5} className="mt-4">
           <div className="jk-contours-dark relative flex flex-wrap items-center gap-7 overflow-hidden rounded-card-lg bg-forest-900 p-7 text-white">
             <div className="grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-white/[.18]">
               <LogoMark size={20} leafColor="#95D5B2" leafColorDark="#40916C" />
@@ -612,42 +584,6 @@ export default function LandingPage() {
             </Link>
           </div>
         </Reveal>
-      </div>
-
-      {/* How it works */}
-      <div id="how" className="mx-auto max-w-[1180px] scroll-mt-[70px] px-6 py-16">
-        <Reveal className="mb-9 text-center">
-          <div className="mb-2.5 text-xs font-bold tracking-[.12em] text-forest-500">{t("landingHowEyebrow")}</div>
-          <h2
-            className={`m-0 text-[26px] tracking-tight text-ink-900 ${
-              lang === "en" ? "font-display font-semibold" : "font-extrabold"
-            }`}
-          >
-            {t("landingHowTitle")}
-          </h2>
-        </Reveal>
-        <div className="jk-how-grid relative grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-4.5">
-          <div className="jk-how-connector absolute top-0 right-[16.6%] left-[16.6%] hidden border-t border-dashed border-mint-border-strong md:block" />
-          {STEPS.map((s, i) => (
-            <Reveal key={s.title} index={i}>
-              <div
-                tabIndex={0}
-                className="jk-how-step jk-focus group relative h-full rounded-card-lg border border-border bg-cream-card p-6 pt-14"
-              >
-                <div className="absolute left-6 top-0 flex -translate-y-1/2 items-center gap-2">
-                  <div className="grid h-12 w-12 flex-none place-items-center rounded-full border-2 border-cream-bg bg-forest-900 text-white shadow-[0_4px_10px_rgba(27,67,50,.28)] transition-transform duration-300 group-hover:scale-110 group-focus-visible:scale-110">
-                    <svg width="17" height="17" viewBox="0 0 15 15" fill="none" stroke="#95D5B2" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={s.path} />
-                    </svg>
-                  </div>
-                  <span className="text-[11px] font-extrabold tracking-[.08em] text-forest-500">STEP {i + 1}</span>
-                </div>
-                <div className="mb-1.5 text-[15px] font-bold">{s.title}</div>
-                <div className="text-[13px] leading-relaxed text-ink-500">{s.body}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
       </div>
 
       {/* Mission */}
