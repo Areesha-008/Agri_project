@@ -19,6 +19,18 @@ test("visiting a protected route while logged out redirects to login", async ({ 
   await expect(page).toHaveURL(/\/login$/);
 });
 
+// The Mapbox draw interaction itself needs real WebGL + a token (see
+// fields.spec.ts) — this only smoke-tests the hero widget's control card.
+test("landing hero field analyzer walks between idle and drawing states", async ({ page }) => {
+  await page.goto("/");
+  const drawButton = page.getByRole("button", { name: "Draw your field" });
+  await expect(drawButton).toBeVisible();
+  await drawButton.click();
+  await expect(page.getByText("Double-click to finish")).toBeVisible();
+  await page.locator("#top").getByRole("button", { name: "Cancel" }).click();
+  await expect(drawButton).toBeVisible();
+});
+
 test("language toggle switches landing copy to Urdu and back", async ({ page }) => {
   await page.goto("/");
   await page.getByText("اردو", { exact: true }).click();

@@ -2,11 +2,11 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { getToken } from "@/lib/api/client";
-import { useCreateField, useField, useFieldNdvi, useNdviJob } from "@/lib/api/hooks";
+import { useCreateField, useDeleteField, useField, useFieldNdvi, useNdviJob } from "@/lib/api/hooks";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { boundsFromGeometry } from "@/lib/geo";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +28,10 @@ const LAYERS: { key: MapLayer; label: string }[] = [
   { key: "satellite", label: "Satellite" },
 ];
 
+// A CDSE job can hang in "running" with no server-side timeout — stop
+// showing an endless spinner after this long and offer a retry.
+const JOB_TIMEOUT_MS = 150_000;
+
 /**
  * Landing-page hero: the real field-drawing + NDVI/NDMI analysis flow from
  * /fields, runnable by anonymous visitors. If no token exists yet, we log in
@@ -48,10 +52,16 @@ export function LandingFieldAnalyzer() {
   const [clearSignal, setClearSignal] = useState(0);
   const [layerChoice, setLayerChoice] = useState<MapLayer | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  // True only when THIS component minted the guest session — the demo field
+  // is then ours to clean up on reset. Never delete under a pre-existing
+  // (real or earlier-guest) session.
+  const mintedGuestSession = useRef(false);
 
   const createField = useCreateField();
+  const deleteField = useDeleteField();
   const jobStatus = useNdviJob(activeFieldId, activeJobId);
   const { data: field } = useField(activeFieldId);
   const { data: ndvi } = useFieldNdvi(activeFieldId);
@@ -72,6 +82,12 @@ export function LandingFieldAnalyzer() {
     queryClient.invalidateQueries({ queryKey: ["fields", activeFieldId] });
   }, [jobDone, activeFieldId, queryClient]);
 
+  useEffect(() => {
+    if (!activeJobId) return;
+    const id = setTimeout(() => setTimedOut(true), JOB_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [activeJobId]);
+
   function startDrawing() {
     setMode("drawing");
     setPendingGeometry(null);
@@ -79,6 +95,11 @@ export function LandingFieldAnalyzer() {
   }
 
   function reset() {
+    // Demo fields shouldn't pile up in the shared guest account — but only
+    // remove what we created under a session we minted ourselves.
+    if (mintedGuestSession.current && activeFieldId) {
+      deleteField.mutate(activeFieldId);
+    }
     setMode("idle");
     setPendingGeometry(null);
     setPendingArea(0);
@@ -86,6 +107,7 @@ export function LandingFieldAnalyzer() {
     setDistrict("");
     setCrop("");
     setSaveFailed(false);
+    setTimedOut(false);
     setActiveJobId(null);
     setActiveFieldId(null);
     setLayerChoice(null);
@@ -104,7 +126,10 @@ export function LandingFieldAnalyzer() {
     setMode("saving");
     setSaveFailed(false);
     try {
-      if (!isAuthenticated && !getToken()) await loginAsGuest();
+      if (!isAuthenticated && !getToken()) {
+        await loginAsGuest();
+        mintedGuestSession.current = true;
+      }
       const result = await createField.mutateAsync({
         name: name || t("landingDrawDefaultName"),
         geometry: pendingGeometry,
@@ -211,11 +236,20 @@ export function LandingFieldAnalyzer() {
           </div>
         )}
 
-        {isAnalyzing && (
+        {isAnalyzing && !timedOut && (
           <div className="flex flex-col items-center gap-2.5 py-2 text-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
             <div className="text-[13px] font-bold text-ink-900">{t("landingDrawAnalyzing")}</div>
             <div className="text-xs text-ink-400">{t("landingDrawAnalyzingHint")}</div>
+          </div>
+        )}
+
+        {timedOut && !showResults && !jobFailed && (
+          <div className="flex flex-col gap-2.5">
+            <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawTimeout")}</div>
+            <Button variant="secondary" onClick={reset}>
+              {t("landingDrawRetry")}
+            </Button>
           </div>
         )}
 

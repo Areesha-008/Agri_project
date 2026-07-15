@@ -159,8 +159,36 @@ export const dictionary = {
     landingDrawAgain: "Draw another field",
     landingDrawSignupCta: "Create a free account to keep this analysis",
     landingDrawError: "Analysis failed. Please try again.",
+    landingDrawTimeout: "Satellite imagery is taking longer than usual. You can keep waiting or start over.",
     landingDrawRetry: "Try again",
     landingDrawDefaultName: "My field",
+
+    // Landing "How it works" steps
+    landingStep1Title: "Draw your field",
+    landingStep1Body:
+      "Trace your boundary on the satellite map. No account needed for your first analysis. We validate the polygon and compute the exact area.",
+    landingStep2Title: "The satellite reads your crop",
+    landingStep2Body:
+      "Cloud-free Sentinel-2 scenes are processed into NDVI and moisture maps within minutes, with per-field statistics saved to your history.",
+    landingStep3Title: "Act with confidence",
+    landingStep3Body:
+      "Irrigate the stressed patch, treat the rust early, sell on the up-day and keep a ledger record of everything you did.",
+
+    // Landing feature bento cards
+    landingNdviCardBadgeNdvi: "vegetation density",
+    landingNdviCardBadgeNdmi: "water stress",
+    landingNdviCardTitle: "NDVI & NDMI overlays",
+    landingNdviCardDesc: "Irrigate only where the crop is thirsty.",
+    landingCardHealthBadge: "HEALTHY",
+    landingCardHealthTitle: "Crop health & yield",
+    landingCardHealthProjected: "Projected",
+    landingCardHealthYield: "57 maund/acre",
+    landingCardScannerTitle: "Leaf disease scanner",
+    landingCardScannerDesc: "Photo → genome-backed diagnosis",
+    landingCardScannerDisease: "Leaf rust",
+    landingCardWeatherTitle: "Weather & pest warnings",
+    landingCardWeatherDesc: "7-day agromet forecast + outbreak risk, before symptoms appear.",
+    landingCardMandiTitle: "Real-time mandi prices",
   },
   ur: {
     dashboard: "ڈیش بورڈ",
@@ -307,8 +335,36 @@ export const dictionary = {
     landingDrawAgain: "ایک اور کھیت بنائیں",
     landingDrawSignupCta: "یہ تجزیہ محفوظ رکھنے کے لیے مفت اکاؤنٹ بنائیں",
     landingDrawError: "تجزیہ ناکام ہو گیا۔ دوبارہ کوشش کریں۔",
+    landingDrawTimeout: "سیٹلائٹ تصاویر معمول سے زیادہ وقت لے رہی ہیں۔ آپ انتظار کر سکتے ہیں یا دوبارہ شروع کریں۔",
     landingDrawRetry: "دوبارہ کوشش کریں",
     landingDrawDefaultName: "میرا کھیت",
+
+    // Landing "How it works" steps
+    landingStep1Title: "اپنا کھیت بنائیں",
+    landingStep1Body:
+      "سیٹلائٹ نقشے پر اپنی حد بنائیں۔ پہلے تجزیے کے لیے اکاؤنٹ کی ضرورت نہیں۔ ہم کثیر الاضلاع کی تصدیق کر کے درست رقبہ نکالتے ہیں۔",
+    landingStep2Title: "سیٹلائٹ آپ کی فصل پڑھتا ہے",
+    landingStep2Body:
+      "بادلوں سے پاک Sentinel-2 مناظر منٹوں میں NDVI اور نمی کے نقشوں میں بدل جاتے ہیں، اور ہر کھیت کے اعداد و شمار آپ کی ہسٹری میں محفوظ ہوتے ہیں۔",
+    landingStep3Title: "اعتماد سے عمل کریں",
+    landingStep3Body:
+      "دباؤ والے حصے کو پانی دیں، کنگی کا جلد علاج کریں، اچھے ریٹ والے دن بیچیں اور اپنے ہر کام کا کھاتہ رکھیں۔",
+
+    // Landing feature bento cards
+    landingNdviCardBadgeNdvi: "پودوں کی کثافت",
+    landingNdviCardBadgeNdmi: "پانی کا دباؤ",
+    landingNdviCardTitle: "NDVI اور NDMI اوورلیز",
+    landingNdviCardDesc: "صرف وہاں پانی دیں جہاں فصل پیاسی ہو۔",
+    landingCardHealthBadge: "صحت مند",
+    landingCardHealthTitle: "فصل کی صحت اور پیداوار",
+    landingCardHealthProjected: "متوقع",
+    landingCardHealthYield: "57 من فی ایکڑ",
+    landingCardScannerTitle: "پتوں کی بیماری اسکینر",
+    landingCardScannerDesc: "تصویر ← جینوم پر مبنی تشخیص",
+    landingCardScannerDisease: "پتوں کی کنگی",
+    landingCardWeatherTitle: "موسم اور کیڑوں کی وارننگ",
+    landingCardWeatherDesc: "7 روزہ زرعی موسمیاتی پیشگوئی + وبا کا خطرہ، علامات ظاہر ہونے سے پہلے۔",
+    landingCardMandiTitle: "منڈی کے تازہ ریٹ",
   },
 } as const;
 

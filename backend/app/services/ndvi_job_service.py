@@ -11,7 +11,7 @@ SessionLocal() instead, mirroring the same lifecycle by hand.
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 from geoalchemy2.shape import from_shape, to_shape
@@ -59,10 +59,25 @@ def create_field_with_job(
     return field, job
 
 
+# compute_ndvi can block indefinitely on a hung CDSE call (BackgroundTasks
+# has no kill switch), and a --reload restart orphans in-flight jobs as
+# "running" forever. Normal jobs finish in well under a minute.
+JOB_STALE_AFTER = timedelta(minutes=10)
+
+
 def get_job_or_404(db: Session, job_id: uuid.UUID) -> NdviJob:
     job = db.query(NdviJob).filter(NdviJob.id == job_id).first()
     if job is None:
         raise JobNotFoundError()
+    # Watchdog on the polling read path: expire jobs stuck in "running" so
+    # clients see a terminal status instead of spinning forever.
+    if (
+        job.status == NdviJobStatus.running
+        and job.started_at is not None
+        and datetime.now(timezone.utc) - job.started_at > JOB_STALE_AFTER
+    ):
+        logger.error(f"NDVI job {job_id} stuck in running past {JOB_STALE_AFTER}; marking failed")
+        _fail_job(db, job, "Analysis timed out")
     return job
 
 

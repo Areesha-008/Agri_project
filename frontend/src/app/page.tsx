@@ -254,6 +254,7 @@ function Nav({ t }: { t: (key: DictionaryKey) => string }) {
 
 /** Bento card B: owns its own NDVI/NDMI toggle state so clicking it doesn't re-render the whole page. */
 function NdviCard() {
+  const { t } = useTranslation();
   const [bentoLayer, setBentoLayer] = useState<"ndvi" | "ndmi">("ndvi");
   return (
     <CardSheen className="flex h-full flex-col gap-3.5 rounded-card-lg border border-border bg-cream-card p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
@@ -284,7 +285,7 @@ function NdviCard() {
           }}
         >
           <div className="absolute bottom-2.5 left-2.5 rounded-md bg-[#141c16cc] px-2.5 py-1 text-[9.5px] text-white">
-            vegetation density
+            {t("landingNdviCardBadgeNdvi")}
           </div>
         </div>
         <div
@@ -295,13 +296,13 @@ function NdviCard() {
           }}
         >
           <div className="absolute bottom-2 left-2.5 rounded-md bg-[#141c16cc] px-2.5 py-1 text-[9.5px] text-white">
-            water stress
+            {t("landingNdviCardBadgeNdmi")}
           </div>
         </div>
       </div>
       <div>
-        <div className="text-[14.5px] font-bold text-ink-900">NDVI & NDMI overlays</div>
-        <div className="mt-0.5 text-xs text-ink-500">Irrigate only where the crop is thirsty.</div>
+        <div className="text-[14.5px] font-bold text-ink-900">{t("landingNdviCardTitle")}</div>
+        <div className="mt-0.5 text-xs text-ink-500">{t("landingNdviCardDesc")}</div>
       </div>
     </CardSheen>
   );
@@ -312,18 +313,18 @@ export default function LandingPage() {
 
   const STEPS = [
     {
-      title: "Draw your field",
-      body: "Trace your boundary on the satellite map. No account needed for your first analysis. We validate the polygon and compute the exact area.",
+      title: t("landingStep1Title"),
+      body: t("landingStep1Body"),
       path: "M2.5 12.5l1-3.2 7-7 2.2 2.2-7 7-3.2 1z M9 3.5l2.2 2.2",
     },
     {
-      title: "The satellite reads your crop",
-      body: "Cloud-free Sentinel-2 scenes are processed into NDVI and moisture maps within minutes, with per-field statistics saved to your history.",
+      title: t("landingStep2Title"),
+      body: t("landingStep2Body"),
       path: "M7.5 7.5m-1.3 0a1.3 1.3 0 102.6 0 1.3 1.3 0 10-2.6 0 M4.6 4.6a4.1 4.1 0 000 5.8 M10.4 4.6a4.1 4.1 0 010 5.8 M2.3 2.3a7.3 7.3 0 000 10.4 M12.7 2.3a7.3 7.3 0 010 10.4",
     },
     {
-      title: "Act with confidence",
-      body: "Irrigate the stressed patch, treat the rust early, sell on the up-day and keep a ledger record of everything you did.",
+      title: t("landingStep3Title"),
+      body: t("landingStep3Body"),
       path: "M3 8l3 3 6-7",
     },
   ];
@@ -444,14 +445,14 @@ export default function LandingPage() {
                 <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-cream-card text-center">
                   <div>
                     <div className="text-base font-extrabold leading-none text-forest-900">74%</div>
-                    <div className="mt-0.5 text-[8px] font-bold text-ink-400">HEALTHY</div>
+                    <div className="mt-0.5 text-[8px] font-bold text-ink-400">{t("landingCardHealthBadge")}</div>
                   </div>
                 </div>
               </div>
               <div className="min-w-0">
-                <div className="text-[13.5px] font-bold leading-tight text-ink-900">Crop health &amp; yield</div>
+                <div className="text-[13.5px] font-bold leading-tight text-ink-900">{t("landingCardHealthTitle")}</div>
                 <div className="mt-0.5 text-[11px] text-ink-500">
-                  Projected <b className="text-ink-900">57 maund/acre</b>
+                  {t("landingCardHealthProjected")} <b className="text-ink-900">{t("landingCardHealthYield")}</b>
                 </div>
               </div>
             </CardSheen>
@@ -471,13 +472,13 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[13.5px] font-bold leading-tight text-ink-900">Leaf disease scanner</div>
-                  <div className="text-[11px] text-ink-500">Photo → genome-backed diagnosis</div>
+                  <div className="text-[13.5px] font-bold leading-tight text-ink-900">{t("landingCardScannerTitle")}</div>
+                  <div className="text-[11px] text-ink-500">{t("landingCardScannerDesc")}</div>
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between text-[11px]">
-                  <span className="font-bold text-alert-red-text">Leaf rust</span>
+                  <span className="font-bold text-alert-red-text">{t("landingCardScannerDisease")}</span>
                   <span className="font-extrabold text-alert-red-text">94.2%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-cream-inset">
@@ -498,8 +499,8 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[14.5px] font-bold text-ink-900">Weather &amp; pest warnings</div>
-                  <div className="text-xs text-ink-500">7-day agromet forecast + outbreak risk, before symptoms appear.</div>
+                  <div className="text-[14.5px] font-bold text-ink-900">{t("landingCardWeatherTitle")}</div>
+                  <div className="text-xs text-ink-500">{t("landingCardWeatherDesc")}</div>
                 </div>
                 <div className="jk-ring-pulse flex flex-none items-center gap-1.5 rounded-full border border-alert-red-border bg-alert-red-bg px-3 py-1.5 text-[11px] font-bold text-alert-red-text">
                   ⚠ RUST 78%
@@ -538,7 +539,7 @@ export default function LandingPage() {
                       <path d="M4.5 10l2-3 2 1.5 3-4.5" />
                     </svg>
                   </div>
-                  <div className="text-[14.5px] font-bold text-ink-900">Real-time mandi prices</div>
+                  <div className="text-[14.5px] font-bold text-ink-900">{t("landingCardMandiTitle")}</div>
                 </div>
                 <div className="text-[10.5px] font-semibold text-ink-400">PKR / 40 kg</div>
               </div>
