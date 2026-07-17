@@ -118,11 +118,14 @@ export default function FieldsPage() {
       : null;
 
   return (
-    <div id="fieldsWrap" className="flex h-full min-h-0">
-      {/* Tools panel */}
+    <div id="fieldsWrap" className="flex h-full min-h-0 flex-col md:flex-row">
+      {/* Tools panel — stacks above the map below md instead of squeezing a fixed 290px
+          panel next to it, which crushed the map (the page's core draw/analyze surface)
+          to a sliver on phone widths. max-h caps the panel so the map still gets room
+          even with a long field list. */}
       <div
         id="fieldsPanel"
-        className="flex w-[290px] flex-none flex-col gap-3.5 overflow-auto border-r border-border bg-cream-card p-4"
+        className="flex max-h-[45vh] w-full flex-none flex-col gap-3.5 overflow-auto border-b border-border bg-cream-card p-4 md:max-h-none md:w-[290px] md:border-b-0 md:border-r"
       >
         {mode === "idle" && !isAnalyzing && (
           <>
@@ -132,12 +135,15 @@ export default function FieldsPage() {
                 <div
                   key={f.id}
                   className={`flex items-center gap-2 rounded-xl border p-3 ${
-                    f.id === selectedFieldId ? "border-forest-500 bg-mint-100" : "border-border bg-white"
+                    f.id === selectedFieldId ? "border-forest-500 bg-mint-100" : "border-border bg-cream-card"
                   }`}
                 >
+                  {/* bg-mint-100 stays a constant light chip color across themes (see globals.css),
+                      so its text must stay constant dark too — ink-900/ink-400 would invert to
+                      light-on-light in dark mode when this row is selected. */}
                   <button onClick={() => setSelectedFieldId(f.id)} className="min-w-0 flex-1 cursor-pointer text-left">
-                    <div className="truncate text-[13px] font-bold text-ink-900">{f.name}</div>
-                    <div className="text-xs text-ink-400">{f.area_hectares ?? "—"} ha</div>
+                    <div className={`truncate text-[13px] font-bold ${f.id === selectedFieldId ? "text-forest-900" : "text-ink-900"}`}>{f.name}</div>
+                    <div className={`text-xs ${f.id === selectedFieldId ? "text-forest-700" : "text-ink-400"}`}>{f.area_hectares ?? "—"} ha</div>
                   </button>
                   <button
                     onClick={() => handleDelete(f)}
@@ -190,7 +196,7 @@ export default function FieldsPage() {
         )}
 
         {(mode === "saving" || (mode === "idle" && isAnalyzing)) && (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-6 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-cream-card p-6 text-center">
             <div className="h-9 w-9 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
             <div className="text-[13px] font-bold text-ink-900">Analyzing via Sentinel-2…</div>
             <div className="text-xs text-ink-400">Fetching cloud-free imagery and computing NDVI/NDMI.</div>
@@ -198,20 +204,20 @@ export default function FieldsPage() {
         )}
 
         {selectedField && mode === "idle" && !isAnalyzing && ndvi?.latest && (
-          <div className="mt-auto rounded-2xl border border-border bg-white p-3.5">
+          <div className="mt-auto rounded-2xl border border-border bg-cream-card p-3.5">
             <div className="mb-2 text-[13px] font-bold text-ink-900">{selectedField.name}</div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div>
                 <div className="text-ink-400">Mean</div>
-                <div className="font-bold text-forest-900">{ndvi.latest.ndvi_mean}</div>
+                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_mean}</div>
               </div>
               <div>
                 <div className="text-ink-400">Min</div>
-                <div className="font-bold text-forest-900">{ndvi.latest.ndvi_min}</div>
+                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_min}</div>
               </div>
               <div>
                 <div className="text-ink-400">Max</div>
-                <div className="font-bold text-forest-900">{ndvi.latest.ndvi_max}</div>
+                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_max}</div>
               </div>
             </div>
           </div>
@@ -226,7 +232,7 @@ export default function FieldsPage() {
               key={l.key}
               onClick={() => setMapLayer(l.key)}
               className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold shadow-card ${
-                mapLayer === l.key ? "bg-forest-900 text-white" : "bg-white text-ink-600"
+                mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
               }`}
             >
               {l.label}

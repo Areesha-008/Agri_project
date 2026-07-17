@@ -5,6 +5,7 @@ secrets/
 !package.json
 !package-lock.json
 !tsconfig.json
+!app/services/scanner/model/class_metadata.json
 
 # Python
 __pycache__/

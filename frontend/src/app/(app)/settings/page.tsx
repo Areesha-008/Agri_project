@@ -33,7 +33,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-3.5 p-5.5">
-      <div className="text-lg font-bold text-ink-900">Settings</div>
+      <h1 className="text-lg font-bold text-ink-900">Settings</h1>
 
       <div id="setGrid" className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
         {/* Profile */}

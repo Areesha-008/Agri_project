@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -37,18 +38,19 @@ export default function SignupPage() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-cream-bg p-6">
-      <div className="flex w-full max-w-[400px] flex-col gap-[18px]">
+      <ThemeToggle className="fixed right-5 top-5" />
+      <div className="flex w-full max-w-[400px] flex-col gap-4.5">
         <Link href="/" className="mb-1.5 flex flex-col items-center gap-2">
           <div className="grid h-[52px] w-[52px] place-items-center rounded-[15px] bg-forest-900 shadow-[0_4px_14px_rgba(27,67,50,.25)]">
             <Logo size={26} />
           </div>
-          <div className="text-xl font-extrabold tracking-tight text-forest-900">Create your account</div>
+          <div className="text-xl font-extrabold tracking-tight text-forest-ink-900">Create your account</div>
           <div className="text-[12.5px] text-ink-500">Your fields, weather and mandi rates in one place</div>
         </Link>
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-white p-[26px] shadow-[0_2px_10px_rgba(27,67,50,.07)]"
+          className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-cream-card p-6.5 shadow-[0_2px_10px_rgba(27,67,50,.07)]"
         >
           <Input
             id="email"
@@ -70,13 +72,17 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          {error && <div className="text-xs font-medium text-alert-red-text">{error}</div>}
+          {error && (
+            <div role="alert" className="text-xs font-medium text-alert-red-text">
+              {error}
+            </div>
+          )}
           <Button type="submit" disabled={submitting} className="mt-1 w-full">
             {submitting ? "Creating account…" : "Create account"}
           </Button>
           <div className="text-center text-[12.5px] text-ink-500">
             Already registered?{" "}
-            <Link href="/login" className="font-bold text-forest-700">
+            <Link href="/login" className="font-bold text-forest-ink-700">
               Sign in
             </Link>
           </div>

@@ -70,16 +70,18 @@ export default function LedgerPage() {
 
   return (
     <div className="flex flex-col gap-3.5 p-5.5">
-      <div className="text-lg font-bold text-ink-900">Digital Ledger</div>
+      <h1 className="text-lg font-bold text-ink-900">Digital Ledger</h1>
 
       <div id="ledgerWrap" className="flex flex-col gap-3.5 lg:flex-row">
         <div className="flex flex-1 flex-col gap-3.5">
           <Card>
             <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2.5">
+              {/* No shared Select component exists in this codebase — matching Input's exact
+                  border/padding/focus classes here instead of a divergent one-off style. */}
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as LedgerCategory)}
-                className="rounded-[10px] border border-input-border bg-cream-card px-3 py-2.5 text-[13px]"
+                className="jk-focus rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] text-ink-900 focus:border-forest-500"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>
@@ -90,7 +92,7 @@ export default function LedgerPage() {
               <select
                 value={fieldId || fields?.[0]?.id || ""}
                 onChange={(e) => setFieldId(e.target.value)}
-                className="rounded-[10px] border border-input-border bg-cream-card px-3 py-2.5 text-[13px]"
+                className="jk-focus rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] text-ink-900 focus:border-forest-500"
               >
                 {fields?.map((f) => (
                   <option key={f.id} value={f.id}>
@@ -98,17 +100,19 @@ export default function LedgerPage() {
                   </option>
                 ))}
               </select>
+              {/* Input wraps its <input> in a label div, so it can't be a flex-1 item
+                  directly here — matching its classes on a raw input instead. */}
               <input
                 placeholder="e.g. 2 bags urea/acre"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="min-w-[160px] flex-1 rounded-[10px] border border-input-border bg-cream-card px-3 py-2.5 text-[13px]"
+                className="jk-focus min-w-[160px] flex-1 rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] text-ink-900 placeholder:text-ink-600 placeholder:opacity-100 focus:border-forest-500"
               />
               <input
                 placeholder="Note (optional)"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="min-w-[160px] flex-1 rounded-[10px] border border-input-border bg-cream-card px-3 py-2.5 text-[13px]"
+                className="jk-focus min-w-[160px] flex-1 rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] text-ink-900 placeholder:text-ink-600 placeholder:opacity-100 focus:border-forest-500"
               />
               <Button type="submit" disabled={createEntry.isPending}>
                 Log action
@@ -169,18 +173,18 @@ export default function LedgerPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[90vh] w-[520px] max-w-full flex-col gap-3.5 overflow-auto rounded-2xl bg-white p-7 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
+            className="flex max-h-[90vh] w-[520px] max-w-full flex-col gap-3.5 overflow-auto rounded-2xl bg-cream-card p-7 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
           >
-            <div className="flex items-center gap-2.5 border-b-2 border-forest-900 pb-3.5">
+            <div className="flex items-center gap-2.5 border-b-2 border-forest-ink-900 pb-3.5">
               <div className="flex-1">
-                <div className="text-[15px] font-extrabold text-forest-900">Production Report</div>
+                <div className="text-[15px] font-extrabold text-forest-ink-900">Production Report</div>
                 <div className="text-[10.5px] text-ink-400">Jadeed Kashtkar</div>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <Stat label="Hectares" value={report?.total_hectares ?? "—"} color="#1B4332" />
-              <Stat label="Avg Health" value={`${report?.avg_health_score ?? "—"}%`} color="#2D6A4F" />
-              <Stat label="Fields" value={report?.field_count ?? "—"} color="#1e2b23" />
+              <Stat label="Hectares" value={report?.total_hectares ?? "—"} color="var(--color-forest-ink-900)" />
+              <Stat label="Avg Health" value={`${report?.avg_health_score ?? "—"}%`} color="var(--color-forest-ink-700)" />
+              <Stat label="Fields" value={report?.field_count ?? "—"} color="var(--color-ink-900)" />
             </div>
             <div>
               <div className="mb-1.5 text-[11px] font-extrabold tracking-[.06em] text-ink-400">FIELD SUMMARY</div>
@@ -189,7 +193,7 @@ export default function LedgerPage() {
                   <span className="flex-1 font-bold">{fs.name}</span>
                   <span className="text-ink-500">{fs.crop ?? "—"}</span>
                   <span className="w-14 text-right">{fs.area_hectares ?? "—"} ha</span>
-                  <span className="w-16 text-right font-bold text-forest-700">
+                  <span className="w-16 text-right font-bold text-forest-ink-700">
                     NDVI {fs.ndvi_mean?.toFixed(2) ?? "—"}
                   </span>
                   <span className="w-11 text-right font-bold">{fs.health_score ?? "—"}%</span>
@@ -203,15 +207,15 @@ export default function LedgerPage() {
               <div className="flex gap-2 text-xs">
                 <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
                   Urea (46-0-0)
-                  <div className="text-[15px] font-extrabold text-forest-900">{report?.urea_bags ?? "—"} bags</div>
+                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.urea_bags ?? "—"} bags</div>
                 </div>
                 <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
                   DAP (18-46-0)
-                  <div className="text-[15px] font-extrabold text-forest-900">{report?.dap_bags ?? "—"} bags</div>
+                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.dap_bags ?? "—"} bags</div>
                 </div>
                 <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
                   SOP (0-0-50)
-                  <div className="text-[15px] font-extrabold text-forest-900">{report?.sop_bags ?? "—"} bags</div>
+                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.sop_bags ?? "—"} bags</div>
                 </div>
               </div>
             </div>

@@ -1,10 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  /* Design tokens — design_handoff/README.md */
+  /* Design tokens — design_handoff/README.md
+     Gray text ramp, WCAG AA verified (4.5:1 min) against every background it's
+     actually used on in this codebase — mint-100 is the tightest (lightest) bg.
+     ink-900: headings + body copy. ink-600: labels/eyebrows (passes AA on its own,
+     kept as-is). ink-500/ink-400: recalibrated below — the previous values
+     (#6b7a6f / #8a927f) measured 3.99–4.11:1 and 2.85–2.94:1, both under 4.5:1,
+     so any small (<18px) text on them failed AA. Dark theme is opt-in via
+     ThemeToggle (data-theme="dark" on <html>), not OS-driven — light is
+     always the default. */
+  color-scheme: light;
+
+  /* Light mode (default) */
   --color-forest-900: #1b4332;
   --color-forest-700: #2d6a4f;
   --color-forest-500: #40916c;
+  /* Brand text ramp — same values as forest-900/700/500 in light mode, but
+     (unlike forest-*, which stays constant as a solid FILL color for buttons/
+     banners/sidebar/badges) these invert to a lighter green in dark mode.
+     Use for standalone brand-colored text sitting directly on a neutral
+     cream-bg/cream-card surface (wordmarks, headline accents, links, stat
+     values) — never on top of a frozen forest-* fill, which already has the
+     right contrast baked in from light mode. */
+  --color-forest-ink-900: #1b4332;
+  --color-forest-ink-700: #2d6a4f;
+  --color-forest-ink-500: #40916c;
   --color-mint-300: #95d5b2;
   --color-mint-100: #eaf3ec;
   --color-mint-border: #cde3d3;
@@ -14,11 +35,13 @@
   --color-cream-inset: #f1eee3;
   --color-border: #e7e3d6;
   --color-input-border: #e2decd;
-  --color-ink-900: #1e2b23;
-  --color-ink-600: #4a5a4f;
-  --color-ink-500: #6b7a6f;
-  --color-ink-400: #8a927f;
-  --color-ink-400-alt: #9aa290;
+  /* Gray text ramp (recalibrated) — contrast below is the worst case across
+     cream-bg/cream-card/mint-100/white, the real backgrounds these sit on */
+  --color-ink-900: #1e2b23;    /* Headings + body text: 13.0:1 min */
+  --color-ink-600: #4a5a4f;    /* Labels, eyebrow text: 6.5:1 min */
+  --color-ink-500: #5d6c61;    /* Secondary text (captions, meta): 4.9:1 min */
+  --color-ink-400: #686f5d;    /* Tertiary text (compact labels, counts): 4.6:1 min */
+  --color-ink-400-alt: #686f5e;
   --color-alert-red: #d95d45;
   --color-alert-red-text: #8c3423;
   --color-alert-red-body: #a06147;
@@ -34,10 +57,64 @@
   --color-down-red: #c1512f;
 }
 
+/* Dark mode theme — opt-in only (ThemeToggle sets data-theme, see lib/theme.ts).
+   Light is the site default regardless of OS preference; this never reads
+   prefers-color-scheme, so it only activates when a user explicitly switches. */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Dark backgrounds: deep forest-tinted neutrals */
+    --color-cream-bg: #0f1410;      /* Dark forest base */
+    --color-cream-card: #131917;    /* Slightly lighter elevation */
+    --color-cream-inset: #0d1310;   /* Sunken surface */
+
+    /* Borders: softer in dark mode */
+    --color-border: #252c27;
+    --color-input-border: #2a3230;
+
+    /* Text: light on dark (reduced weight reads better) */
+    --color-ink-900: #f0f3ee;       /* Body text: 4.8:1 contrast on dark forest */
+    --color-ink-600: #c4cec6;       /* Labels, secondary text */
+    --color-ink-500: #a8b4aa;       /* Tertiary text (deprecated for primary use) */
+    --color-ink-400: #8a9589;       /* Placeholder/disabled states */
+    --color-ink-400-alt: #7a8577;
+
+    /* Forest/mint stay CONSTANT across themes — they're used as solid brand
+       FILLS (buttons, the ledger/CTA banners, badge/chip pills, the app
+       Sidebar) that were tuned against light-mode partners (e.g. white text
+       on forest-900, forest-700 text on mint-100). Inverting them here
+       previously washed every one of those out to pale, low-contrast green.
+       forest-ink-* (below) covers standalone brand text on neutral surfaces. */
+    --color-forest-ink-900: #6cc584;
+    --color-forest-ink-700: #5db375;
+    --color-forest-ink-500: #4fa166;
+
+    /* Semantic colors for dark mode */
+    --color-alert-red: #ff6b5b;     /* Brighter red in dark mode */
+    --color-alert-red-text: #ffb3a8;
+    --color-alert-red-body: #ff8c6e;
+    --color-alert-red-bg: #3a1f18;  /* Very dark red background */
+    --color-alert-red-border: #5a3028;
+
+    --color-alert-amber: #f4c853;   /* Brighter amber */
+    --color-alert-amber-text: #ffe4a8;
+    --color-alert-amber-bg: #3a2f18;
+    --color-alert-amber-border: #5a4a28;
+
+    --color-info-blue: #7ec1ff;     /* Brighter blue */
+    --color-info-blue-bg: #1d3a52;  /* Dark blue background */
+    --color-info-blue-text: #b0d8ff;
+
+    --color-down-red: #ff7a5c;
+}
+
 @theme inline {
   --color-forest-900: var(--color-forest-900);
   --color-forest-700: var(--color-forest-700);
   --color-forest-500: var(--color-forest-500);
+  --color-forest-ink-900: var(--color-forest-ink-900);
+  --color-forest-ink-700: var(--color-forest-ink-700);
+  --color-forest-ink-500: var(--color-forest-ink-500);
   --color-mint-300: var(--color-mint-300);
   --color-mint-100: var(--color-mint-100);
   --color-mint-border: var(--color-mint-border);

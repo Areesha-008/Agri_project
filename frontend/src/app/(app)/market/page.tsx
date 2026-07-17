@@ -26,7 +26,7 @@ export default function MarketPage() {
 
   return (
     <div className="flex flex-col gap-3.5 p-5.5">
-      <div className="text-lg font-bold text-ink-900">Market Prices &amp; Weather</div>
+      <h1 className="text-lg font-bold text-ink-900">Market Prices &amp; Weather</h1>
 
       {pestAlerts.length > 0 && (
         <div className="flex flex-col gap-2 rounded-2xl border border-alert-red-border bg-alert-red-bg p-4">
@@ -49,12 +49,12 @@ export default function MarketPage() {
               key={d.date}
               className="rounded-xl p-2.5 text-center text-xs"
               style={{
-                background: d.rain ? "#FBF3E1" : "#F6F4ED",
-                border: d.rain ? "1px solid #F0E3C2" : "1px solid transparent",
+                background: d.rain ? "var(--color-alert-amber-bg)" : "var(--color-cream-bg)",
+                border: d.rain ? "1px solid var(--color-alert-amber-border)" : "1px solid transparent",
               }}
             >
               <div className="font-semibold text-ink-500">{d.day}</div>
-              <div className="mt-1 text-base font-bold" style={{ color: d.rain ? "#B07D2B" : "#1e2b23" }}>
+              <div className="mt-1 text-base font-bold" style={{ color: d.rain ? "var(--color-alert-amber-text)" : "var(--color-ink-900)" }}>
                 {d.temp_hi}°
               </div>
               <div className="text-[10px] text-ink-400">{d.temp_lo}° low</div>
@@ -82,25 +82,31 @@ export default function MarketPage() {
             ))}
           </div>
         </div>
-        <div id="mktHead" className="grid grid-cols-[1.6fr_1fr_1fr_1fr] gap-2 border-b border-cream-inset pb-2 text-[10.5px] font-bold uppercase text-ink-400">
+        {/* 7-day sparkline is the least essential column (decorative trend, not a number
+            users act on) — collapse it below sm to match the forecast grid's own sm:
+            breakpoint above, instead of squeezing all 4 columns at every width. */}
+        <div id="mktHead" className="grid grid-cols-[1.6fr_1fr_1fr] gap-2 border-b border-cream-inset pb-2 text-[10.5px] font-bold uppercase text-ink-400 sm:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <span>Commodity</span>
           <span className="text-right">Today</span>
           <span className="text-right">Change</span>
-          <span className="text-right">7-day</span>
+          <span className="hidden text-right sm:block">7-day</span>
         </div>
         <div id="mktRows" className="flex flex-col">
           {mandiRates?.map((r) => (
-            <div key={r.commodity} className="grid grid-cols-[1.6fr_1fr_1fr_1fr] items-center gap-2 border-b border-cream-inset py-2.5 text-xs last:border-0">
+            <div
+              key={r.commodity}
+              className="grid grid-cols-[1.6fr_1fr_1fr] items-center gap-2 border-b border-cream-inset py-2.5 text-xs last:border-0 sm:grid-cols-[1.6fr_1fr_1fr_1fr]"
+            >
               <div>
                 <div className="font-semibold text-ink-900">{r.commodity}</div>
                 <div className="text-[10.5px] text-ink-400" lang="ur">{r.urdu_name}</div>
               </div>
               <div className="text-right font-bold">{r.price_pkr_per_40kg.toLocaleString()}</div>
-              <div className="text-right font-bold" style={{ color: r.change_pct >= 0 ? "#2D6A4F" : "#C1512F" }}>
+              <div className="text-right font-bold" style={{ color: r.change_pct >= 0 ? "var(--color-forest-ink-700)" : "var(--color-down-red)" }}>
                 {r.change_pct >= 0 ? "▲" : "▼"}
                 {Math.abs(r.change_pct)}%
               </div>
-              <div className="flex items-end justify-end gap-0.5">
+              <div className="hidden items-end justify-end gap-0.5 sm:flex">
                 {r.history_7d.map((v, i) => (
                   <div key={i} className="w-1.5 rounded-t-sm bg-mint-border-strong" style={{ height: `${Math.max(4, v / 2)}px` }} />
                 ))}

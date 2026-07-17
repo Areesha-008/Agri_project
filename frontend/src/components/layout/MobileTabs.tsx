@@ -26,7 +26,7 @@ export function MobileTabs() {
             key={tab.href}
             href={tab.href}
             className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[9.5px] font-bold"
-            style={{ color: active ? "#1B4332" : "#8a927f" }}
+            style={{ color: active ? "var(--color-forest-ink-900)" : "var(--color-ink-400)" }}
           >
             {tab.icon}
             <span>{tab.label}</span>

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useAlerts, useDismissAlert, useFields } from "@/lib/api/hooks";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAppStore } from "@/lib/store/useAppStore";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { NavIcons } from "./icons";
 
 function FieldSwitcher() {
@@ -33,7 +34,7 @@ function FieldSwitcher() {
         {NavIcons.chevron}
       </button>
       {fieldMenuOpen && fields && fields.length > 0 && (
-        <div className="absolute left-0 top-11 z-[60] w-64 rounded-xl border border-border bg-white p-1.5 shadow-dropdown">
+        <div className="absolute left-0 top-11 z-[60] w-64 rounded-xl border border-border bg-cream-card p-1.5 shadow-dropdown">
           {fields.map((f) => (
             <button
               key={f.id}
@@ -57,6 +58,7 @@ function FieldSwitcher() {
 }
 
 function NotificationsBell() {
+  const { t } = useTranslation();
   const { data: alerts } = useAlerts(false);
   const dismissAlert = useDismissAlert();
   const notifOpen = useAppStore((s) => s.notifOpen);
@@ -67,7 +69,8 @@ function NotificationsBell() {
     <div className="relative">
       <button
         onClick={toggleNotif}
-        className="relative grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-[9px] border border-input-border bg-white text-ink-600 hover:bg-cream-bg"
+        aria-label={t("alertsNotifications")}
+        className="relative grid h-11 w-11 cursor-pointer place-items-center rounded-[9px] border border-input-border bg-cream-card text-ink-600 hover:bg-cream-bg"
       >
         {NavIcons.bell}
         {activeCount > 0 && (
@@ -77,7 +80,7 @@ function NotificationsBell() {
         )}
       </button>
       {notifOpen && (
-        <div className="absolute right-0 top-11 z-[60] flex w-80 flex-col gap-2 rounded-2xl border border-border bg-white p-2.5 shadow-dropdown">
+        <div className="absolute right-0 top-11 z-[60] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-2xl border border-border bg-cream-card p-2.5 shadow-dropdown">
           <div className="px-1 py-0.5 text-xs font-bold text-ink-900">Alerts</div>
           {activeCount === 0 && <div className="px-1 py-2 text-xs text-ink-400">No active alerts.</div>}
           {alerts?.map((alert) => (
@@ -86,7 +89,7 @@ function NotificationsBell() {
               <div className="mt-1 text-[11px] leading-relaxed text-alert-red-body">{alert.message}</div>
               <button
                 onClick={() => dismissAlert.mutate(alert.id)}
-                className="mt-1.5 cursor-pointer text-[11px] font-semibold text-forest-700"
+                className="mt-1.5 cursor-pointer text-[11px] font-semibold text-forest-ink-700"
               >
                 Dismiss
               </button>
@@ -99,7 +102,7 @@ function NotificationsBell() {
 }
 
 export function TopBar() {
-  const { lang, setLang } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
 
   return (
     <div
@@ -124,10 +127,12 @@ export function TopBar() {
       </div>
       <Link
         href="/settings"
-        className="grid h-8.5 w-8.5 place-items-center rounded-[9px] border border-input-border bg-white text-ink-600 hover:bg-cream-bg"
+        aria-label={t("settings")}
+        className="grid h-11 w-11 place-items-center rounded-[9px] border border-input-border bg-cream-card text-ink-600 hover:bg-cream-bg"
       >
         {NavIcons.settings}
       </Link>
+      <ThemeToggle />
       <NotificationsBell />
     </div>
   );

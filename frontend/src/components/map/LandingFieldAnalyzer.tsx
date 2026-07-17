@@ -227,8 +227,8 @@ export function LandingFieldAnalyzer() {
                   <button
                     key={l.key}
                     onClick={() => setLayerChoice(l.key)}
-                    className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-card ${
-                      layer === l.key ? "bg-forest-900 text-white" : "bg-white text-ink-600"
+                    className={`cursor-pointer rounded-lg px-3 py-3.5 text-[11px] font-semibold shadow-card ${
+                      layer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
                     }`}
                   >
                     {l.label}
@@ -237,7 +237,7 @@ export function LandingFieldAnalyzer() {
               <button
                 onClick={() => setExpanded((v) => !v)}
                 aria-label={expanded ? t("landingCollapseMapAria") : t("landingExpandMapAria")}
-                className="jk-focus grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-lg bg-white text-ink-600 shadow-card"
+                className="jk-focus grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-cream-card text-ink-600 shadow-card"
               >
                 {expanded ? (
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -253,7 +253,7 @@ export function LandingFieldAnalyzer() {
             <button
               onClick={() => setLocateSignal((n) => n + 1)}
               aria-label={t("landingLocateAria")}
-              className="jk-focus grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-lg bg-white text-ink-600 shadow-card"
+              className="jk-focus grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-cream-card text-ink-600 shadow-card"
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="7.5" cy="7.5" r="3.5" />
@@ -262,7 +262,7 @@ export function LandingFieldAnalyzer() {
             </button>
           </div>
 
-          <div className="absolute bottom-3 left-3 z-10 w-[252px] rounded-2xl border border-border bg-white/95 p-3.5 shadow-card backdrop-blur-sm">
+          <div className="absolute bottom-3 left-3 z-10 w-[252px] rounded-2xl border border-border bg-cream-card/95 p-3.5 shadow-card backdrop-blur-sm">
             {mode === "idle" && !isAnalyzing && !activeFieldId && (
               <div className="flex flex-col gap-2.5">
                 <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawHint")}</div>
@@ -340,15 +340,15 @@ export function LandingFieldAnalyzer() {
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div>
                     <div className="text-ink-400">{t("landingDrawMean")}</div>
-                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_mean}</div>
+                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_mean}</div>
                   </div>
                   <div>
                     <div className="text-ink-400">{t("landingDrawMin")}</div>
-                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_min}</div>
+                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_min}</div>
                   </div>
                   <div>
                     <div className="text-ink-400">{t("landingDrawMax")}</div>
-                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_max}</div>
+                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_max}</div>
                   </div>
                 </div>
                 <Button variant="secondary" onClick={reset}>

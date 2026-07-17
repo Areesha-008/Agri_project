@@ -62,7 +62,7 @@ export default function ScannerPage() {
   return (
     <div className="flex flex-col gap-3.5 p-5.5">
       <div>
-        <div className="text-lg font-bold text-ink-900">Disease Scanner</div>
+        <h1 className="text-lg font-bold text-ink-900">Disease Scanner</h1>
         <div className="text-xs text-ink-400">
           Photograph a leaf, get a diagnosis and mitigation plan
         </div>
@@ -101,7 +101,7 @@ export default function ScannerPage() {
       )}
 
       {state === "uploading" && (
-        <div className="mx-auto mt-6 flex w-full max-w-[640px] flex-col items-center gap-4 rounded-[20px] border border-border bg-white p-9">
+        <div className="mx-auto mt-6 flex w-full max-w-[640px] flex-col items-center gap-4 rounded-[20px] border border-border bg-cream-card p-9">
           <div className="h-11 w-11 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
           <div className="text-[15px] font-bold">{PHASES[Math.min(3, Math.floor(pct / 26))]}</div>
           <div className="h-2 w-full max-w-[380px] overflow-hidden rounded-full bg-cream-inset">
@@ -115,9 +115,12 @@ export default function ScannerPage() {
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[300px_1fr]">
           <div className="flex flex-col gap-3">
             {previewUrl ? (
+              // ponytail: previewUrl is a local blob: URL (URL.createObjectURL) — next/image's
+              // optimizer can't fetch it, so this would need `unoptimized` for no real gain.
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="Uploaded leaf" className="h-[280px] w-full rounded-2xl border border-border object-cover" />
             ) : (
-              <div className="grid h-[280px] w-full place-items-center rounded-2xl border border-border bg-mint-100 text-xs text-ink-500">
+              <div className="grid h-[280px] w-full place-items-center rounded-2xl border border-border bg-mint-100 text-xs text-forest-700">
                 sample leaf photo
               </div>
             )}
@@ -136,17 +139,17 @@ export default function ScannerPage() {
               <div className="min-w-0 flex-1">
                 <div
                   className="text-base font-extrabold"
-                  style={{ color: scan.disease.toLowerCase() === "healthy" ? "#2D6A4F" : "#8c3423" }}
+                  style={{ color: scan.disease.toLowerCase() === "healthy" ? "var(--color-forest-700)" : "var(--color-alert-red-text)" }}
                 >
                   {scan.disease}
                   {scan.latin_name ? ` — ${scan.latin_name}` : ""}
                 </div>
-                <div className="text-xs" style={{ color: scan.disease.toLowerCase() === "healthy" ? "#40916C" : "#a06147" }}>
+                <div className="text-xs" style={{ color: scan.disease.toLowerCase() === "healthy" ? "var(--color-forest-500)" : "var(--color-alert-red-body)" }}>
                   {scan.demo_mode ? "Demo classifier" : "Genome-referenced classifier"}
                 </div>
               </div>
               <div className="flex-none text-center">
-                <div className="text-[22px] font-extrabold" style={{ color: scan.disease.toLowerCase() === "healthy" ? "#2D6A4F" : "#8c3423" }}>
+                <div className="text-[22px] font-extrabold" style={{ color: scan.disease.toLowerCase() === "healthy" ? "var(--color-forest-700)" : "var(--color-alert-red-text)" }}>
                   {scan.confidence_pct}%
                 </div>
                 <div className="text-[10px] font-semibold text-ink-400">CONFIDENCE</div>
@@ -172,7 +175,7 @@ export default function ScannerPage() {
             <Card className="flex flex-col gap-2.5">
               <div className="text-[13px] font-bold">Recommended mitigation</div>
               {scan.mitigations.map((m, i) => (
-                <div key={i} className="flex gap-2.5 text-xs leading-relaxed text-ink-600">
+                <div key={i} className="flex gap-2.5 text-xs leading-relaxed text-ink-900">
                   <span className="grid h-5 w-5 flex-none place-items-center rounded-md bg-mint-100 text-[11px] font-extrabold text-forest-700">
                     {i + 1}
                   </span>

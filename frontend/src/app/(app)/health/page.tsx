@@ -25,7 +25,7 @@ export default function HealthPage() {
 
   return (
     <div className="flex flex-col gap-3.5 p-5.5">
-      <div className="text-lg font-bold text-ink-900">Crop health</div>
+      <h1 className="text-lg font-bold text-ink-900">Crop health</h1>
 
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
         {/* Yield projection */}
@@ -33,7 +33,7 @@ export default function HealthPage() {
           <HealthGauge score={health?.health_score ?? 0} size={130} label={(health?.status_label ?? "—").toUpperCase()} />
           <div className="flex flex-1 flex-col gap-2.5">
             <div className="text-sm font-bold">Projected yield — {field?.name ?? "—"}</div>
-            <div className="text-2xl font-extrabold leading-none text-forest-900">
+            <div className="text-2xl font-extrabold leading-none text-forest-ink-900">
               {health?.yield_maund_per_acre ?? "—"}{" "}
               <span className="text-[13px] font-semibold text-ink-400">
                 maund/acre · {health?.yield_t_per_ha ?? "—"} t/ha
@@ -62,7 +62,7 @@ export default function HealthPage() {
             <div className="flex min-h-[160px] flex-1 items-end gap-3 overflow-x-auto border-b border-cream-inset px-0.5 pb-0">
               {health.ndvi_trend.map((point) => (
                 <div key={point.date} className="flex h-full w-11 flex-none flex-col items-center justify-end gap-1.5">
-                  <div className="text-[10px] font-bold text-forest-700">{point.ndvi_mean.toFixed(2)}</div>
+                  <div className="text-[10px] font-bold text-forest-ink-700">{point.ndvi_mean.toFixed(2)}</div>
                   <div
                     className="w-6 rounded-t-md bg-gradient-to-b from-forest-500 to-mint-300"
                     style={{ height: `${Math.max(6, (point.ndvi_mean / maxTrend) * 120)}px` }}
@@ -101,7 +101,7 @@ export default function HealthPage() {
                 </div>
                 <div
                   className="text-[11px] font-semibold"
-                  style={{ color: STATUS_COLOR[h?.status_label ?? ""] ?? "#6b7a6f" }}
+                  style={{ color: STATUS_COLOR[h?.status_label ?? ""] ?? "var(--color-ink-500)" }}
                 >
                   {h?.status_label ?? "No data"}
                 </div>
@@ -113,7 +113,7 @@ export default function HealthPage() {
 
       <Card className="flex flex-col gap-2.5">
         <div className="text-sm font-bold">Lab recommendations — {field?.name ?? "—"}</div>
-        <div className="grid grid-cols-1 gap-3 text-xs leading-relaxed text-ink-600 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 text-xs leading-relaxed text-ink-900 md:grid-cols-3">
           <div className="rounded-xl bg-cream-inset p-3">
             <b className="text-ink-900">Nitrogen top-dress</b>
             <br />

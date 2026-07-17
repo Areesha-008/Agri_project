@@ -4,8 +4,8 @@ type Variant = "primary" | "secondary" | "ghost";
 
 const variantClasses: Record<Variant, string> = {
   primary: "bg-forest-900 text-white hover:bg-forest-700",
-  secondary: "bg-white border border-input-border text-forest-900 hover:bg-cream-inset",
-  ghost: "bg-transparent text-forest-900 hover:bg-cream-inset",
+  secondary: "bg-cream-card border border-input-border text-forest-ink-900 hover:bg-cream-inset",
+  ghost: "bg-transparent text-forest-ink-900 hover:bg-cream-inset",
 };
 
 export function Button({

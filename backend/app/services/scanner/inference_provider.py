@@ -1,20 +1,3 @@
-"""
-InferenceProvider — see GAPS.md Gap 5.
-
-No trained disease-detection model exists in this repo. Options presented
-to the user were: (a) wait for the lab's model, (b) a hosted vision API as
-a stopgap, (c) a clearly-fake demo classifier. Chose (c) so the rest of the
-scanner (upload, persistence, ledger logging) can be built and demoed now;
-swapping in a real model later means adding a new class here and flipping
-settings.INFERENCE_PROVIDER, not touching routes_scans.py or scan_service.py.
-
-DemoInferenceProvider is deterministic per image hash (same photo always
-classifies the same way) and returns entries drawn verbatim from the
-design's sample data (design_handoff/designs/Jadeed Kashtkar App.dc.html,
-~line 477, 492-494, 958-961 for the rust case; the ledger sample entry
-"Leaf scan — healthy · 96% confidence" for the healthy case). Every
-response is marked `demo_mode=True` so the frontend can badge it clearly.
-"""
 
 import hashlib
 from abc import ABC, abstractmethod

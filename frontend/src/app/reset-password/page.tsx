@@ -8,6 +8,7 @@ import { authApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -46,7 +47,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-white p-[26px] shadow-[0_2px_10px_rgba(27,67,50,.07)]">
+    <div className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-cream-card p-6.5 shadow-[0_2px_10px_rgba(27,67,50,.07)]">
       <div className="text-base font-bold">Choose a new password</div>
 
       {!token && (
@@ -60,7 +61,7 @@ function ResetPasswordForm() {
       )}
 
       {token && done && (
-        <div className="rounded-xl bg-mint-100 p-3 text-[12.5px] text-forest-700">
+        <div role="status" className="rounded-xl bg-mint-100 p-3 text-[12.5px] text-forest-700">
           Password updated — redirecting you to sign in…
         </div>
       )}
@@ -87,7 +88,11 @@ function ResetPasswordForm() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
-          {error && <div className="text-xs font-medium text-alert-red-text">{error}</div>}
+          {error && (
+            <div role="alert" className="text-xs font-medium text-alert-red-text">
+              {error}
+            </div>
+          )}
           <Button type="submit" disabled={submitting} className="mt-1 w-full">
             {submitting ? "Updating…" : "Update password"}
           </Button>
@@ -100,12 +105,13 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-cream-bg p-6">
-      <div className="flex w-full max-w-[400px] flex-col gap-[18px]">
+      <ThemeToggle className="fixed right-5 top-5" />
+      <div className="flex w-full max-w-[400px] flex-col gap-4.5">
         <Link href="/" className="mb-1.5 flex flex-col items-center gap-2">
           <div className="grid h-[52px] w-[52px] place-items-center rounded-[15px] bg-forest-900 shadow-[0_4px_14px_rgba(27,67,50,.25)]">
             <Logo size={26} />
           </div>
-          <div className="text-xl font-extrabold tracking-tight text-forest-900">Jadeed Kashtkar</div>
+          <div className="text-xl font-extrabold tracking-tight text-forest-ink-900">Jadeed Kashtkar</div>
         </Link>
 
         <Suspense fallback={<div className="text-center text-sm text-ink-400">Loading…</div>}>

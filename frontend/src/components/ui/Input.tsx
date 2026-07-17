@@ -16,7 +16,7 @@ export function Input({
       )}
       <input
         id={id}
-        className={`rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] outline-none focus:border-forest-500 ${className}`}
+        className={`jk-focus rounded-[10px] border border-input-border bg-cream-card px-3.5 py-2.5 text-[13.5px] text-ink-900 placeholder:text-ink-600 placeholder:opacity-100 focus:border-forest-500 ${className}`}
         {...props}
       />
     </div>

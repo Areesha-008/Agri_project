@@ -7,6 +7,7 @@ import { authApi } from "@/lib/api/resources";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -32,15 +33,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-cream-bg p-6">
-      <div className="flex w-full max-w-[400px] flex-col gap-[18px]">
+      <ThemeToggle className="fixed right-5 top-5" />
+      <div className="flex w-full max-w-[400px] flex-col gap-4.5">
         <Link href="/" className="mb-1.5 flex flex-col items-center gap-2">
           <div className="grid h-[52px] w-[52px] place-items-center rounded-[15px] bg-forest-900 shadow-[0_4px_14px_rgba(27,67,50,.25)]">
             <Logo size={26} />
           </div>
-          <div className="text-xl font-extrabold tracking-tight text-forest-900">Jadeed Kashtkar</div>
+          <div className="text-xl font-extrabold tracking-tight text-forest-ink-900">Jadeed Kashtkar</div>
         </Link>
 
-        <div className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-white p-[26px] shadow-[0_2px_10px_rgba(27,67,50,.07)]">
+        <div className="flex flex-col gap-3.5 rounded-card-lg border border-border bg-cream-card p-6.5 shadow-[0_2px_10px_rgba(27,67,50,.07)]">
           <div>
             <div className="text-base font-bold">Reset your password</div>
             <div className="mt-1 text-[12.5px] text-ink-500">
@@ -61,7 +63,7 @@ export default function ForgotPasswordPage() {
                   No email server configured — open your reset link
                 </Link>
               )}
-              <Link href="/login" className="text-center text-[12.5px] font-bold text-forest-700">
+              <Link href="/login" className="text-center text-[12.5px] font-bold text-forest-ink-700">
                 Back to sign in
               </Link>
             </div>
@@ -81,7 +83,7 @@ export default function ForgotPasswordPage() {
                 {submitting ? "Sending…" : "Send reset link"}
               </Button>
               <div className="text-center text-[12.5px] text-ink-500">
-                <Link href="/login" className="font-bold text-forest-700">
+                <Link href="/login" className="font-bold text-forest-ink-700">
                   Back to sign in
                 </Link>
               </div>

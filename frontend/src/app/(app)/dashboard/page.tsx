@@ -64,7 +64,7 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-full flex-col gap-3.5 p-5.5">
       <div className="flex flex-wrap items-baseline gap-2.5">
-        <div className="text-lg font-bold text-ink-900">Assalam-o-Alaikum</div>
+        <h1 className="text-lg font-bold text-ink-900">Assalam-o-Alaikum</h1>
         <div className="text-xs text-ink-400">
           {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         </div>
@@ -84,19 +84,20 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/market"
-            className="flex-none rounded-lg border border-alert-red-border bg-white px-3 py-1.5 text-xs font-semibold text-alert-red-text hover:bg-[#FCE5DC]"
+            className="flex-none rounded-lg border border-alert-red-border bg-cream-card px-3 py-1.5 text-xs font-semibold text-alert-red-text hover:bg-alert-red-border"
           >
             View advisory
           </Link>
         </div>
       )}
 
-      <div className="grid flex-1 grid-cols-1 gap-3.5 lg:grid-cols-[1.5fr_1fr_1fr]">
-        {/* Live field map card */}
-        <Card className="flex min-h-0 flex-col gap-2.5">
+      <div className="grid flex-1 grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
+        {/* Live field map card — spans both tablet columns so it isn't squeezed to
+            half-width; resets to its own column once the 3-pane desktop grid kicks in. */}
+        <Card className="flex min-h-0 flex-col gap-2.5 md:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <div className="text-[13px] font-bold text-ink-900">Field NDVI — {field?.name ?? "—"}</div>
-            <Link href="/fields" className="text-[11px] font-semibold text-forest-700">
+            <Link href="/fields" className="text-[11px] font-semibold text-forest-ink-700">
               Open map →
             </Link>
           </div>
@@ -125,7 +126,7 @@ export default function DashboardPage() {
                     key={l.key}
                     onClick={() => setMapLayer(l.key)}
                     className={`pointer-events-auto rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-card ${
-                      mapLayer === l.key ? "bg-forest-900 text-white" : "bg-white text-ink-600"
+                      mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
                     }`}
                   >
                     {l.label}
@@ -140,17 +141,18 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="flex gap-2">
+            {/* Same MEAN/MIN/MAX vocabulary as fields/page.tsx and LandingFieldAnalyzer.tsx —
+                forest-ink-900 (not the old hardcoded per-stat hex) so it stays readable once
+                cream-inset inverts to dark, and matches how every other NDVI stat box looks. */}
             {[
-              ["MEAN", latest?.ndvi_mean, "#1B4332"],
-              ["MIN", latest?.ndvi_min, "#8B4513"],
-              ["MAX", latest?.ndvi_max, "#228B22"],
-              ["AREA", field?.area_hectares ? `${field.area_hectares} ha` : "—", "#1e2b23"],
-            ].map(([label, value, color]) => (
+              ["MEAN", latest?.ndvi_mean, "text-forest-ink-900"],
+              ["MIN", latest?.ndvi_min, "text-forest-ink-900"],
+              ["MAX", latest?.ndvi_max, "text-forest-ink-900"],
+              ["AREA", field?.area_hectares ? `${field.area_hectares} ha` : "—", "text-ink-900"],
+            ].map(([label, value, colorClass]) => (
               <div key={label as string} className="flex-1 rounded-lg bg-cream-inset px-2.5 py-2">
                 <div className="text-[10px] font-semibold text-ink-400">{label}</div>
-                <div className="text-base font-bold" style={{ color: color as string }}>
-                  {value ?? "—"}
-                </div>
+                <div className={`text-base font-bold ${colorClass as string}`}>{value ?? "—"}</div>
               </div>
             ))}
           </div>
@@ -188,10 +190,10 @@ export default function DashboardPage() {
                   <div
                     key={d.date}
                     className="flex-1 rounded-lg px-0.5 py-1.5"
-                    style={{ background: d.rain ? "#FBF3E1" : "#F6F4ED" }}
+                    style={{ background: d.rain ? "var(--color-alert-amber-bg)" : "var(--color-cream-bg)" }}
                   >
                     {d.day}
-                    <div className="text-[11px] font-bold" style={{ color: d.rain ? "#B07D2B" : "#1e2b23" }}>
+                    <div className="text-[11px] font-bold" style={{ color: d.rain ? "var(--color-alert-amber-text)" : "var(--color-ink-900)" }}>
                       {d.temp_hi}°
                     </div>
                   </div>
@@ -216,7 +218,7 @@ export default function DashboardPage() {
                     <span className="font-bold">{r.price_pkr_per_40kg.toLocaleString()}</span>
                     <span
                       className="w-11 text-right text-[11px] font-bold"
-                      style={{ color: r.change_pct >= 0 ? "#2D6A4F" : "#C1512F" }}
+                      style={{ color: r.change_pct >= 0 ? "var(--color-forest-ink-700)" : "var(--color-down-red)" }}
                     >
                       {r.change_pct >= 0 ? "▲" : "▼"}
                       {Math.abs(r.change_pct)}%
@@ -234,7 +236,7 @@ export default function DashboardPage() {
                   <div key={entry.id} className="flex items-start gap-2 text-xs">
                     <span
                       className="mt-1 h-2 w-2 flex-none rounded-sm"
-                      style={{ background: CATEGORY_DOT[entry.category] ?? "#8a927f" }}
+                      style={{ background: CATEGORY_DOT[entry.category] ?? "var(--color-ink-400)" }}
                     />
                     <div className="min-w-0">
                       <div className="truncate font-semibold text-ink-900">{entry.title}</div>

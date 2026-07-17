@@ -15,6 +15,8 @@ export const dictionary = {
     ledger: "Digital Ledger",
     settings: "Settings",
     signout: "Sign out",
+    themeToggleToDark: "Switch to dark mode",
+    themeToggleToLight: "Switch to light mode",
 
     // Auth
     signIn: "Sign in",
@@ -118,7 +120,6 @@ export const dictionary = {
     landingStat1: "pixel resolution",
     landingStat2: "satellite revisit",
     landingStat3: "to analyze a field",
-    landingFeaturesEyebrow: "EVERYTHING WE OFFER",
     landingFeaturesTitle: "Where the field meets the genome",
     landingFeaturesSubcopy:
       "Everyday tools for growers, research-grade tools for breeders — built on one shared satellite and genomic data pipeline.",
@@ -126,7 +127,6 @@ export const dictionary = {
     landingLedgerBannerDesc:
       "Log every input on a timeline, then compile it into a printable production report for buyers, banks, or subsidy programs.",
     landingLedgerBannerCta: "Open the ledger",
-    landingHowEyebrow: "HOW IT WORKS",
     landingHowTitle: "From map to mandi in three steps",
     landingMissionEyebrow: "OUR MISSION",
     landingMissionTitle: "Bridging genome engineering and the farmer's field",
@@ -213,6 +213,8 @@ export const dictionary = {
     ledger: "ڈیجیٹل کھاتہ",
     settings: "ترتیبات",
     signout: "سائن آؤٹ",
+    themeToggleToDark: "ڈارک موڈ پر جائیں",
+    themeToggleToLight: "لائٹ موڈ پر جائیں",
 
     signIn: "سائن ان",
     signInToFarm: "اپنے فارم میں سائن ان کریں",
@@ -308,7 +310,6 @@ export const dictionary = {
     landingStat1: "پکسل ریزولیوشن",
     landingStat2: "سیٹلائٹ دوبارہ وزٹ",
     landingStat3: "کھیت کا تجزیہ کرنے کی قیمت",
-    landingFeaturesEyebrow: "ہم جو کچھ پیش کرتے ہیں",
     landingFeaturesTitle: "جہاں کھیت جینوم سے ملتا ہے",
     landingFeaturesSubcopy:
       "کاشتکاروں کے لیے روزمرہ کے آلات، افزائش نسل کے ماہرین کے لیے تحقیقی سطح کے آلات — ایک ہی سیٹلائٹ اور جینیاتی ڈیٹا پائپ لائن پر مبنی۔",
@@ -316,7 +317,6 @@ export const dictionary = {
     landingLedgerBannerDesc:
       "ہر ان پٹ کو ٹائم لائن پر درج کریں، پھر اسے خریداروں، بینکوں یا سبسڈی پروگراموں کے لیے پرنٹ کے قابل رپورٹ میں مرتب کریں۔",
     landingLedgerBannerCta: "کھاتہ کھولیں",
-    landingHowEyebrow: "یہ کیسے کام کرتا ہے",
     landingHowTitle: "نقشے سے منڈی تک، تین مراحل میں",
     landingMissionEyebrow: "ہمارا مشن",
     landingMissionTitle: "جینوم انجینئرنگ اور کسان کے کھیت کے درمیان پل",
