@@ -118,6 +118,17 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
             _fail_job(db, job, str(e))
             return
 
+        # The field (and this job's own row, via cascade) may have been
+        # deleted while compute_ndvi was running the multi-minute CDSE
+        # fetch — e.g. a user clicking "try again" after the client-side
+        # timeout, before this job actually finished. That's an expected
+        # outcome of deletion and analysis being unsynchronized, not a bug:
+        # re-check existence right before writing results instead of
+        # letting the insert below crash on a foreign-key violation.
+        if db.query(Field).filter(Field.id == field.id).first() is None:
+            logger.info(f"NDVI job {job_id}: field {field.id} was deleted mid-analysis; discarding result")
+            return
+
         history = NdviHistory(
             field_id=field.id,
             ndvi_mean=result.stats.mean,
