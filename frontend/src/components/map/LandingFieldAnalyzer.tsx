@@ -55,6 +55,8 @@ export function LandingFieldAnalyzer() {
   const [timedOut, setTimedOut] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [locateSignal, setLocateSignal] = useState(0);
   // True only when THIS component minted the guest session — the demo field
   // is then ours to clean up on reset. Never delete under a pre-existing
   // (real or earlier-guest) session.
@@ -88,16 +90,37 @@ export function LandingFieldAnalyzer() {
     return () => clearTimeout(id);
   }, [activeJobId]);
 
+  useEffect(() => {
+    if (!expanded) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpanded(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [expanded]);
+
   function startDrawing() {
     setMode("drawing");
     setPendingGeometry(null);
     setSaveFailed(false);
+    // Drawing gets the full-screen overlay too — more canvas to draw on, and it
+    // reuses the same smooth expand as the dedicated expand button.
+    setExpanded(true);
   }
 
   function reset() {
     // Demo fields shouldn't pile up in the shared guest account — but only
-    // remove what we created under a session we minted ourselves.
-    if (mintedGuestSession.current && activeFieldId) {
+    // remove what we created under a session we minted ourselves, and only
+    // once its analysis job has actually reached a terminal state. Real CDSE
+    // fetches have been observed taking well over our own JOB_TIMEOUT_MS
+    // "taking longer than usual" threshold — deleting the field while that
+    // job is still running (e.g. a "Try again" click right after the
+    // timeout message appears) causes the background job to crash trying to
+    // write results for a field that's already gone. Leaving it in place
+    // lets the job finish normally; it's still cleaned up once it's done.
+    const jobIsTerminal =
+      !activeJobId || jobStatus.data?.status === "done" || jobStatus.data?.status === "failed";
+    if (mintedGuestSession.current && activeFieldId && jobIsTerminal) {
       deleteField.mutate(activeFieldId);
     }
     setMode("idle");
@@ -112,6 +135,7 @@ export function LandingFieldAnalyzer() {
     setActiveFieldId(null);
     setLayerChoice(null);
     setClearSignal((n) => n + 1);
+    setExpanded(false);
   }
 
   function handleDrawComplete(geometry: PolygonGeometry, areaHectares: number) {
@@ -160,135 +184,186 @@ export function LandingFieldAnalyzer() {
   const mapGeometries: Record<string, PolygonGeometry> = field ? { [field.id]: field.geometry } : {};
 
   return (
-    <div className="relative h-[400px] overflow-hidden rounded-card-lg border border-border bg-[#1a2417] shadow-card">
-      <FieldsMap
-        fields={mapFields}
-        fieldGeometries={mapGeometries}
-        selectedFieldId={field?.id ?? null}
-        onSelectField={() => {}}
-        layer={layer}
-        overlay={overlay}
-        drawing={mode === "drawing"}
-        onDrawComplete={handleDrawComplete}
-        clearSignal={clearSignal}
-      />
+    // This h-[400px] wrapper never leaves the layout — when the map jumps to
+    // the fixed overlay, it holds the hero column's space open so the page
+    // doesn't visibly reflow behind the translucent backdrop.
+    <div className="relative h-[400px]">
+      <div
+        className={
+          expanded
+            ? "jk-backdrop-in fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-6"
+            : "contents"
+        }
+        onClick={expanded ? () => setExpanded(false) : undefined}
+      >
+        <div
+          className={
+            expanded
+              ? "jk-overlay-in relative h-[85vh] w-[90vw] max-w-[1400px] overflow-hidden rounded-card-lg border border-border bg-[#1a2417] shadow-[0_24px_60px_rgba(0,0,0,.3)]"
+              : "relative h-full w-full overflow-hidden rounded-card-lg border border-border bg-[#1a2417] shadow-card"
+          }
+          onClick={expanded ? (e) => e.stopPropagation() : undefined}
+        >
+          <FieldsMap
+            fields={mapFields}
+            fieldGeometries={mapGeometries}
+            selectedFieldId={field?.id ?? null}
+            onSelectField={() => {}}
+            layer={layer}
+            overlay={overlay}
+            drawing={mode === "drawing"}
+            onDrawComplete={handleDrawComplete}
+            clearSignal={clearSignal}
+            showGeocoder={mode === "idle" || mode === "drawing"}
+            geocoderPlaceholder={t("landingSearchPlaceholder")}
+            autoLocate
+            locateSignal={locateSignal}
+          />
 
-      {showResults && (
-        <div className="absolute right-3 top-3 z-10 flex gap-1.5">
-          {LAYERS.map((l) => (
+          <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
+            <div className="flex gap-1.5">
+              {showResults &&
+                LAYERS.map((l) => (
+                  <button
+                    key={l.key}
+                    onClick={() => setLayerChoice(l.key)}
+                    className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-card ${
+                      layer === l.key ? "bg-forest-900 text-white" : "bg-white text-ink-600"
+                    }`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                aria-label={expanded ? t("landingCollapseMapAria") : t("landingExpandMapAria")}
+                className="jk-focus grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-lg bg-white text-ink-600 shadow-card"
+              >
+                {expanded ? (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5.5 2v3.5H2M9.5 2v3.5H13M13 9.5H9.5V13M2 9.5h3.5V13" />
+                  </svg>
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 5.5V2h3.5M9.5 2H13v3.5M13 9.5V13H9.5M5.5 13H2V9.5" />
+                  </svg>
+                )}
+              </button>
+            </div>
             <button
-              key={l.key}
-              onClick={() => setLayerChoice(l.key)}
-              className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-card ${
-                layer === l.key ? "bg-forest-900 text-white" : "bg-white text-ink-600"
-              }`}
+              onClick={() => setLocateSignal((n) => n + 1)}
+              aria-label={t("landingLocateAria")}
+              className="jk-focus grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-lg bg-white text-ink-600 shadow-card"
             >
-              {l.label}
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="7.5" cy="7.5" r="3.5" />
+                <path d="M7.5 1v2.2M7.5 11.8V14M1 7.5h2.2M11.8 7.5H14" />
+              </svg>
             </button>
-          ))}
+          </div>
+
+          <div className="absolute bottom-3 left-3 z-10 w-[252px] rounded-2xl border border-border bg-white/95 p-3.5 shadow-card backdrop-blur-sm">
+            {mode === "idle" && !isAnalyzing && !activeFieldId && (
+              <div className="flex flex-col gap-2.5">
+                <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawHint")}</div>
+                <Button onClick={startDrawing}>{t("landingDrawCta")}</Button>
+              </div>
+            )}
+
+            {mode === "drawing" && (
+              <div className="flex flex-col gap-2.5">
+                <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawInstruction")}</div>
+                <Button variant="secondary" onClick={reset}>
+                  {t("cancel")}
+                </Button>
+              </div>
+            )}
+
+            {mode === "naming" && (
+              <div className="flex flex-col gap-2.5">
+                <div className="rounded-xl bg-mint-100 px-3 py-2 text-xs text-forest-700">
+                  {t("landingDrawAreaLabel")}: <b>{pendingArea} ha</b>
+                </div>
+                <Input label={t("landingDrawNameLabel")} value={name} onChange={(e) => setName(e.target.value)} />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t("landingDrawDistrictPlaceholder")}
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    className="w-full"
+                  />
+                  <Input
+                    placeholder={t("landingDrawCropPlaceholder")}
+                    value={crop}
+                    onChange={(e) => setCrop(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                {saveFailed && <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>}
+                <Button onClick={handleAnalyze} disabled={!name}>
+                  {saveFailed ? t("landingDrawRetry") : t("landingDrawAnalyze")}
+                </Button>
+                <Button variant="secondary" onClick={reset}>
+                  {t("cancel")}
+                </Button>
+              </div>
+            )}
+
+            {isAnalyzing && !timedOut && (
+              <div className="flex flex-col items-center gap-2.5 py-2 text-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
+                <div className="text-[13px] font-bold text-ink-900">{t("landingDrawAnalyzing")}</div>
+                <div className="text-xs text-ink-400">{t("landingDrawAnalyzingHint")}</div>
+              </div>
+            )}
+
+            {timedOut && !showResults && !jobFailed && (
+              <div className="flex flex-col gap-2.5">
+                <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawTimeout")}</div>
+                <Button variant="secondary" onClick={reset}>
+                  {t("landingDrawRetry")}
+                </Button>
+              </div>
+            )}
+
+            {jobFailed && (
+              <div className="flex flex-col gap-2.5">
+                <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>
+                <Button variant="secondary" onClick={reset}>
+                  {t("landingDrawRetry")}
+                </Button>
+              </div>
+            )}
+
+            {showResults && (
+              <div className="flex flex-col gap-2.5">
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div>
+                    <div className="text-ink-400">{t("landingDrawMean")}</div>
+                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_mean}</div>
+                  </div>
+                  <div>
+                    <div className="text-ink-400">{t("landingDrawMin")}</div>
+                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_min}</div>
+                  </div>
+                  <div>
+                    <div className="text-ink-400">{t("landingDrawMax")}</div>
+                    <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_max}</div>
+                  </div>
+                </div>
+                <Button variant="secondary" onClick={reset}>
+                  {t("landingDrawAgain")}
+                </Button>
+                <Link
+                  href="/signup"
+                  className="jk-focus text-center text-xs font-bold text-forest-700 underline-offset-2 hover:underline"
+                >
+                  {t("landingDrawSignupCta")}
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-
-      <div className="absolute bottom-3 left-3 z-10 w-[252px] rounded-2xl border border-border bg-white/95 p-3.5 shadow-card backdrop-blur-sm">
-        {mode === "idle" && !isAnalyzing && !activeFieldId && (
-          <div className="flex flex-col gap-2.5">
-            <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawHint")}</div>
-            <Button onClick={startDrawing}>{t("landingDrawCta")}</Button>
-          </div>
-        )}
-
-        {mode === "drawing" && (
-          <div className="flex flex-col gap-2.5">
-            <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawInstruction")}</div>
-            <Button variant="secondary" onClick={reset}>
-              {t("cancel")}
-            </Button>
-          </div>
-        )}
-
-        {mode === "naming" && (
-          <div className="flex flex-col gap-2.5">
-            <div className="rounded-xl bg-mint-100 px-3 py-2 text-xs text-forest-700">
-              {t("landingDrawAreaLabel")}: <b>{pendingArea} ha</b>
-            </div>
-            <Input label={t("landingDrawNameLabel")} value={name} onChange={(e) => setName(e.target.value)} />
-            <div className="flex gap-2">
-              <Input
-                placeholder={t("landingDrawDistrictPlaceholder")}
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="w-full"
-              />
-              <Input
-                placeholder={t("landingDrawCropPlaceholder")}
-                value={crop}
-                onChange={(e) => setCrop(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            {saveFailed && <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>}
-            <Button onClick={handleAnalyze} disabled={!name}>
-              {saveFailed ? t("landingDrawRetry") : t("landingDrawAnalyze")}
-            </Button>
-            <Button variant="secondary" onClick={reset}>
-              {t("cancel")}
-            </Button>
-          </div>
-        )}
-
-        {isAnalyzing && !timedOut && (
-          <div className="flex flex-col items-center gap-2.5 py-2 text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
-            <div className="text-[13px] font-bold text-ink-900">{t("landingDrawAnalyzing")}</div>
-            <div className="text-xs text-ink-400">{t("landingDrawAnalyzingHint")}</div>
-          </div>
-        )}
-
-        {timedOut && !showResults && !jobFailed && (
-          <div className="flex flex-col gap-2.5">
-            <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawTimeout")}</div>
-            <Button variant="secondary" onClick={reset}>
-              {t("landingDrawRetry")}
-            </Button>
-          </div>
-        )}
-
-        {jobFailed && (
-          <div className="flex flex-col gap-2.5">
-            <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>
-            <Button variant="secondary" onClick={reset}>
-              {t("landingDrawRetry")}
-            </Button>
-          </div>
-        )}
-
-        {showResults && (
-          <div className="flex flex-col gap-2.5">
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <div className="text-ink-400">{t("landingDrawMean")}</div>
-                <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_mean}</div>
-              </div>
-              <div>
-                <div className="text-ink-400">{t("landingDrawMin")}</div>
-                <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_min}</div>
-              </div>
-              <div>
-                <div className="text-ink-400">{t("landingDrawMax")}</div>
-                <div className="font-bold text-forest-900">{ndvi!.latest!.ndvi_max}</div>
-              </div>
-            </div>
-            <Button variant="secondary" onClick={reset}>
-              {t("landingDrawAgain")}
-            </Button>
-            <Link
-              href="/signup"
-              className="jk-focus text-center text-xs font-bold text-forest-700 underline-offset-2 hover:underline"
-            >
-              {t("landingDrawSignupCta")}
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );

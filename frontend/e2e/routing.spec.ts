@@ -34,7 +34,12 @@ test("landing hero field analyzer walks between idle and drawing states", async 
 test("language toggle switches landing copy to Urdu and back", async ({ page }) => {
   await page.goto("/");
   await page.getByText("اردو", { exact: true }).click();
-  await expect(page.locator('div[dir="rtl"]')).toBeVisible();
+  // .first(): the page-root div is always the first dir-tagged element in
+  // document order. Compact feature cards also re-assert `dir` internally
+  // (so their Urdu text reads correctly even though their scroll row is
+  // forced dir="ltr" for cross-browser-consistent scroll math) — this test
+  // cares about the page-level direction, not those nested overrides.
+  await expect(page.locator('div[dir="rtl"]').first()).toBeVisible();
   await page.getByText("EN", { exact: true }).click();
-  await expect(page.locator('div[dir="ltr"]')).toBeVisible();
+  await expect(page.locator('div[dir="ltr"]').first()).toBeVisible();
 });

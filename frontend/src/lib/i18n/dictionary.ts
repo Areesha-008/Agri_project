@@ -108,21 +108,20 @@ export const dictionary = {
     landingNavFeatures: "Features",
     landingNavHow: "How it works",
     landingNavMission: "Mission",
-    landingBadge: "Built by a Biotechnology & Genome Engineering lab",
     landingHeadline1: "Satellite intelligence for",
     landingHeadline2: "every acre",
     landingHeadline3: "you farm.",
     landingSubcopy:
       "Draw your field on a map and Jadeed Kashtkar watches it from space: vegetation health, water stress, disease risk, weather and mandi rates, all in one place.",
-    landingCtaPrimary: "Analyze your first field free",
+    landingCtaPrimary: "Create your free account",
     landingCtaSecondary: "See all features ↓",
     landingStat1: "pixel resolution",
     landingStat2: "satellite revisit",
     landingStat3: "to analyze a field",
     landingFeaturesEyebrow: "EVERYTHING WE OFFER",
-    landingFeaturesTitle: "One platform, from soil to sale",
+    landingFeaturesTitle: "Where the field meets the genome",
     landingFeaturesSubcopy:
-      "Seven tools that work together — spend less on water and fertilizer, catch disease early, sell at the right price.",
+      "Everyday tools for growers, research-grade tools for breeders — built on one shared satellite and genomic data pipeline.",
     landingLedgerBannerTitle: "Digital farm ledger & PDF reports",
     landingLedgerBannerDesc:
       "Log every input on a timeline, then compile it into a printable production report for buyers, banks, or subsidy programs.",
@@ -143,6 +142,10 @@ export const dictionary = {
     landingFooterYear: "© 2026 Jadeed Kashtkar Biotech",
 
     // Landing hero field analyzer
+    landingSearchPlaceholder: "Search a location…",
+    landingExpandMapAria: "Expand map",
+    landingCollapseMapAria: "Collapse map",
+    landingLocateAria: "Find my location",
     landingDrawCta: "Draw your field",
     landingDrawHint: "Trace your boundary on the live satellite map — get a real Sentinel-2 analysis, free.",
     landingDrawInstruction: "Click on the map to place points (≥3). Double-click to finish the shape.",
@@ -174,21 +177,32 @@ export const dictionary = {
     landingStep3Body:
       "Irrigate the stressed patch, treat the rust early, sell on the up-day and keep a ledger record of everything you did.",
 
-    // Landing feature bento cards
-    landingNdviCardBadgeNdvi: "vegetation density",
-    landingNdviCardBadgeNdmi: "water stress",
-    landingNdviCardTitle: "NDVI & NDMI overlays",
-    landingNdviCardDesc: "Irrigate only where the crop is thirsty.",
-    landingCardHealthBadge: "HEALTHY",
+    // Landing feature cards
     landingCardHealthTitle: "Crop health & yield",
-    landingCardHealthProjected: "Projected",
-    landingCardHealthYield: "57 maund/acre",
+    landingCardHealthCompactDesc: "NDVI/NDMI vegetation & moisture maps · 74% healthy",
     landingCardScannerTitle: "Leaf disease scanner",
     landingCardScannerDesc: "Photo → genome-backed diagnosis",
-    landingCardScannerDisease: "Leaf rust",
     landingCardWeatherTitle: "Weather & pest warnings",
-    landingCardWeatherDesc: "7-day agromet forecast + outbreak risk, before symptoms appear.",
+    landingCardWeatherDesc: "7-day agromet forecast + outbreak risk.",
     landingCardMandiTitle: "Real-time mandi prices",
+    landingCardMandiDesc: "Wheat, paddy, cotton",
+    landingCardDroneSurveyTitle: "Drone surveying",
+    landingCardDroneSurveyDesc: "High-res aerial imagery",
+    landingCardDroneSprayTitle: "Drone spraying",
+    landingCardDroneSprayDesc: "Precision-dosed inputs",
+    landingCardPhenotypingTitle: "High Throughput Phenotyping",
+    landingCardPhenotypingDesc: "Automated trait scoring",
+    landingCardGenomicTitle: "Genomic Selection",
+    landingCardGenomicDesc: "Breeding value prediction",
+
+    // Landing audience partitions (Farmers / Breeders)
+    landingAudienceFarmersTag: "For Farmers",
+    landingAudienceFarmersHeading: "Run the day-to-day of every field",
+    landingAudienceFarmersCount: "6 tools",
+    landingAudienceBreedersTag: "For Breeders",
+    landingAudienceBreedersHeading: "Screen trait data at research scale",
+    landingAudienceBreedersCount: "2 tools",
+    landingFeatureRowNextAria: "See more tools",
   },
   ur: {
     dashboard: "ڈیش بورڈ",
@@ -284,21 +298,20 @@ export const dictionary = {
     landingNavFeatures: "خصوصیات",
     landingNavHow: "یہ کیسے کام کرتا ہے",
     landingNavMission: "مشن",
-    landingBadge: "ایک بائیوٹیکنالوجی اور جینوم انجینئرنگ لیب کی جانب سے",
     landingHeadline1: "آپ کی ہر ایکڑ زمین کے لیے",
     landingHeadline2: "سیٹلائٹ ذہانت",
     landingHeadline3: "",
     landingSubcopy:
       "نقشے پر اپنا کھیت بنائیں اور جدید کاشتکار خلا سے اس کی نگرانی کرے گا: فصل کی صحت، پانی کا دباؤ، بیماری کا خطرہ، موسم اور منڈی ریٹ، سب ایک ہی جگہ۔",
-    landingCtaPrimary: "اپنا پہلا کھیت مفت تجزیہ کریں",
+    landingCtaPrimary: "اپنا مفت اکاؤنٹ بنائیں",
     landingCtaSecondary: "تمام خصوصیات دیکھیں ↓",
     landingStat1: "پکسل ریزولیوشن",
     landingStat2: "سیٹلائٹ دوبارہ وزٹ",
     landingStat3: "کھیت کا تجزیہ کرنے کی قیمت",
     landingFeaturesEyebrow: "ہم جو کچھ پیش کرتے ہیں",
-    landingFeaturesTitle: "مٹی سے منڈی تک، ایک پلیٹ فارم",
+    landingFeaturesTitle: "جہاں کھیت جینوم سے ملتا ہے",
     landingFeaturesSubcopy:
-      "سات آلات جو مل کر کام کرتے ہیں — پانی اور کھاد پر کم خرچ کریں، بیماری جلد پکڑیں، صحیح قیمت پر بیچیں۔",
+      "کاشتکاروں کے لیے روزمرہ کے آلات، افزائش نسل کے ماہرین کے لیے تحقیقی سطح کے آلات — ایک ہی سیٹلائٹ اور جینیاتی ڈیٹا پائپ لائن پر مبنی۔",
     landingLedgerBannerTitle: "ڈیجیٹل فارم کھاتہ اور پی ڈی ایف رپورٹس",
     landingLedgerBannerDesc:
       "ہر ان پٹ کو ٹائم لائن پر درج کریں، پھر اسے خریداروں، بینکوں یا سبسڈی پروگراموں کے لیے پرنٹ کے قابل رپورٹ میں مرتب کریں۔",
@@ -319,6 +332,10 @@ export const dictionary = {
     landingFooterYear: "© 2026 جدید کاشتکار بائیوٹیک",
 
     // Landing hero field analyzer
+    landingSearchPlaceholder: "کوئی مقام تلاش کریں…",
+    landingExpandMapAria: "نقشہ بڑا کریں",
+    landingCollapseMapAria: "نقشہ چھوٹا کریں",
+    landingLocateAria: "میرا مقام تلاش کریں",
     landingDrawCta: "اپنے کھیت کی حد بنائیں",
     landingDrawHint: "لائیو سیٹلائٹ نقشے پر اپنے کھیت کی حد بنائیں — مفت Sentinel-2 تجزیہ حاصل کریں۔",
     landingDrawInstruction: "پوائنٹس لگانے کے لیے نقشے پر کلک کریں (کم از کم 3)۔ شکل مکمل کرنے کے لیے ڈبل کلک کریں۔",
@@ -350,21 +367,32 @@ export const dictionary = {
     landingStep3Body:
       "دباؤ والے حصے کو پانی دیں، کنگی کا جلد علاج کریں، اچھے ریٹ والے دن بیچیں اور اپنے ہر کام کا کھاتہ رکھیں۔",
 
-    // Landing feature bento cards
-    landingNdviCardBadgeNdvi: "پودوں کی کثافت",
-    landingNdviCardBadgeNdmi: "پانی کا دباؤ",
-    landingNdviCardTitle: "NDVI اور NDMI اوورلیز",
-    landingNdviCardDesc: "صرف وہاں پانی دیں جہاں فصل پیاسی ہو۔",
-    landingCardHealthBadge: "صحت مند",
+    // Landing feature cards
     landingCardHealthTitle: "فصل کی صحت اور پیداوار",
-    landingCardHealthProjected: "متوقع",
-    landingCardHealthYield: "57 من فی ایکڑ",
+    landingCardHealthCompactDesc: "NDVI/NDMI پودوں اور نمی کے نقشے · 74% صحت مند",
     landingCardScannerTitle: "پتوں کی بیماری اسکینر",
     landingCardScannerDesc: "تصویر ← جینوم پر مبنی تشخیص",
-    landingCardScannerDisease: "پتوں کی کنگی",
     landingCardWeatherTitle: "موسم اور کیڑوں کی وارننگ",
-    landingCardWeatherDesc: "7 روزہ زرعی موسمیاتی پیشگوئی + وبا کا خطرہ، علامات ظاہر ہونے سے پہلے۔",
+    landingCardWeatherDesc: "7 روزہ زرعی موسمیاتی پیشگوئی + وبا کا خطرہ۔",
     landingCardMandiTitle: "منڈی کے تازہ ریٹ",
+    landingCardMandiDesc: "گندم، دھان، کپاس",
+    landingCardDroneSurveyTitle: "ڈرون سروے",
+    landingCardDroneSurveyDesc: "ہائی ریزولوشن فضائی تصاویر",
+    landingCardDroneSprayTitle: "ڈرون سپرے",
+    landingCardDroneSprayDesc: "درست مقدار میں کھاد اور دوا",
+    landingCardPhenotypingTitle: "ہائی تھرو پُٹ فینوٹائپنگ",
+    landingCardPhenotypingDesc: "خودکار خصلت کی پیمائش",
+    landingCardGenomicTitle: "جینومک سلیکشن",
+    landingCardGenomicDesc: "افزائش نسل کی قدر کی پیش گوئی",
+
+    // Landing audience partitions (Farmers / Breeders)
+    landingAudienceFarmersTag: "کاشتکاروں کے لیے",
+    landingAudienceFarmersHeading: "ہر کھیت کے روزمرہ کے کام سنبھالیں",
+    landingAudienceFarmersCount: "6 آلات",
+    landingAudienceBreedersTag: "افزائش کاروں کے لیے",
+    landingAudienceBreedersHeading: "تحقیقی سطح پر خصلت کے ڈیٹا کا جائزہ لیں",
+    landingAudienceBreedersCount: "2 آلات",
+    landingFeatureRowNextAria: "مزید آلات دیکھیں",
   },
 } as const;
 

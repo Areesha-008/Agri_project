@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Reveal } from "@/components/ui/Reveal";
+import { FeatureRow, type FeatureRowCard } from "@/components/ui/FeatureRow";
 import { Logo, LogoMark } from "@/components/ui/Logo";
 import { LandingFieldAnalyzer } from "@/components/map/LandingFieldAnalyzer";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -138,33 +139,6 @@ function useScrollProgress() {
   return barRef;
 }
 
-/** Writes cursor position as `--mx`/`--my` percentages for a CSS-driven sheen; skipped on touch. */
-function useCursorGlow<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !window.matchMedia("(hover: hover)").matches) return;
-    const onMove = (e: PointerEvent) => {
-      const rect = el.getBoundingClientRect();
-      el.style.setProperty("--mx", `${((e.clientX - rect.left) / rect.width) * 100}%`);
-      el.style.setProperty("--my", `${((e.clientY - rect.top) / rect.height) * 100}%`);
-    };
-    el.addEventListener("pointermove", onMove);
-    return () => el.removeEventListener("pointermove", onMove);
-  }, []);
-  return ref;
-}
-
-/** Bento card wrapper: adds a low-opacity radial-gradient sheen that follows the cursor on hover. */
-function CardSheen({ className, children }: { className: string; children: React.ReactNode }) {
-  const ref = useCursorGlow<HTMLDivElement>();
-  return (
-    <div ref={ref} className={`jk-card-sheen relative overflow-hidden ${className}`}>
-      {children}
-      <div className="jk-card-sheen-layer pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300" />
-    </div>
-  );
-}
 
 const NAV_LINK_CLASS =
   "jk-focus group relative py-1 after:absolute after:-bottom-0.5 after:left-1/2 after:h-[2px] after:w-full after:origin-center after:-translate-x-1/2 after:scale-x-0 after:rounded-full after:bg-forest-500 after:transition-transform after:duration-300 hover:after:scale-x-100";
@@ -252,62 +226,6 @@ function Nav({ t }: { t: (key: DictionaryKey) => string }) {
   );
 }
 
-/** Bento card B: owns its own NDVI/NDMI toggle state so clicking it doesn't re-render the whole page. */
-function NdviCard() {
-  const { t } = useTranslation();
-  const [bentoLayer, setBentoLayer] = useState<"ndvi" | "ndmi">("ndvi");
-  return (
-    <CardSheen className="flex h-full flex-col gap-3.5 rounded-card-lg border border-border bg-cream-card p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
-      <div className="flex gap-1.5 text-[10.5px] font-semibold">
-        <button
-          onClick={() => setBentoLayer("ndvi")}
-          className={`jk-focus rounded-md px-2.5 py-1.5 transition-colors ${
-            bentoLayer === "ndvi" ? "bg-forest-900 text-white" : "bg-cream-inset text-ink-500"
-          }`}
-        >
-          NDVI
-        </button>
-        <button
-          onClick={() => setBentoLayer("ndmi")}
-          className={`jk-focus rounded-md px-2.5 py-1.5 transition-colors ${
-            bentoLayer === "ndmi" ? "bg-forest-900 text-white" : "bg-cream-inset text-ink-500"
-          }`}
-        >
-          NDMI
-        </button>
-      </div>
-      <div className="relative flex-1 overflow-hidden rounded-xl">
-        <div
-          className="absolute inset-0 transition-opacity duration-500"
-          style={{
-            background: "linear-gradient(135deg,#006837 0%,#31a354 28%,#78c679 55%,#c2e699 78%,#ffffcc 100%)",
-            opacity: bentoLayer === "ndvi" ? 1 : 0,
-          }}
-        >
-          <div className="absolute bottom-2.5 left-2.5 rounded-md bg-[#141c16cc] px-2.5 py-1 text-[9.5px] text-white">
-            {t("landingNdviCardBadgeNdvi")}
-          </div>
-        </div>
-        <div
-          className="absolute inset-0 transition-opacity duration-500"
-          style={{
-            background: "linear-gradient(135deg,#253494,#2c7fb8 40%,#41b6c4 65%,#a1dab4 85%,#ffffcc)",
-            opacity: bentoLayer === "ndmi" ? 1 : 0,
-          }}
-        >
-          <div className="absolute bottom-2 left-2.5 rounded-md bg-[#141c16cc] px-2.5 py-1 text-[9.5px] text-white">
-            {t("landingNdviCardBadgeNdmi")}
-          </div>
-        </div>
-      </div>
-      <div>
-        <div className="text-[14.5px] font-bold text-ink-900">{t("landingNdviCardTitle")}</div>
-        <div className="mt-0.5 text-xs text-ink-500">{t("landingNdviCardDesc")}</div>
-      </div>
-    </CardSheen>
-  );
-}
-
 export default function LandingPage() {
   const { t, dir, lang } = useTranslation();
 
@@ -329,6 +247,95 @@ export default function LandingPage() {
     },
   ];
 
+  const farmerCards: FeatureRowCard[] = [
+    {
+      icon: <div className="h-6 w-6 rounded-full" style={{ background: "conic-gradient(#40916C 0 74%, #EDEAE0 74% 100%)" }} />,
+      title: t("landingCardHealthTitle"),
+      desc: t("landingCardHealthCompactDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#C1512F" strokeWidth="1.5">
+          <circle cx="7" cy="7" r="4.5" />
+          <path d="M10.5 10.5 L13.5 13.5" />
+        </svg>
+      ),
+      title: t("landingCardScannerTitle"),
+      desc: t("landingCardScannerDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#3a719b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4.5 10.5a2.5 2.5 0 01-.5-4.95A3 3 0 0110 4.6a2.75 2.75 0 011 5.35" />
+        </svg>
+      ),
+      title: t("landingCardWeatherTitle"),
+      desc: t("landingCardWeatherDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 12.5V2M2 12.5h11" />
+          <path d="M4.5 10l2-3 2 1.5 3-4.5" />
+        </svg>
+      ),
+      title: t("landingCardMandiTitle"),
+      desc: t("landingCardMandiDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="7.5" cy="7.5" r="1.5" />
+          <path d="M3 3l3 3M12 3l-3 3M3 12l3-3M12 12l-3-3" />
+          <circle cx="3" cy="3" r="1.2" />
+          <circle cx="12" cy="3" r="1.2" />
+          <circle cx="3" cy="12" r="1.2" />
+          <circle cx="12" cy="12" r="1.2" />
+        </svg>
+      ),
+      title: t("landingCardDroneSurveyTitle"),
+      desc: t("landingCardDroneSurveyDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="7.5" cy="4.5" r="1.4" />
+          <path d="M4.3 2l2.3 2M10.7 2l-2.3 2" />
+          <circle cx="4.3" cy="2" r="1" />
+          <circle cx="10.7" cy="2" r="1" />
+          <path d="M5 7.5l-1 3M7.5 8l0 3M10 7.5l1 3" strokeDasharray=".2 1.3" />
+        </svg>
+      ),
+      title: t("landingCardDroneSprayTitle"),
+      desc: t("landingCardDroneSprayDesc"),
+    },
+  ];
+
+  const breederCards: FeatureRowCard[] = [
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#1b4332" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="7" height="7" rx="1" />
+          <path d="M3.5 3.5h4M3.5 5.5h4M3.5 7.5h2" />
+          <circle cx="10.2" cy="10.2" r="2.6" />
+          <path d="M12 12L13.3 13.3" />
+        </svg>
+      ),
+      title: t("landingCardPhenotypingTitle"),
+      desc: t("landingCardPhenotypingDesc"),
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#1b4332" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 1.5c2.2 2 4.8 2 7 4M4 13.5c2.2-2 4.8-2 7-4" />
+          <path d="M4.5 4h6M4.2 7.2h6.6M4.5 10.4h6" />
+        </svg>
+      ),
+      title: t("landingCardGenomicTitle"),
+      desc: t("landingCardGenomicDesc"),
+    },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col" dir={dir}>
       {/* Nav */}
@@ -342,10 +349,6 @@ export default function LandingPage() {
         />
         <div className="relative mx-auto grid max-w-[1180px] grid-cols-1 items-center gap-11 px-6 pb-14 pt-16 md:grid-cols-[1.05fr_1fr]">
           <div className="jk-hero-in flex flex-col gap-5">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-mint-border bg-mint-100 px-3.5 py-1.5 text-xs font-semibold text-forest-700">
-              <span className="jk-ring-pulse jk-ring-pulse-mint h-1.5 w-1.5 rounded-full bg-forest-500" />
-              {t("landingBadge")}
-            </div>
             <h1
               className={`m-0 text-[36px] leading-[1.1] tracking-tight text-ink-900 md:text-[52px] ${
                 lang === "en" ? "font-display font-semibold" : "font-extrabold"
@@ -429,144 +432,30 @@ export default function LandingPage() {
           <p className="m-0 text-[14.5px] leading-relaxed text-ink-500">{t("landingFeaturesSubcopy")}</p>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:auto-rows-[172px]">
-          {/* B · NDVI & NDMI (1x2) */}
-          <Reveal index={0} className="lg:col-start-1 lg:row-start-1 lg:col-span-1 lg:row-span-2">
-            <NdviCard />
+        <div className="flex flex-col gap-4">
+          <Reveal index={0}>
+            <FeatureRow
+              variant="farmers"
+              tag={t("landingAudienceFarmersTag")}
+              heading={t("landingAudienceFarmersHeading")}
+              count={t("landingAudienceFarmersCount")}
+              nextAriaLabel={t("landingFeatureRowNextAria")}
+              cards={farmerCards}
+            />
           </Reveal>
-
-          {/* C · Crop health gauge (1x1) */}
-          <Reveal index={1} className="lg:col-start-2 lg:row-start-1 lg:col-span-1 lg:row-span-1">
-            <CardSheen className="flex h-full items-center gap-3.5 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
-              <div
-                className="grid h-[74px] w-[74px] flex-none place-items-center rounded-full"
-                style={{ background: "conic-gradient(#40916C 0 74%, #EDEAE0 74% 100%)" }}
-              >
-                <div className="grid h-[54px] w-[54px] place-items-center rounded-full bg-cream-card text-center">
-                  <div>
-                    <div className="text-base font-extrabold leading-none text-forest-900">74%</div>
-                    <div className="mt-0.5 text-[8px] font-bold text-ink-400">{t("landingCardHealthBadge")}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13.5px] font-bold leading-tight text-ink-900">{t("landingCardHealthTitle")}</div>
-                <div className="mt-0.5 text-[11px] text-ink-500">
-                  {t("landingCardHealthProjected")} <b className="text-ink-900">{t("landingCardHealthYield")}</b>
-                </div>
-              </div>
-            </CardSheen>
-          </Reveal>
-
-          {/* D · Disease scanner (1x1) */}
-          <Reveal index={2} className="lg:col-start-2 lg:row-start-2 lg:col-span-1 lg:row-span-1">
-            <CardSheen className="flex h-full flex-col justify-center gap-2.5 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="grid h-11 w-11 flex-none place-items-center rounded-xl border border-border"
-                  style={{ background: "repeating-linear-gradient(45deg,#EAF3EC 0 8px,#F6F4ED 8px 16px)" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#C1512F" strokeWidth="1.5">
-                    <circle cx="7" cy="7" r="4.5" />
-                    <path d="M10.5 10.5 L13.5 13.5" />
-                  </svg>
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[13.5px] font-bold leading-tight text-ink-900">{t("landingCardScannerTitle")}</div>
-                  <div className="text-[11px] text-ink-500">{t("landingCardScannerDesc")}</div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <div className="flex justify-between text-[11px]">
-                  <span className="font-bold text-alert-red-text">{t("landingCardScannerDisease")}</span>
-                  <span className="font-extrabold text-alert-red-text">94.2%</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-cream-inset">
-                  <div className="h-full w-[94%] rounded-full bg-alert-red" />
-                </div>
-              </div>
-            </CardSheen>
-          </Reveal>
-
-          {/* E · Weather & pest warnings (2x1) */}
-          <Reveal index={3} className="lg:col-start-3 lg:row-start-1 lg:col-span-2 lg:row-span-1">
-            <CardSheen className="flex h-full flex-col justify-center gap-3 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
-              <div className="flex items-center gap-2.5">
-                <div className="grid h-11 w-11 flex-none place-items-center rounded-xl border border-border bg-info-blue-bg">
-                  <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#3a719b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4.5 10.5a2.5 2.5 0 01-.5-4.95A3 3 0 0110 4.6a2.75 2.75 0 011 5.35" />
-                    <path d="M5 12.5v1M8 12.5v1.5M6.5 13.75v.75" />
-                  </svg>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[14.5px] font-bold text-ink-900">{t("landingCardWeatherTitle")}</div>
-                  <div className="text-xs text-ink-500">{t("landingCardWeatherDesc")}</div>
-                </div>
-                <div className="jk-ring-pulse flex flex-none items-center gap-1.5 rounded-full border border-alert-red-border bg-alert-red-bg px-3 py-1.5 text-[11px] font-bold text-alert-red-text">
-                  ⚠ RUST 78%
-                </div>
-              </div>
-              <div className="flex gap-1.5 text-center text-[10.5px] text-ink-500">
-                {[
-                  ["Thu", "39°", false],
-                  ["Fri", "37°", false],
-                  ["Sat", "34°", true],
-                  ["Sun", "33°", true],
-                  ["Mon", "35°", false],
-                  ["Tue", "36°", false],
-                  ["Wed", "37°", false],
-                ].map(([day, temp, warn]) => (
-                  <div
-                    key={day as string}
-                    className={`flex-1 rounded-lg px-0.5 py-2 ${warn ? "border border-[#F0E3C2] bg-[#FBF3E1]" : "bg-cream-inset"}`}
-                  >
-                    {day}
-                    <div className={`text-[13px] font-extrabold ${warn ? "text-[#B07D2B]" : "text-ink-900"}`}>{temp}</div>
-                  </div>
-                ))}
-              </div>
-            </CardSheen>
-          </Reveal>
-
-          {/* F · Mandi prices (2x1) */}
-          <Reveal index={4} className="lg:col-start-3 lg:row-start-2 lg:col-span-2 lg:row-span-1">
-            <CardSheen className="flex h-full flex-col justify-center gap-2 rounded-card-lg border border-border bg-cream-card p-4.5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,67,50,.1)]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="grid h-9 w-9 flex-none place-items-center rounded-lg border border-border bg-mint-100">
-                    <svg width="16" height="16" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12.5V2M2 12.5h11" />
-                      <path d="M4.5 10l2-3 2 1.5 3-4.5" />
-                    </svg>
-                  </div>
-                  <div className="text-[14.5px] font-bold text-ink-900">{t("landingCardMandiTitle")}</div>
-                </div>
-                <div className="text-[10.5px] font-semibold text-ink-400">PKR / 40 kg</div>
-              </div>
-              <div className="flex flex-col text-xs">
-                {[
-                  ["#E9B44C", "Wheat", "3,920", "▲1.2%", true],
-                  ["#95D5B2", "Basmati paddy", "5,410", "▼0.8%", false],
-                  ["#F0E68C", "Cotton (phutti)", "8,540", "▲2.4%", true],
-                ].map(([dot, name, price, change, up], i, arr) => (
-                  <div
-                    key={name as string}
-                    className={`flex items-center gap-2 py-1.5 ${i < arr.length - 1 ? "border-b border-cream-inset" : ""}`}
-                  >
-                    <span className="h-2 w-2 flex-none rounded-sm" style={{ background: dot as string }} />
-                    <span className="flex-1 font-semibold text-ink-900">{name}</span>
-                    <span className="font-extrabold">{price}</span>
-                    <span className={`w-11 text-right text-[11px] font-bold ${up ? "text-forest-700" : "text-[#C1512F]"}`}>
-                      {change}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardSheen>
+          <Reveal index={1}>
+            <FeatureRow
+              variant="breeders"
+              tag={t("landingAudienceBreedersTag")}
+              heading={t("landingAudienceBreedersHeading")}
+              count={t("landingAudienceBreedersCount")}
+              nextAriaLabel={t("landingFeatureRowNextAria")}
+              cards={breederCards}
+            />
           </Reveal>
         </div>
 
-        <Reveal index={5} className="mt-4">
+        <Reveal index={2} className="mt-4">
           <div className="jk-contours-dark relative flex flex-wrap items-center gap-7 overflow-hidden rounded-card-lg bg-forest-900 p-7 text-white">
             <div className="grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-white/[.18]">
               <LogoMark size={20} leafColor="#95D5B2" leafColorDark="#40916C" />
