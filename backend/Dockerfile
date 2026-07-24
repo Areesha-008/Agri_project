@@ -5,7 +5,9 @@ WORKDIR /app
 # WeasyPrint (production report PDFs) needs Pango/Cairo/GDK-Pixbuf at
 # runtime, not just at pip-install time — these are native libs, not
 # Python packages. Mirrors the Homebrew `pango`/`gdk-pixbuf` install used
-# in local dev (see DEPLOY.md).
+# in local dev (see DEPLOY.md). libgomp1 is onnxruntime's OpenMP runtime
+# dependency (disease scanner, INFERENCE_PROVIDER=onnx) — not bundled by
+# python:3.12-slim.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
@@ -13,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

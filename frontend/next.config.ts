@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lean production runtime for Docker: `.next/standalone` + a minimal
+  // server.js, instead of needing the full node_modules tree at runtime.
+  output: "standalone",
   images: {
     remotePatterns: [
       {

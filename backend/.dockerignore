@@ -1,0 +1,23 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Tests (not needed in the runtime image)
+tests/
+
+# Secrets — supplied at runtime via env_file, never baked into an image layer
+.env*
+
+# VCS / editors / OS
+.git/
+.gitignore
+.DS_Store
+
+# Logs
+*.log

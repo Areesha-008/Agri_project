@@ -32,20 +32,28 @@ services:
       - "8000:8000"
     volumes:
       - backend_static:/app/static
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
-  # Uncomment once the frontend is scaffolded (see GAPS.md / AUDIT.md —
-  # `/frontend` doesn't exist yet). Expects a frontend/Dockerfile exposing
-  # port 3000 and reading NEXT_PUBLIC_API_URL / NEXT_PUBLIC_MAP_TILES_KEY.
-  # frontend:
-  #   build: ./frontend
-  #   restart: unless-stopped
-  #   environment:
-  #     NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
-  #     NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "3000:3000"
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # The *browser* calls this (via the host-published port below), not
+        # container-to-container — http://backend:8000 would only resolve
+        # inside the compose network, not from the user's machine.
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+        NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres_data:

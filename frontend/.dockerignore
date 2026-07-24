@@ -1,0 +1,22 @@
+# Rebuilt fresh inside the image
+node_modules/
+.next/
+out/
+
+# Secrets / local env — build-time vars arrive via Docker build ARGs instead
+.env*
+!.env.example
+
+# Tests / tooling artifacts
+e2e/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+tsconfig.tsbuildinfo
+
+# VCS / editors / OS
+.git/
+.gitignore
+.DS_Store
+*.log
