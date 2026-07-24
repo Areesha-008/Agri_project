@@ -5,8 +5,19 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.ledger import LedgerEntryCreateRequest, LedgerEntryResponse, ReportResponse
-from app.services.ledger_service import build_report, create_ledger_entry, list_ledger_entries_for_user
+from app.schemas.ledger import (
+    LedgerCategoryCreateRequest,
+    LedgerEntryCreateRequest,
+    LedgerEntryResponse,
+    ReportResponse,
+)
+from app.services.ledger_service import (
+    build_report,
+    create_ledger_category,
+    create_ledger_entry,
+    list_ledger_categories,
+    list_ledger_entries_for_user,
+)
 from app.services.report_pdf import render_report_pdf
 
 router = APIRouter(tags=["Ledger & Report"])
@@ -27,6 +38,23 @@ def get_ledger_entries(
     current_user: User = Depends(get_current_user),
 ):
     return list_ledger_entries_for_user(db, current_user.id)
+
+
+@router.get("/ledger/categories", response_model=list[str])
+def get_ledger_categories(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return list_ledger_categories(db, current_user.id)
+
+
+@router.post("/ledger/categories", response_model=list[str], status_code=201)
+def post_ledger_category(
+    category_in: LedgerCategoryCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return create_ledger_category(db, current_user.id, category_in.name)
 
 
 @router.get("/report", response_model=ReportResponse)

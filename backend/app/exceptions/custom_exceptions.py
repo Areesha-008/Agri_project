@@ -12,6 +12,11 @@ class InvalidGeometryError(AppException):
         super().__init__(message, status_code=422)
 
 
+class InvalidDateRangeError(AppException):
+    def __init__(self, message: str = "Invalid date range"):
+        super().__init__(message, status_code=422)
+
+
 class SatelliteDataError(AppException):
     def __init__(self, message: str = "Satellite data processing failed"):
         super().__init__(message, status_code=502)

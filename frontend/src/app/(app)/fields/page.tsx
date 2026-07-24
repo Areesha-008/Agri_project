@@ -14,7 +14,10 @@ import {
 import { useAppStore, type MapLayer } from "@/lib/store/useAppStore";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import type { PolygonGeometry } from "@/lib/api/types";
+import { TimeWindowPicker, type DateRange } from "@/components/ui/TimeWindowPicker";
+import { NdviLegend } from "@/components/map/NdviLegend";
+import { FieldReanalyzePanel } from "@/components/map/FieldReanalyzePanel";
+import type { NdviHistoryItem, PolygonGeometry } from "@/lib/api/types";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
 import { boundsFromGeometry } from "@/lib/geo";
 
@@ -44,13 +47,17 @@ export default function FieldsPage() {
   const { data: selectedField } = useField(selectedFieldId);
   const { data: ndvi } = useFieldNdvi(selectedFieldId);
 
+  const [activeEntry, setActiveEntry] = useState<NdviHistoryItem | null>(null);
+
   const [mode, setMode] = useState<Mode>("idle");
   const [pendingGeometry, setPendingGeometry] = useState<PolygonGeometry | null>(null);
   const [pendingArea, setPendingArea] = useState(0);
   const [name, setName] = useState("");
   const [district, setDistrict] = useState("");
   const [crop, setCrop] = useState("");
+  const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
   const [clearSignal, setClearSignal] = useState(0);
+  const [locateSignal, setLocateSignal] = useState(0);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
@@ -98,6 +105,7 @@ export default function FieldsPage() {
         geometry: pendingGeometry,
         district: district || undefined,
         crop: crop || undefined,
+        ...(timeWindow ?? {}),
       });
       setActiveFieldId(result.field.id);
       setActiveJobId(result.job_id);
@@ -109,11 +117,11 @@ export default function FieldsPage() {
   }
 
   const overlay: FieldOverlay | null =
-    selectedField && ndvi?.latest
+    selectedField && activeEntry
       ? {
           id: selectedField.id,
           boundingBox: boundsFromGeometry(selectedField.geometry),
-          imageUrl: mapLayer === "ndmi" ? (ndvi.latest.ndmi_png_url ?? "") : (ndvi.latest.ndvi_png_url ?? ""),
+          imageUrl: mapLayer === "ndmi" ? (activeEntry.ndmi_png_url ?? "") : (activeEntry.ndvi_png_url ?? ""),
         }
       : null;
 
@@ -183,6 +191,10 @@ export default function FieldsPage() {
             <div className="rounded-xl bg-mint-100 p-3 text-xs text-forest-700">
               Estimated area: <b>{pendingArea} ha</b> (server recomputes exactly on save)
             </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-ink-600">Satellite data window</label>
+              <TimeWindowPicker value={timeWindow} onChange={setTimeWindow} />
+            </div>
             <Input label="Field name" value={name} onChange={(e) => setName(e.target.value)} />
             <Input label="District" placeholder="Faisalabad" value={district} onChange={(e) => setDistrict(e.target.value)} />
             <Input label="Crop" placeholder="Wheat" value={crop} onChange={(e) => setCrop(e.target.value)} />
@@ -203,41 +215,66 @@ export default function FieldsPage() {
           </div>
         )}
 
-        {selectedField && mode === "idle" && !isAnalyzing && ndvi?.latest && (
-          <div className="mt-auto rounded-2xl border border-border bg-cream-card p-3.5">
-            <div className="mb-2 text-[13px] font-bold text-ink-900">{selectedField.name}</div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <div className="text-ink-400">Mean</div>
-                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_mean}</div>
+        {selectedField && mode === "idle" && !isAnalyzing && (
+          <div className="mt-auto flex flex-col gap-3.5">
+            <FieldReanalyzePanel
+              key={selectedField.id}
+              fieldId={selectedField.id}
+              history={ndvi?.history ?? []}
+              onActiveEntryChange={setActiveEntry}
+            />
+            {activeEntry && (
+              <div className="rounded-2xl border border-border bg-cream-card p-3.5">
+                <div className="mb-2 text-[13px] font-bold text-ink-900">{selectedField.name}</div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div>
+                    <div className="text-ink-400">Mean</div>
+                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_mean}</div>
+                  </div>
+                  <div>
+                    <div className="text-ink-400">Min</div>
+                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_min}</div>
+                  </div>
+                  <div>
+                    <div className="text-ink-400">Max</div>
+                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_max}</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-ink-400">Min</div>
-                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_min}</div>
-              </div>
-              <div>
-                <div className="text-ink-400">Max</div>
-                <div className="font-bold text-forest-ink-900">{ndvi.latest.ndvi_max}</div>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Map */}
       <div className="relative flex-1">
-        <div className="absolute right-3 top-3 z-10 flex gap-1.5">
-          {LAYERS.map((l) => (
-            <button
-              key={l.key}
-              onClick={() => setMapLayer(l.key)}
-              className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold shadow-card ${
-                mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
-              }`}
-            >
-              {l.label}
-            </button>
-          ))}
+        <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
+          <div className="flex gap-1.5">
+            {LAYERS.map((l) => (
+              <button
+                key={l.key}
+                onClick={() => setMapLayer(l.key)}
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold shadow-card ${
+                  mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+          {/* Manual re-locate — always live (user-initiated), unlike the
+              once-per-session auto-locate that fires when the map first loads. */}
+          <button
+            onClick={() => setLocateSignal((n) => n + 1)}
+            aria-label="Find my location"
+            title="Find my location"
+            className="jk-focus grid h-9 w-9 cursor-pointer place-items-center rounded-lg bg-cream-card text-ink-600 shadow-card"
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="7.5" cy="7.5" r="3.5" />
+              <path d="M7.5 1v2.2M7.5 11.8V14M1 7.5h2.2M11.8 7.5H14" />
+            </svg>
+          </button>
         </div>
         <FieldsMap
           fields={fields ?? []}
@@ -249,7 +286,16 @@ export default function FieldsPage() {
           drawing={mode === "drawing"}
           onDrawComplete={handleDrawComplete}
           clearSignal={clearSignal}
+          showGeocoder={mode === "idle" || mode === "drawing"}
+          geocoderPlaceholder="Search a location…"
+          autoLocate
+          locateSignal={locateSignal}
         />
+        {overlay && mapLayer !== "satellite" && (
+          <div className="absolute bottom-3 left-3 z-10 flex w-44 flex-col gap-2.5 rounded-card border border-border bg-cream-card p-2.5 shadow-card">
+            <NdviLegend layer={mapLayer === "ndmi" ? "ndmi" : "ndvi"} />
+          </div>
+        )}
       </div>
     </div>
   );

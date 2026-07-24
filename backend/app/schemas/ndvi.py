@@ -9,6 +9,8 @@ from app.schemas.geometry import PolygonGeometry
 class NdviAnalyzeRequest(BaseModel):
     geometry: PolygonGeometry
     field_name: Optional[str] = Field(default=None, max_length=255)
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class NdviColorStop(BaseModel):

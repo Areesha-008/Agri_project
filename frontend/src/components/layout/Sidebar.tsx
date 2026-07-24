@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { href: "/fields", key: "fields" as const, icon: NavIcons.fields },
   { href: "/health", key: "health" as const, icon: NavIcons.health },
   { href: "/scanner", key: "scanner" as const, icon: NavIcons.scanner },
-  { href: "/market", key: "market" as const, icon: NavIcons.market },
   { href: "/ledger", key: "ledger" as const, icon: NavIcons.ledger },
 ];
 

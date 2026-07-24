@@ -9,10 +9,8 @@ class UserSettingsResponse(BaseModel):
 
     language: str
     yield_unit: str
-    default_mandi: str
     alert_pest: bool
     alert_weather: bool
-    alert_price: bool
     alert_sms: bool
     updated_at: datetime
 
@@ -22,8 +20,6 @@ class UserSettingsUpdateRequest(BaseModel):
 
     language: Optional[str] = Field(default=None, pattern="^(en|ur)$")
     yield_unit: Optional[str] = Field(default=None, pattern="^(maund_per_acre|t_per_ha)$")
-    default_mandi: Optional[str] = None
     alert_pest: Optional[bool] = None
     alert_weather: Optional[bool] = None
-    alert_price: Optional[bool] = None
     alert_sms: Optional[bool] = None

@@ -1,17 +1,23 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.ledger_entry import LedgerCategory
+from app.models.ledger_entry import LEDGER_ENTRY_TYPES
+
+LedgerEntryType = Literal["expense", "income"]
+assert set(LEDGER_ENTRY_TYPES) == {"expense", "income"}  # keep schema + model in sync
 
 
 class LedgerEntryCreateRequest(BaseModel):
     field_id: uuid.UUID
     title: str
     detail: str
-    category: LedgerCategory
+    # Free string so users can log against their own heads, not just built-ins.
+    category: str = Field(min_length=1, max_length=64)
+    amount: Optional[float] = Field(default=None, ge=0)
+    entry_type: LedgerEntryType = "expense"
 
 
 class LedgerEntryResponse(BaseModel):
@@ -21,8 +27,14 @@ class LedgerEntryResponse(BaseModel):
     field_id: uuid.UUID
     title: str
     detail: str
-    category: LedgerCategory
+    category: str
+    amount: Optional[float]
+    entry_type: str
     timestamp: datetime
+
+
+class LedgerCategoryCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=64)
 
 
 class FieldReportSummary(BaseModel):
@@ -41,5 +53,8 @@ class ReportResponse(BaseModel):
     dap_bags: int
     sop_bags: int
     ledger_entry_count: int
+    total_spent: float
+    total_earned: float
+    net: float
     field_summaries: list[FieldReportSummary]
     generated_at: datetime

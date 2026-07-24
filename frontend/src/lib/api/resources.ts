@@ -8,8 +8,6 @@ import type {
   FieldResponse,
   LedgerEntry,
   LedgerEntryCreate,
-  Mandi,
-  MandiRate,
   MessageResponse,
   NdviJobStatusResponse,
   PolygonGeometry,
@@ -39,12 +37,21 @@ export interface CreateFieldInput {
   geometry: PolygonGeometry;
   district?: string;
   crop?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface ReanalyzeFieldInput {
+  start_date?: string;
+  end_date?: string;
 }
 
 export const fieldsApi = {
   list: () => api.get<FieldListItem[]>("/fields"),
   get: (id: string) => api.get<FieldResponse>(`/fields/${id}`),
   create: (input: CreateFieldInput) => api.post<FieldCreateResponse>("/fields", input),
+  reanalyze: (fieldId: string, input: ReanalyzeFieldInput) =>
+    api.post<NdviJobStatusResponse>(`/fields/${fieldId}/reanalyze`, input),
   getJob: (fieldId: string, jobId: string) =>
     api.get<NdviJobStatusResponse>(`/fields/${fieldId}/jobs/${jobId}`),
   getNdvi: (fieldId: string) => api.get<FieldNdviLatestResponse>(`/fields/${fieldId}/ndvi`),
@@ -56,11 +63,6 @@ export const fieldsApi = {
 export const settingsApi = {
   get: () => api.get<UserSettings>("/settings"),
   update: (patch: UserSettingsUpdate) => api.patch<UserSettings>("/settings", patch),
-};
-
-// --- Mandi rates ---
-export const mandiApi = {
-  list: (mandi: Mandi) => api.get<MandiRate[]>(`/mandi-rates?mandi=${mandi}`),
 };
 
 // --- Weather ---
@@ -79,6 +81,8 @@ export const alertsApi = {
 export const ledgerApi = {
   list: () => api.get<LedgerEntry[]>("/ledger"),
   create: (entry: LedgerEntryCreate) => api.post<LedgerEntry>("/ledger", entry),
+  listCategories: () => api.get<string[]>("/ledger/categories"),
+  createCategory: (name: string) => api.post<string[]>("/ledger/categories", { name }),
   report: () => api.get<Report>("/report"),
   // GET /report/pdf requires the JWT bearer header, so a plain <a href>
   // can't hit it directly — fetch as a blob and let the caller trigger

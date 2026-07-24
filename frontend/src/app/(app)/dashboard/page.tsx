@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useCropHealth, useField, useFieldNdvi, useAlerts, useMandiRates, useWeather, useLedgerEntries } from "@/lib/api/hooks";
+import { useCropHealth, useField, useFieldNdvi, useAlerts, useWeather, useLedgerEntries } from "@/lib/api/hooks";
 import { boundsFromGeometry, polygonCentroid } from "@/lib/geo";
 import { useAppStore, type MapLayer } from "@/lib/store/useAppStore";
 import { Card } from "@/components/ui/Card";
@@ -31,7 +31,6 @@ const LAYERS: { key: MapLayer; label: string }[] = [
 
 export default function DashboardPage() {
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
-  const selectedMandi = useAppStore((s) => s.selectedMandi);
   const mapLayer = useAppStore((s) => s.mapLayer);
   const setMapLayer = useAppStore((s) => s.setMapLayer);
 
@@ -39,7 +38,6 @@ export default function DashboardPage() {
   const { data: ndvi } = useFieldNdvi(selectedFieldId);
   const { data: health } = useCropHealth(selectedFieldId);
   const { data: alerts } = useAlerts(false);
-  const { data: mandiRates } = useMandiRates(selectedMandi);
   const { data: ledgerEntries } = useLedgerEntries();
 
   const centroid = field ? polygonCentroid(field.geometry) : null;
@@ -83,7 +81,7 @@ export default function DashboardPage() {
             <div className="text-xs text-alert-red-body">{topAlert.message}</div>
           </div>
           <Link
-            href="/market"
+            href="/health"
             className="flex-none rounded-lg border border-alert-red-border bg-cream-card px-3 py-1.5 text-xs font-semibold text-alert-red-text hover:bg-alert-red-border"
           >
             View advisory
@@ -170,64 +168,45 @@ export default function DashboardPage() {
               </div>
             </Card>
           </Link>
-          <Link href="/market" className="min-h-0 flex-1">
-            <Card className="flex h-full flex-col gap-2.5 hover:border-[#C9DECE]">
-              <div className="flex items-center justify-between">
-                <div className="text-[13px] font-bold text-ink-900">Weather</div>
-              </div>
-              {forecast && forecast[0] ? (
+          {/* Full 7-day forecast — this is now the home for weather (the old
+              /market page that held it is gone). Day chips scroll horizontally
+              rather than squeezing, so the card holds any column width. */}
+          <Card className="flex min-h-0 flex-1 flex-col gap-2.5">
+            <div className="text-[13px] font-bold text-ink-900">
+              7-day weather{field?.district ? ` — ${field.district}` : ""}
+            </div>
+            {forecast && forecast[0] ? (
+              <>
                 <div className="flex items-center gap-2.5">
                   <div className="text-[22px] font-extrabold leading-none text-ink-900">{forecast[0].temp_hi}°</div>
                   <div className="text-[11px] text-ink-400">
                     Humidity {forecast[0].humidity_pct}% · Wind {forecast[0].wind_kmh} km/h
                   </div>
                 </div>
-              ) : (
-                <div className="text-xs text-ink-400">No field selected</div>
-              )}
-              <div className="flex gap-1 text-center text-[10px] text-ink-500">
-                {forecast?.slice(0, 5).map((d) => (
-                  <div
-                    key={d.date}
-                    className="flex-1 rounded-lg px-0.5 py-1.5"
-                    style={{ background: d.rain ? "var(--color-alert-amber-bg)" : "var(--color-cream-bg)" }}
-                  >
-                    {d.day}
-                    <div className="text-[11px] font-bold" style={{ color: d.rain ? "var(--color-alert-amber-text)" : "var(--color-ink-900)" }}>
-                      {d.temp_hi}°
+                <div className="flex gap-1 overflow-x-auto text-center text-[10px] text-ink-500">
+                  {forecast.map((d) => (
+                    <div
+                      key={d.date}
+                      className="min-w-[34px] flex-1 rounded-lg px-0.5 py-1.5"
+                      style={{ background: d.rain ? "var(--color-alert-amber-bg)" : "var(--color-cream-bg)" }}
+                    >
+                      <div className="font-semibold">{d.day}</div>
+                      <div className="text-[11px] font-bold" style={{ color: d.rain ? "var(--color-alert-amber-text)" : "var(--color-ink-900)" }}>
+                        {d.temp_hi}°
+                      </div>
+                      <div className="text-[9px] text-ink-400">{d.temp_lo}°</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Link>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-ink-400">No field selected — draw a field to see its forecast.</div>
+            )}
+          </Card>
         </div>
 
         {/* Right col */}
         <div className="flex min-h-0 flex-col gap-3.5">
-          <Link href="/market">
-            <Card className="flex flex-col gap-2 hover:border-[#C9DECE]">
-              <div className="flex items-baseline justify-between">
-                <div className="text-[13px] font-bold text-ink-900">Mandi rates</div>
-                <div className="text-[10.5px] text-ink-400">PKR / 40 kg</div>
-              </div>
-              <div className="flex flex-col text-xs">
-                {mandiRates?.slice(0, 4).map((r) => (
-                  <div key={r.commodity} className="flex items-center gap-2 border-b border-cream-inset py-1.5 last:border-0">
-                    <span className="flex-1 font-semibold text-ink-900">{r.commodity}</span>
-                    <span className="font-bold">{r.price_pkr_per_40kg.toLocaleString()}</span>
-                    <span
-                      className="w-11 text-right text-[11px] font-bold"
-                      style={{ color: r.change_pct >= 0 ? "var(--color-forest-ink-700)" : "var(--color-down-red)" }}
-                    >
-                      {r.change_pct >= 0 ? "▲" : "▼"}
-                      {Math.abs(r.change_pct)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Link>
           <Link href="/ledger" className="min-h-0 flex-1">
             <Card className="flex h-full flex-col gap-2.5 hover:border-[#C9DECE]">
               <div className="text-[13px] font-bold text-ink-900">Recent ledger</div>

@@ -11,7 +11,7 @@ inference), it gets its own small table the same way.
 
 import enum
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, String
@@ -48,6 +48,11 @@ class NdviJob(Base):
         nullable=False,
     )
     error_message: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    # The date window this job was asked to use — NULL on both means "used
+    # the global NDVI_SEARCH_WINDOW_DAYS default", not a redundant copy of it.
+    requested_start_date: Mapped[Optional[date]] = mapped_column(nullable=True)
+    requested_end_date: Mapped[Optional[date]] = mapped_column(nullable=True)
 
     # Set once the job finishes successfully — points at the NdviHistory row
     # it produced. SET NULL (not CASCADE) so deleting a history row later

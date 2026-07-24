@@ -7,12 +7,12 @@ import {
   CreateFieldInput,
   fieldsApi,
   ledgerApi,
-  mandiApi,
+  ReanalyzeFieldInput,
   scansApi,
   settingsApi,
   weatherApi,
 } from "./resources";
-import type { LedgerEntryCreate, Mandi, UserSettingsUpdate } from "./types";
+import type { LedgerEntryCreate, UserSettingsUpdate } from "./types";
 
 export function useFields() {
   const { isAuthenticated } = useAuth();
@@ -86,6 +86,19 @@ export function useCreateField() {
   });
 }
 
+/**
+ * Only creates the job (mutationFn resolves once the job is `pending`) —
+ * no query invalidation here, since no new NdviHistory row exists yet.
+ * The caller invalidates ["fields"] once useNdviJob's polling reports the
+ * job is "done" (see health/page.tsx).
+ */
+export function useReanalyzeField() {
+  return useMutation({
+    mutationFn: ({ fieldId, input }: { fieldId: string; input: ReanalyzeFieldInput }) =>
+      fieldsApi.reanalyze(fieldId, input),
+  });
+}
+
 export function useDeleteField() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -112,10 +125,6 @@ export function useUpdateSettings() {
     mutationFn: (patch: UserSettingsUpdate) => settingsApi.update(patch),
     onSuccess: (data) => queryClient.setQueryData(["settings"], data),
   });
-}
-
-export function useMandiRates(mandi: Mandi) {
-  return useQuery({ queryKey: ["mandi-rates", mandi], queryFn: () => mandiApi.list(mandi) });
 }
 
 export function useWeather(lat: number | null, lon: number | null) {
@@ -156,7 +165,27 @@ export function useCreateLedgerEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ledger"] });
       queryClient.invalidateQueries({ queryKey: ["report"] });
+      // A logged entry may introduce a new head — keep the dropdown fresh.
+      queryClient.invalidateQueries({ queryKey: ["ledger-categories"] });
     },
+  });
+}
+
+export function useLedgerCategories() {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: ["ledger-categories"],
+    queryFn: ledgerApi.listCategories,
+    enabled: isAuthenticated,
+  });
+}
+
+export function useCreateLedgerCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => ledgerApi.createCategory(name),
+    // The endpoint returns the full updated list — seed the cache directly.
+    onSuccess: (categories) => queryClient.setQueryData(["ledger-categories"], categories),
   });
 }
 

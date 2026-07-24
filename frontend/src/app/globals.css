@@ -234,6 +234,49 @@
   border-radius: 6px;
 }
 
+/* Bold native range-slider — the browser's stock thumb reads as an
+   afterthought at this size, so this reshapes it into a solid, shadowed
+   FAB-weight grab handle instead of switching to a custom drag control.
+   Native <input type="range"> semantics (keyboard, touch, a11y) stay intact;
+   only the thumb/track paint is replaced. */
+.jk-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.jk-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-cream-inset);
+}
+.jk-slider::-moz-range-track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-cream-inset);
+}
+.jk-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--color-forest-900);
+  box-shadow: 0 0 0 3px var(--color-cream-card), var(--shadow-fab);
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.jk-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-forest-900);
+  box-shadow: 0 0 0 3px var(--color-cream-card), var(--shadow-fab);
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
 
 .jk-how-connector {
   transition: border-color 300ms ease;

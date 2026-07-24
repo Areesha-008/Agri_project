@@ -74,10 +74,13 @@ def get_crop_health(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Cro
     if field is None:
         raise FieldNotFoundError()
 
+    # satellite_image_date alone is day-granularity and, since re-analysis
+    # can run more than once per day, no longer unique — computed_at breaks
+    # ties by actual recency instead of leaving same-day order undefined.
     history_rows: List[NdviHistory] = (
         db.query(NdviHistory)
         .filter(NdviHistory.field_id == field_id)
-        .order_by(NdviHistory.satellite_image_date.asc())
+        .order_by(NdviHistory.satellite_image_date.asc(), NdviHistory.computed_at.asc())
         .all()
     )
 

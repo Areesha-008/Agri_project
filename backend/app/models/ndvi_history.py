@@ -56,6 +56,11 @@ class NdviHistory(Base):
     ndvi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     ndmi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
+    # Start of the requested search window (end is satellite_image_date
+    # below). Nullable because rows written before this column existed have
+    # no recoverable value — leave those NULL rather than guessing.
+    date_range_start: Mapped[Optional[date]] = mapped_column(nullable=True)
+
     # Date of the Sentinel-2 image used for this computation (not when we
     # computed it — that's computed_at below). Distinguishing these matters:
     # a user might re-run analysis on the same underlying satellite image.

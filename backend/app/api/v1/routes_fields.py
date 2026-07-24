@@ -14,7 +14,7 @@ from app.schemas.field import (
     FieldResponse,
     FieldSaveRequest,
 )
-from app.schemas.ndvi_job import NdviJobStatusResponse
+from app.schemas.ndvi_job import FieldReanalyzeRequest, NdviJobStatusResponse
 from app.services.field_service import (
     delete_field,
     field_to_response,
@@ -24,6 +24,7 @@ from app.services.field_service import (
 )
 from app.services.ndvi_job_service import (
     create_field_with_job,
+    create_reanalysis_job,
     get_field_ndvi,
     get_job_or_404,
     run_ndvi_job,
@@ -111,3 +112,23 @@ def get_field_ndvi_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     return get_field_ndvi(db, current_user.id, field_id)
+
+
+@router.post("/{field_id}/reanalyze", response_model=NdviJobStatusResponse, status_code=201)
+def reanalyze_field(
+    field_id: uuid.UUID,
+    body: FieldReanalyzeRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Re-runs NDVI/NDMI analysis for an already-saved field over a new date
+    window, appending a fresh NdviHistory row (doesn't touch the Field row
+    or overwrite prior history). Poll GET /fields/{field_id}/jobs/{job_id}
+    same as field creation.
+    """
+    field = get_field_or_404(db, current_user.id, field_id)
+    job = create_reanalysis_job(db, field, body)
+    background_tasks.add_task(run_ndvi_job, job.id)
+    return job

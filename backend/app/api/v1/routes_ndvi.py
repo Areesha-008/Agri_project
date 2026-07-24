@@ -21,5 +21,10 @@ def analyze_ndvi(request: NdviAnalyzeRequest):
     polygon = validate_polygon(request.geometry)
     area_hectares = calculate_area_hectares(polygon)
 
-    result = compute_ndvi(polygon, area_hectares=area_hectares)
+    result = compute_ndvi(
+        polygon,
+        area_hectares=area_hectares,
+        start_date=request.start_date,
+        end_date=request.end_date,
+    )
     return result

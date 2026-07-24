@@ -34,6 +34,9 @@ td.num { text-align: right; }
 .fert { display: flex; gap: 8px; margin-bottom: 20px; }
 .fert div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; font-size: 12px; }
 .fert .amount { font-weight: 800; font-size: 16px; color: #1B4332; }
+.money { display: flex; gap: 8px; margin-bottom: 20px; }
+.money div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; font-size: 12px; }
+.money .amount { font-weight: 800; font-size: 16px; }
 .footnote { font-size: 10px; color: #9aa290; border-top: 1px solid #EAE7DA; padding-top: 10px; }
 """
 
@@ -67,6 +70,12 @@ def render_report_pdf(report: ReportResponse, owner_email: str) -> bytes:
         <tr><th>Field</th><th>Crop</th><th>Area</th><th>NDVI</th><th>Health</th></tr>
         {rows or "<tr><td colspan='5'>No fields yet.</td></tr>"}
       </table>
+      <h2>FINANCIAL SUMMARY</h2>
+      <div class="money">
+        <div>Total spent<div class="amount" style="color:#B4362A">PKR {report.total_spent:,.0f}</div></div>
+        <div>Total earned<div class="amount" style="color:#1B4332">PKR {report.total_earned:,.0f}</div></div>
+        <div>Net<div class="amount" style="color:{'#1B4332' if report.net >= 0 else '#B4362A'}">PKR {report.net:,.0f}</div></div>
+      </div>
       <h2>CALCULATED FERTILIZER REQUIREMENT</h2>
       <div class="fert">
         <div>Urea (46-0-0)<div class="amount">{report.urea_bags} bags</div></div>

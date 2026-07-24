@@ -3,9 +3,8 @@ DistrictYieldBaseline — reference table of expected NDVI and yield for a
 given district+crop, used as the baseline that the health score and yield
 projection (see services/crop_health_service.py) scale against.
 
-This is curated reference data seeded via an Alembic data migration (same
-pattern as mandi_rates — see models/mandi_rate.py), not something users
-create through the API. A ("DEFAULT", "DEFAULT") row is always seeded so a
+This is curated reference data seeded via an Alembic data migration, not
+something users create through the API. A ("DEFAULT", "DEFAULT") row is always seeded so a
 field missing district/crop (or naming one the table doesn't have yet)
 still gets a sane fallback instead of a 404.
 """

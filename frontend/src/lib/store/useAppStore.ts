@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { Lang } from "@/lib/i18n/dictionary";
-import type { Mandi } from "@/lib/api/types";
 
 export type MapLayer = "ndvi" | "ndmi" | "satellite";
 
@@ -13,9 +12,6 @@ interface AppState {
 
   mapLayer: MapLayer;
   setMapLayer: (layer: MapLayer) => void;
-
-  selectedMandi: Mandi;
-  setSelectedMandi: (mandi: Mandi) => void;
 
   notifOpen: boolean;
   fieldMenuOpen: boolean;
@@ -35,9 +31,6 @@ export const useAppStore = create<AppState>((set) => ({
 
   mapLayer: "ndvi",
   setMapLayer: (layer) => set({ mapLayer: layer }),
-
-  selectedMandi: "faisalabad",
-  setSelectedMandi: (mandi) => set({ selectedMandi: mandi }),
 
   notifOpen: false,
   fieldMenuOpen: false,

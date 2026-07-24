@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { Card } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
-import type { Mandi } from "@/lib/api/types";
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -84,24 +83,6 @@ export default function SettingsPage() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2.5 border-t border-cream-inset py-2.5">
-            <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] font-semibold">Default mandi</div>
-              <div className="text-[11px] text-ink-400">Market rates shown first</div>
-            </div>
-            <div className="flex rounded-lg bg-cream-inset p-0.5 text-[11.5px] font-semibold">
-              {(["faisalabad", "lahore", "multan"] as Mandi[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => updateSettings.mutate({ default_mandi: m })}
-                  className="cursor-pointer rounded-md px-2.5 py-1.5 capitalize"
-                  style={settings?.default_mandi === m ? { background: "#1B4332", color: "#fff" } : undefined}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
         </Card>
 
         {/* Alerts */}
@@ -118,12 +99,6 @@ export default function SettingsPage() {
             desc="Monsoon, heatwave and frost advisories"
             checked={settings?.alert_weather ?? false}
             onChange={(v) => updateSettings.mutate({ alert_weather: v })}
-          />
-          <ToggleRow
-            label="Mandi price alerts"
-            desc="Notify when your crop moves more than 2%"
-            checked={settings?.alert_price ?? false}
-            onChange={(v) => updateSettings.mutate({ alert_price: v })}
           />
           <ToggleRow
             label="SMS fallback"

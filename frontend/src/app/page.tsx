@@ -282,16 +282,6 @@ export default function LandingPage() {
     },
     {
       icon: (
-        <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 12.5V2M2 12.5h11" />
-          <path d="M4.5 10l2-3 2 1.5 3-4.5" />
-        </svg>
-      ),
-      title: t("landingCardMandiTitle"),
-      desc: t("landingCardMandiDesc"),
-    },
-    {
-      icon: (
         <svg width="18" height="18" viewBox="0 0 15 15" fill="none" stroke="#2d6a4f" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="7.5" cy="7.5" r="1.5" />
           <path d="M3 3l3 3M12 3l-3 3M3 12l3-3M12 12l-3-3" />

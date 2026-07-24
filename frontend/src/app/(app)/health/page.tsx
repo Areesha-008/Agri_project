@@ -1,18 +1,31 @@
 "use client";
 
-import { useMemo } from "react";
-import { useAllCropHealth, useCropHealth, useField, useFields } from "@/lib/api/hooks";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useAllCropHealth,
+  useCropHealth,
+  useField,
+  useFields,
+  useNdviJob,
+  useReanalyzeField,
+} from "@/lib/api/hooks";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { Card } from "@/components/ui/Card";
 import { HealthGauge } from "@/components/ui/HealthGauge";
+import { TimeWindowPicker, type DateRange } from "@/components/ui/TimeWindowPicker";
 
+// forest-ink-700 (not forest-700 — that's a frozen fill token, not the
+// inverting text ramp) since these render as standalone text on a neutral
+// card background, exactly forest-ink's documented use case.
 const STATUS_COLOR: Record<string, string> = {
-  Healthy: "#2D6A4F",
-  Stressed: "#B07D2B",
-  Critical: "#C1512F",
+  Healthy: "var(--color-forest-ink-700)",
+  Stressed: "var(--color-alert-amber-text)",
+  Critical: "var(--color-down-red)",
 };
 
 export default function HealthPage() {
+  const queryClient = useQueryClient();
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
   const setSelectedFieldId = useAppStore((s) => s.setSelectedFieldId);
   const { data: field } = useField(selectedFieldId);
@@ -20,6 +33,35 @@ export default function HealthPage() {
   const { data: fields } = useFields();
   const fieldIds = useMemo(() => fields?.map((f) => f.id) ?? [], [fields]);
   const { data: allHealth } = useAllCropHealth(fieldIds);
+
+  const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const reanalyzeField = useReanalyzeField();
+  const jobStatus = useNdviJob(activeFieldId, activeJobId);
+  const isAnalyzing =
+    activeJobId !== null && jobStatus.data?.status !== "done" && jobStatus.data?.status !== "failed";
+
+  // Job completion isn't observable any other way (no websocket/SSE) — this
+  // effect is what actually refreshes the trend chart/gauge once the
+  // background job finishes; a broad ["fields"] invalidation matches what
+  // useCreateField already does on success, just triggered at the right
+  // time (job done, not job created).
+  useEffect(() => {
+    if (jobStatus.data?.status === "done") {
+      queryClient.invalidateQueries({ queryKey: ["fields"] });
+    }
+  }, [jobStatus.data?.status, queryClient]);
+
+  function handleWindowChange(range: DateRange) {
+    if (!selectedFieldId || reanalyzeField.isPending) return;
+    setTimeWindow(range);
+    setActiveFieldId(selectedFieldId);
+    reanalyzeField.mutate(
+      { fieldId: selectedFieldId, input: range },
+      { onSuccess: (job) => setActiveJobId(job.id) }
+    );
+  }
 
   const maxTrend = Math.max(0.01, ...(health?.ndvi_trend.map((p) => p.ndvi_mean) ?? [0.01]));
 
@@ -39,7 +81,7 @@ export default function HealthPage() {
                 maund/acre · {health?.yield_t_per_ha ?? "—"} t/ha
               </span>
             </div>
-            <div className="h-2 rounded-full bg-[#EDEAE0]">
+            <div className="h-2 rounded-full bg-cream-inset">
               <div
                 className="h-2 rounded-full bg-gradient-to-r from-mint-300 to-forest-500"
                 style={{ width: `${health?.health_score ?? 0}%` }}
@@ -54,14 +96,24 @@ export default function HealthPage() {
 
         {/* NDVI trend */}
         <Card className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline justify-between gap-3">
             <div className="text-sm font-bold">NDVI season trend — {field?.name ?? "—"}</div>
-            <div className="text-[11px] text-ink-400">Sentinel-2 history</div>
+            {isAnalyzing ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-ink-400">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-cream-inset border-t-forest-500" />
+                Analyzing via Sentinel-2…
+              </div>
+            ) : (
+              <TimeWindowPicker value={timeWindow} onChange={handleWindowChange} disabled={!selectedFieldId} />
+            )}
           </div>
           {health && health.ndvi_trend.length > 0 ? (
             <div className="flex min-h-[160px] flex-1 items-end gap-3 overflow-x-auto border-b border-cream-inset px-0.5 pb-0">
-              {health.ndvi_trend.map((point) => (
-                <div key={point.date} className="flex h-full w-11 flex-none flex-col items-center justify-end gap-1.5">
+              {health.ndvi_trend.map((point, i) => (
+                // point.date is the search window's end date, not a unique scene
+                // id — re-analyzing the same field more than once in a day (now
+                // possible via the reanalyze control) produces duplicate dates.
+                <div key={`${point.date}-${i}`} className="flex h-full w-11 flex-none flex-col items-center justify-end gap-1.5">
                   <div className="text-[10px] font-bold text-forest-ink-700">{point.ndvi_mean.toFixed(2)}</div>
                   <div
                     className="w-6 rounded-t-md bg-gradient-to-b from-forest-500 to-mint-300"

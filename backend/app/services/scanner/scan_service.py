@@ -69,7 +69,7 @@ def log_scan_to_ledger(db: Session, user_id: uuid.UUID, scan_id: uuid.UUID, fiel
         field_id=field.id,
         title=f"Leaf scan — {'healthy' if is_healthy else scan.disease}",
         detail=f"{scan.confidence_pct:.0f}% confidence · {field.name}",
-        category=LedgerCategory.Scan,
+        category=LedgerCategory.Scan.value,  # category is a String column now
     )
     db.add(entry)
     db.commit()

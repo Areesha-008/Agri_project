@@ -15,6 +15,8 @@ class FieldCreateRequest(BaseModel):
     geometry: PolygonGeometry
     district: Optional[str] = Field(default=None, max_length=100)
     crop: Optional[str] = Field(default=None, max_length=50)
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
 class FieldSaveRequest(BaseModel):
@@ -77,6 +79,7 @@ class NdviHistoryItem(BaseModel):
     ndmi_mean: Optional[float] = None
     ndmi_min: Optional[float] = None
     ndmi_max: Optional[float] = None
+    date_range_start: Optional[date] = None
     satellite_image_date: date
     cloud_cover_percent: Optional[float] = None
     source_collection: str

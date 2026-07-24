@@ -26,12 +26,6 @@ export const NavIcons = {
       <path d="M10.5 10.5 L13.5 13.5" />
     </svg>
   ),
-  market: (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.6" className="flex-none">
-      <path d="M2 12 L5 8 L8 10 L13 3" />
-      <path d="M9.5 3 H13 V6.5" />
-    </svg>
-  ),
   ledger: (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.6" className="flex-none">
       <rect x="2.5" y="1.5" width="10" height="12" rx="1.5" />

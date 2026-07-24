@@ -23,6 +23,7 @@ from app.models.field import Field
 from app.models.ndvi_history import NdviHistory
 from app.models.ndvi_job import NdviJob, NdviJobStatus
 from app.schemas.field import FieldCreateRequest, FieldNdviLatestResponse, NdviHistoryItem
+from app.schemas.ndvi_job import FieldReanalyzeRequest
 from app.services.geometry_validator import calculate_area_hectares, validate_polygon
 from app.services.satellite.ndvi_processor import compute_ndvi
 
@@ -50,13 +51,33 @@ def create_field_with_job(
     db.add(field)
     db.flush()  # get field.id before creating the related NdviJob row
 
-    job = NdviJob(field_id=field.id, status=NdviJobStatus.pending)
+    job = NdviJob(
+        field_id=field.id,
+        status=NdviJobStatus.pending,
+        requested_start_date=field_in.start_date,
+        requested_end_date=field_in.end_date,
+    )
     db.add(job)
 
     db.commit()
     db.refresh(field)
     db.refresh(job)
     return field, job
+
+
+def create_reanalysis_job(db: Session, field: Field, body: FieldReanalyzeRequest) -> NdviJob:
+    """Re-runs analysis for an already-saved field over a new date window —
+    no new Field row, just a fresh NdviJob appending to its history."""
+    job = NdviJob(
+        field_id=field.id,
+        status=NdviJobStatus.pending,
+        requested_start_date=body.start_date,
+        requested_end_date=body.end_date,
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return job
 
 
 # compute_ndvi can block indefinitely on a hung CDSE call (BackgroundTasks
@@ -112,7 +133,12 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
         polygon = to_shape(field.geometry)
 
         try:
-            result = compute_ndvi(polygon, area_hectares=field.area_hectares)
+            result = compute_ndvi(
+                polygon,
+                area_hectares=field.area_hectares,
+                start_date=job.requested_start_date,
+                end_date=job.requested_end_date,
+            )
         except Exception as e:
             logger.error(f"NDVI job {job_id} analysis failed: {e}", exc_info=True)
             _fail_job(db, job, str(e))
@@ -141,6 +167,7 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
             # temporal-means every cloud-free scene in the search window, so
             # the window's end date is used as the recorded image date (see
             # ndvi_processor.py's module docstring for why).
+            date_range_start=result.source.date_range_start,
             satellite_image_date=result.source.date_range_end,
             cloud_cover_percent=result.source.max_cloud_cover_filter_percent,
             source_collection=result.source.collection,
@@ -172,10 +199,13 @@ def get_field_ndvi(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Fiel
     if field is None:
         raise FieldNotFoundError()
 
+    # satellite_image_date alone is day-granularity and, since re-analysis
+    # can run more than once per day, no longer unique — computed_at breaks
+    # ties by actual recency instead of leaving same-day order undefined.
     history_rows = (
         db.query(NdviHistory)
         .filter(NdviHistory.field_id == field_id)
-        .order_by(NdviHistory.satellite_image_date.desc())
+        .order_by(NdviHistory.satellite_image_date.desc(), NdviHistory.computed_at.desc())
         .all()
     )
     history_items = [NdviHistoryItem.model_validate(row) for row in history_rows]

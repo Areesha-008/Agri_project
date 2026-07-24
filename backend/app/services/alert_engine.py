@@ -2,14 +2,12 @@
 Rule-based alert engine — evaluated on a periodic sweep (APScheduler, see
 main.py, interval from settings.ALERT_SWEEP_INTERVAL_HOURS).
 
-Three rule categories, matching the three non-SMS toggles in UserSettings:
+Two rule categories, matching the two non-SMS toggles in UserSettings:
 - pest: stripe rust proliferation risk (humidity/temperature window, the
   example rule from the build instructions).
 - weather: upcoming monsoon rain warning.
-- price: the user's field crop moving >2% at their default mandi ("Notify
-  when your crop moves more than 2%" — see Settings screen copy).
 
-All three are heuristic scoring, not validated agronomic/statistical
+Both are heuristic scoring, not validated agronomic/statistical
 models — flagged in GAPS.md alongside the crop-health formula for the
 agronomy team to refine.
 
@@ -30,7 +28,6 @@ from app.db.session import SessionLocal
 from app.exceptions.custom_exceptions import AlertNotFoundError
 from app.models.alert import Alert, AlertCategory
 from app.models.field import Field
-from app.models.mandi_rate import MandiRate
 from app.services.notifications.notifier import InAppNotifier
 from app.services.user_settings_service import get_or_create_settings
 from app.services.weather.open_meteo_client import ForecastDay, get_forecast
@@ -44,18 +41,6 @@ RUST_MIN_CONSECUTIVE_DAYS = 3
 
 MONSOON_LOOKAHEAD_DAYS = 3
 MONSOON_MIN_RAIN_DAYS = 2
-
-PRICE_ALERT_THRESHOLD_PCT = 2.0
-
-# Field.crop (free text) -> MandiRate.commodity, so a price alert can be
-# tied to "your crop" per field rather than every commodity.
-CROP_TO_COMMODITY = {
-    "Wheat": "Wheat",
-    "Rice": "Basmati paddy",
-    "Sugarcane": "Sugarcane",
-    "Cotton": "Cotton (phutti)",
-    "Maize": "Maize",
-}
 
 
 def _has_active_alert(db: Session, field_id: uuid.UUID, category: AlertCategory) -> bool:
@@ -138,34 +123,6 @@ def evaluate_field_weather_alerts(db: Session, field: Field, forecast: list[Fore
     return [alert]
 
 
-def evaluate_field_price_alerts(db: Session, field: Field) -> list[Alert]:
-    if not field.crop:
-        return []
-    commodity = CROP_TO_COMMODITY.get(field.crop)
-    if commodity is None:
-        return []
-
-    rate = db.query(MandiRate).filter(MandiRate.commodity == commodity).first()
-    if rate is None or abs(rate.change_pct) < PRICE_ALERT_THRESHOLD_PCT:
-        return []
-    if _has_active_alert(db, field.id, AlertCategory.price):
-        return []
-
-    direction = "up" if rate.change_pct > 0 else "down"
-    alert = Alert(
-        field_id=field.id,
-        category=AlertCategory.price,
-        title=f"{commodity} price {direction} {abs(rate.change_pct):.1f}%",
-        message=(
-            f"{commodity} moved {rate.change_pct:+.1f}% today — above your "
-            f"{PRICE_ALERT_THRESHOLD_PCT:.0f}% alert threshold for {field.name}."
-        ),
-        risk_pct=None,
-    )
-    db.add(alert)
-    return [alert]
-
-
 def evaluate_field(db: Session, field: Field) -> list[Alert]:
     settings_row = get_or_create_settings(db, field.user_id)
     new_alerts: list[Alert] = []
@@ -179,8 +136,6 @@ def evaluate_field(db: Session, field: Field) -> list[Alert]:
         new_alerts += evaluate_field_pest_alerts(db, field, forecast)
     if settings_row.alert_weather:
         new_alerts += evaluate_field_weather_alerts(db, field, forecast)
-    if settings_row.alert_price:
-        new_alerts += evaluate_field_price_alerts(db, field)
 
     return new_alerts
 

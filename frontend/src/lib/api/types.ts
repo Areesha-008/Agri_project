@@ -65,6 +65,7 @@ export interface NdviHistoryItem {
   ndmi_mean: number | null;
   ndmi_min: number | null;
   ndmi_max: number | null;
+  date_range_start: string | null;
   satellite_image_date: string;
   cloud_cover_percent: number | null;
   source_collection: string;
@@ -97,25 +98,13 @@ export interface CropHealthResponse {
 export interface UserSettings {
   language: "en" | "ur";
   yield_unit: "maund_per_acre" | "t_per_ha";
-  default_mandi: string;
   alert_pest: boolean;
   alert_weather: boolean;
-  alert_price: boolean;
   alert_sms: boolean;
   updated_at: string;
 }
 
 export type UserSettingsUpdate = Partial<Omit<UserSettings, "updated_at">>;
-
-export type Mandi = "faisalabad" | "lahore" | "multan";
-
-export interface MandiRate {
-  commodity: string;
-  urdu_name: string;
-  price_pkr_per_40kg: number;
-  change_pct: number;
-  history_7d: number[];
-}
 
 export interface ForecastDay {
   day: string;
@@ -141,7 +130,9 @@ export interface Alert {
   created_at: string;
 }
 
-export type LedgerCategory = "Fertilizer" | "Irrigation" | "Spray" | "Operation" | "Scan";
+// Free string now — the backend stores custom heads alongside the built-ins.
+export type LedgerCategory = string;
+export type LedgerEntryType = "expense" | "income";
 
 export interface LedgerEntry {
   id: string;
@@ -149,6 +140,8 @@ export interface LedgerEntry {
   title: string;
   detail: string;
   category: LedgerCategory;
+  amount: number | null;
+  entry_type: LedgerEntryType;
   timestamp: string;
 }
 
@@ -157,6 +150,8 @@ export interface LedgerEntryCreate {
   title: string;
   detail: string;
   category: LedgerCategory;
+  amount?: number | null;
+  entry_type: LedgerEntryType;
 }
 
 export interface FieldReportSummary {
@@ -175,6 +170,9 @@ export interface Report {
   dap_bags: number;
   sop_bags: number;
   ledger_entry_count: number;
+  total_spent: number;
+  total_earned: number;
+  net: number;
   field_summaries: FieldReportSummary[];
   generated_at: string;
 }

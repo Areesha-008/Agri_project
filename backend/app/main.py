@@ -11,6 +11,7 @@ from app.core.logging import setup_logging
 from app.exceptions import register_exception_handlers
 from app.services.alert_engine import run_alert_sweep
 from app.services.satellite.cdse_client import initialize_cdse_connection
+from app.services.scanner.inference_provider import get_inference_provider
 
 setup_logging()
 
@@ -46,6 +47,11 @@ scheduler = BackgroundScheduler()
 @app.on_event("startup")
 def on_startup():
     initialize_cdse_connection()
+    # Force the inference provider singleton to load now — if
+    # INFERENCE_PROVIDER=onnx and the model files are missing/broken, this
+    # raises FileNotFoundError here (crash at boot with a clear log line)
+    # instead of on a user's first scan request.
+    get_inference_provider()
     scheduler.add_job(
         run_alert_sweep,
         "interval",

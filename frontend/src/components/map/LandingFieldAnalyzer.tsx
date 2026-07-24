@@ -6,17 +6,24 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { getToken } from "@/lib/api/client";
-import { useCreateField, useDeleteField, useField, useFieldNdvi, useNdviJob } from "@/lib/api/hooks";
+import { useCreateField, useDeleteField, useField, useFieldNdvi, useNdviJob, useReanalyzeField } from "@/lib/api/hooks";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { boundsFromGeometry } from "@/lib/geo";
+import { isoDaysAgo, todayIso } from "@/components/ui/TimeWindowPicker";
+import { computeWeeklyTiles, matchEntry, type WeekTile } from "@/lib/weekTiles";
+import { WeekScrubber } from "@/components/map/WeekScrubber";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { PolygonGeometry } from "@/lib/api/types";
 import type { MapLayer } from "@/lib/store/useAppStore";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
+import { boundsFromGeometry } from "@/lib/geo";
 
 const FieldsMap = dynamic(() => import("@/components/map/FieldsMap").then((m) => m.FieldsMap), {
   ssr: false,
+  // #1a2417 is intentionally a literal, not a token: it approximates the
+  // Mapbox satellite basemap's own dark tone (what's about to load in),
+  // not the site's light/dark theme — the map looks the same regardless of
+  // which theme the rest of the page is in.
   loading: () => <div className="jk-contours-dark h-full w-full animate-pulse bg-[#1a2417]" />,
 });
 
@@ -34,9 +41,10 @@ const JOB_TIMEOUT_MS = 150_000;
 
 /**
  * Landing-page hero: the real field-drawing + NDVI/NDMI analysis flow from
- * /fields, runnable by anonymous visitors. If no token exists yet, we log in
- * as the shared guest user (same as "Try without an account") right before
- * saving — never earlier, and never over an existing session.
+ * /fields, runnable by anonymous visitors. Guests get the previous 4 weeks as
+ * separate weekly readings (auto-analyzed one week at a time), NOT a single
+ * averaged window — custom date ranges are gated behind an account. If no
+ * token exists yet, we log in as the shared guest user right before saving.
  */
 export function LandingFieldAnalyzer() {
   const { t } = useTranslation();
@@ -55,6 +63,9 @@ export function LandingFieldAnalyzer() {
   const [timedOut, setTimedOut] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  const [activeTileIndex, setActiveTileIndex] = useState(0);
+  // True from the moment analysis starts until every weekly job is terminal.
+  const [batchActive, setBatchActive] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [locateSignal, setLocateSignal] = useState(0);
   // True only when THIS component minted the guest session — the demo field
@@ -62,28 +73,68 @@ export function LandingFieldAnalyzer() {
   // (real or earlier-guest) session.
   const mintedGuestSession = useRef(false);
 
+  // The four weekly tiles (newest first), fixed for the component's life so the
+  // jobs we fire always match the tiles the scrubber displays.
+  const [tiles] = useState<WeekTile[]>(() =>
+    computeWeeklyTiles({ start_date: isoDaysAgo(28), end_date: todayIso() }),
+  );
+  // Weeks whose jobs haven't been fired yet — drained one at a time as each
+  // finishes (sequential, to keep concurrent CDSE load to one query).
+  const queueRef = useRef<WeekTile[]>([]);
+  // Guards the sequential-advance effect so each finished job advances the
+  // queue exactly once (the effect can re-run with the same terminal status).
+  const processedJobRef = useRef<string | null>(null);
+
   const createField = useCreateField();
+  const reanalyzeField = useReanalyzeField();
   const deleteField = useDeleteField();
   const jobStatus = useNdviJob(activeFieldId, activeJobId);
   const { data: field } = useField(activeFieldId);
   const { data: ndvi } = useFieldNdvi(activeFieldId);
 
-  const isAnalyzing =
-    mode === "saving" ||
-    (activeJobId !== null && jobStatus.data?.status !== "done" && jobStatus.data?.status !== "failed");
-  const jobFailed = jobStatus.data?.status === "failed";
-  const jobDone = jobStatus.data?.status === "done";
-  const showResults = jobDone && Boolean(ndvi?.latest);
-  // Heatmap by default once results exist; the toggle overrides.
-  const layer: MapLayer = layerChoice ?? (showResults ? "ndvi" : "satellite");
+  const history = ndvi?.history ?? [];
+  const anyResults = history.length > 0;
+  const activeEntry = tiles[activeTileIndex] ? matchEntry(tiles[activeTileIndex], history) : null;
+  const isAnalyzing = mode === "saving" || batchActive;
+  // Heatmap by default once any week has results; the toggle overrides.
+  const layer: MapLayer = layerChoice ?? (anyResults ? "ndvi" : "satellite");
 
-  // The NDVI PNGs only exist once the job finishes — nothing else refetches
-  // the queries that were fired (empty) while the job was still running.
+  // Sequential driver: when the current weekly job reaches a terminal state,
+  // refresh the field (to pick up its new history row) and fire the next
+  // queued week. When the queue empties, the batch is done.
   useEffect(() => {
-    if (!jobDone || !activeFieldId) return;
-    queryClient.invalidateQueries({ queryKey: ["fields", activeFieldId] });
-  }, [jobDone, activeFieldId, queryClient]);
+    const status = jobStatus.data?.status;
+    if (status !== "done" && status !== "failed") return;
+    if (!activeJobId || !activeFieldId) return;
+    if (processedJobRef.current === activeJobId) return;
+    processedJobRef.current = activeJobId;
 
+    // The NDVI PNGs/stats only exist once a job finishes — nothing else
+    // refetches the queries fired (empty) while it was still running.
+    queryClient.invalidateQueries({ queryKey: ["fields", activeFieldId] });
+
+    const next = queueRef.current.shift();
+    if (next) {
+      reanalyzeField.mutate(
+        { fieldId: activeFieldId, input: { start_date: next.start, end_date: next.end } },
+        {
+          // Clear the previous week's "taking longer" flag as the next starts.
+          onSuccess: (job) => {
+            setTimedOut(false);
+            setActiveJobId(job.id);
+          },
+          onError: () => setBatchActive(false),
+        },
+      );
+    } else {
+      setBatchActive(false);
+    }
+  }, [jobStatus.data?.status, activeJobId, activeFieldId, reanalyzeField, queryClient]);
+
+  // Per-job "taking longer than usual" timer — re-armed as each weekly job
+  // starts (activeJobId changes), so it flags a genuinely stuck single job.
+  // timedOut is cleared where activeJobId is set (handleAnalyze + the advance
+  // effect's onSuccess), not here, to avoid a synchronous setState-in-effect.
   useEffect(() => {
     if (!activeJobId) return;
     const id = setTimeout(() => setTimedOut(true), JOB_TIMEOUT_MS);
@@ -111,16 +162,11 @@ export function LandingFieldAnalyzer() {
   function reset() {
     // Demo fields shouldn't pile up in the shared guest account — but only
     // remove what we created under a session we minted ourselves, and only
-    // once its analysis job has actually reached a terminal state. Real CDSE
-    // fetches have been observed taking well over our own JOB_TIMEOUT_MS
-    // "taking longer than usual" threshold — deleting the field while that
-    // job is still running (e.g. a "Try again" click right after the
-    // timeout message appears) causes the background job to crash trying to
-    // write results for a field that's already gone. Leaving it in place
-    // lets the job finish normally; it's still cleaned up once it's done.
-    const jobIsTerminal =
-      !activeJobId || jobStatus.data?.status === "done" || jobStatus.data?.status === "failed";
-    if (mintedGuestSession.current && activeFieldId && jobIsTerminal) {
+    // once the ENTIRE weekly batch has reached a terminal state. Deleting the
+    // field while any of its jobs is still running crashes that background job
+    // trying to write results for a field that's already gone; leaving it lets
+    // the jobs finish (it's still cleaned up on the next reset once terminal).
+    if (mintedGuestSession.current && activeFieldId && !batchActive) {
       deleteField.mutate(activeFieldId);
     }
     setMode("idle");
@@ -133,6 +179,10 @@ export function LandingFieldAnalyzer() {
     setTimedOut(false);
     setActiveJobId(null);
     setActiveFieldId(null);
+    setActiveTileIndex(0);
+    setBatchActive(false);
+    queueRef.current = [];
+    processedJobRef.current = null;
     setLayerChoice(null);
     setClearSignal((n) => n + 1);
     setExpanded(false);
@@ -146,35 +196,46 @@ export function LandingFieldAnalyzer() {
   }
 
   async function handleAnalyze() {
-    if (!pendingGeometry) return;
+    if (!pendingGeometry || tiles.length === 0) return;
     setMode("saving");
     setSaveFailed(false);
+    setTimedOut(false);
     try {
       if (!isAuthenticated && !getToken()) {
         await loginAsGuest();
         mintedGuestSession.current = true;
       }
+      const newest = tiles[0];
+      // Queue the older weeks; the sequential-advance effect fires them one by
+      // one as each finishes. Creating the field kicks off the newest week.
+      queueRef.current = tiles.slice(1);
+      processedJobRef.current = null;
+      setBatchActive(true);
       const result = await createField.mutateAsync({
         name: name || t("landingDrawDefaultName"),
         geometry: pendingGeometry,
         district: district || undefined,
         crop: crop || undefined,
+        start_date: newest.start,
+        end_date: newest.end,
       });
       setActiveFieldId(result.field.id);
       setActiveJobId(result.job_id);
+      setActiveTileIndex(0);
       setMode("idle");
     } catch {
       setSaveFailed(true);
+      setBatchActive(false);
       setMode("naming");
     }
   }
 
   const overlay: FieldOverlay | null =
-    field && ndvi?.latest && jobDone
+    field && activeEntry
       ? {
           id: field.id,
           boundingBox: boundsFromGeometry(field.geometry),
-          imageUrl: layer === "ndmi" ? (ndvi.latest.ndmi_png_url ?? "") : (ndvi.latest.ndvi_png_url ?? ""),
+          imageUrl: layer === "ndmi" ? (activeEntry.ndmi_png_url ?? "") : (activeEntry.ndvi_png_url ?? ""),
         }
       : null;
 
@@ -222,7 +283,7 @@ export function LandingFieldAnalyzer() {
 
           <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
             <div className="flex gap-1.5">
-              {showResults &&
+              {anyResults &&
                 LAYERS.map((l) => (
                   <button
                     key={l.key}
@@ -263,7 +324,7 @@ export function LandingFieldAnalyzer() {
           </div>
 
           <div className="absolute bottom-3 left-3 z-10 w-[252px] rounded-2xl border border-border bg-cream-card/95 p-3.5 shadow-card backdrop-blur-sm">
-            {mode === "idle" && !isAnalyzing && !activeFieldId && (
+            {mode === "idle" && !activeFieldId && !isAnalyzing && (
               <div className="flex flex-col gap-2.5">
                 <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawHint")}</div>
                 <Button onClick={startDrawing}>{t("landingDrawCta")}</Button>
@@ -283,6 +344,14 @@ export function LandingFieldAnalyzer() {
               <div className="flex flex-col gap-2.5">
                 <div className="rounded-xl bg-mint-100 px-3 py-2 text-xs text-forest-700">
                   {t("landingDrawAreaLabel")}: <b>{pendingArea} ha</b>
+                </div>
+                {/* Custom date ranges are an account feature; guests get a fixed
+                    last-4-weeks view. */}
+                <div className="rounded-xl bg-cream-inset px-3 py-2 text-[11px] leading-relaxed text-ink-500">
+                  {t("landingDrawFourWeeksHint")}{" "}
+                  <Link href="/signup" className="font-bold text-forest-700 underline-offset-2 hover:underline">
+                    {t("landingDrawCustomRangeCta")}
+                  </Link>
                 </div>
                 <Input label={t("landingDrawNameLabel")} value={name} onChange={(e) => setName(e.target.value)} />
                 <div className="flex gap-2">
@@ -309,7 +378,7 @@ export function LandingFieldAnalyzer() {
               </div>
             )}
 
-            {isAnalyzing && !timedOut && (
+            {mode === "saving" && (
               <div className="flex flex-col items-center gap-2.5 py-2 text-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
                 <div className="text-[13px] font-bold text-ink-900">{t("landingDrawAnalyzing")}</div>
@@ -317,51 +386,59 @@ export function LandingFieldAnalyzer() {
               </div>
             )}
 
-            {timedOut && !showResults && !jobFailed && (
-              <div className="flex flex-col gap-2.5">
-                <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawTimeout")}</div>
-                <Button variant="secondary" onClick={reset}>
-                  {t("landingDrawRetry")}
-                </Button>
-              </div>
-            )}
-
-            {jobFailed && (
-              <div className="flex flex-col gap-2.5">
-                <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>
-                <Button variant="secondary" onClick={reset}>
-                  {t("landingDrawRetry")}
-                </Button>
-              </div>
-            )}
-
-            {showResults && (
-              <div className="flex flex-col gap-2.5">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <div className="text-ink-400">{t("landingDrawMean")}</div>
-                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_mean}</div>
-                  </div>
-                  <div>
-                    <div className="text-ink-400">{t("landingDrawMin")}</div>
-                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_min}</div>
-                  </div>
-                  <div>
-                    <div className="text-ink-400">{t("landingDrawMax")}</div>
-                    <div className="font-bold text-forest-ink-900">{ndvi!.latest!.ndvi_max}</div>
-                  </div>
+            {activeFieldId &&
+              (!batchActive && !anyResults ? (
+                <div className="flex flex-col gap-2.5">
+                  <div className="text-xs leading-relaxed text-ink-500">{t("landingDrawNoResults")}</div>
+                  <Button variant="secondary" onClick={reset}>
+                    {t("landingDrawRetry")}
+                  </Button>
                 </div>
-                <Button variant="secondary" onClick={reset}>
-                  {t("landingDrawAgain")}
-                </Button>
-                <Link
-                  href="/signup"
-                  className="jk-focus text-center text-xs font-bold text-forest-700 underline-offset-2 hover:underline"
-                >
-                  {t("landingDrawSignupCta")}
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  <WeekScrubber
+                    tiles={tiles}
+                    activeIndex={activeTileIndex}
+                    onIndexChange={setActiveTileIndex}
+                    ariaLabel="Select a week to view"
+                    stateForTile={(tile) =>
+                      matchEntry(tile, history) !== null ? "cached" : batchActive ? "analyzing" : "empty"
+                    }
+                  />
+                  {activeEntry ? (
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div>
+                        <div className="text-ink-400">{t("landingDrawMean")}</div>
+                        <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_mean}</div>
+                      </div>
+                      <div>
+                        <div className="text-ink-400">{t("landingDrawMin")}</div>
+                        <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_min}</div>
+                      </div>
+                      <div>
+                        <div className="text-ink-400">{t("landingDrawMax")}</div>
+                        <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_max}</div>
+                      </div>
+                    </div>
+                  ) : batchActive ? (
+                    <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-400">
+                      <div className="h-3 w-3 flex-none animate-spin rounded-full border-2 border-cream-inset border-t-forest-500" />
+                      {timedOut ? t("landingDrawTimeout") : t("landingDrawWeekAnalyzing")}
+                    </div>
+                  ) : (
+                    <div className="text-center text-[11px] text-ink-400">{t("landingDrawWeekEmpty")}</div>
+                  )}
+                  <Button variant="secondary" onClick={reset}>
+                    {t("landingDrawAgain")}
+                  </Button>
+                  <Link
+                    href="/signup"
+                    className="jk-focus text-center text-xs font-bold text-forest-700 underline-offset-2 hover:underline"
+                  >
+                    {t("landingDrawSignupCta")}
+                  </Link>
+                </div>
+              ))}
           </div>
         </div>
       </div>

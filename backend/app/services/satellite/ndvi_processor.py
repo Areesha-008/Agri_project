@@ -29,14 +29,18 @@ be introduced without touching the API route.
 import logging
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
 import tifffile
 from shapely.geometry import Polygon, mapping
 
 from app.core.config import settings
-from app.exceptions.custom_exceptions import NoSatelliteImageFoundError, SatelliteDataError
+from app.exceptions.custom_exceptions import (
+    InvalidDateRangeError,
+    NoSatelliteImageFoundError,
+    SatelliteDataError,
+)
 from app.schemas.ndvi import NdviAnalyzeResponse, NdviSourceInfo, NdviStats, NdviVisualization
 from app.services.satellite.cdse_client import ensure_connection
 from app.services.satellite.visualization import render_ndvi_png
@@ -76,6 +80,45 @@ NDMI_MAX_DISPLAY = 0.5
 CLOUD_SCL_CLASSES = [3, 8, 9, 10]
 
 NDVI_IMAGES_DIR = os.path.join("static", "ndvi_images")
+
+# Bounds for a user-requested search window (see validate_search_window).
+# MIN sits below the smallest UI preset (7d) so all presets always pass;
+# MAX gives headroom over the largest preset (90d) for a deliberate
+# "last year" custom pull while bounding worst-case CDSE compute cost.
+MIN_SEARCH_WINDOW_DAYS = 3
+MAX_SEARCH_WINDOW_DAYS = 365
+
+
+def validate_search_window(start_date: date | None, end_date: date | None) -> None:
+    """
+    Validates a user-requested date window. Both None is valid (caller
+    falls back to the global NDVI_SEARCH_WINDOW_DAYS default) — this is the
+    only validation entry point compute_ndvi() has, so it covers every
+    caller (POST /ndvi/analyze and the background NDVI job) in one place.
+    """
+    if start_date is None and end_date is None:
+        return
+    if start_date is None or end_date is None:
+        raise InvalidDateRangeError("Both start_date and end_date must be provided together")
+    if end_date <= start_date:
+        raise InvalidDateRangeError("end_date must be after start_date")
+    # A plain `date` has no timezone, so "today" is ambiguous by up to a day
+    # depending on the client's UTC offset (as far as UTC+14) — tolerate a
+    # 1-day skew rather than rejecting a client-local "today" as "future".
+    if end_date > datetime.now(timezone.utc).date() + timedelta(days=1):
+        raise InvalidDateRangeError("end_date cannot be in the future")
+
+    window_days = (end_date - start_date).days
+    if window_days < MIN_SEARCH_WINDOW_DAYS:
+        raise InvalidDateRangeError(
+            f"Date range ({window_days} days) is shorter than the minimum "
+            f"of {MIN_SEARCH_WINDOW_DAYS} days"
+        )
+    if window_days > MAX_SEARCH_WINDOW_DAYS:
+        raise InvalidDateRangeError(
+            f"Date range ({window_days} days) exceeds the maximum of "
+            f"{MAX_SEARCH_WINDOW_DAYS} days"
+        )
 
 
 def _polygon_to_geojson_geometry(polygon: Polygon):
@@ -144,8 +187,8 @@ def _download_index_array(
         index_composite.download(tmp_path)
     except Exception as e:
         raise NoSatelliteImageFoundError(
-            f"No Sentinel-2 imagery could be processed for this area within "
-            f"the last {settings.NDVI_SEARCH_WINDOW_DAYS} days with cloud "
+            f"No Sentinel-2 imagery could be processed for this area between "
+            f"{start_date.date()} and {end_date.date()} with cloud "
             f"cover below {settings.MAX_CLOUD_COVER_PERCENT}%. Try a "
             f"different area or a wider date range. ({e})"
         )
@@ -190,7 +233,12 @@ def _stats_and_png(
     return stats, image_url
 
 
-def compute_ndvi(polygon: Polygon, area_hectares: float | None = None) -> NdviAnalyzeResponse:
+def compute_ndvi(
+    polygon: Polygon,
+    area_hectares: float | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> NdviAnalyzeResponse:
     """
     Main pipeline entry point — computes both NDVI (B08/B04) and NDMI
     (B08/B11) over the same date window/cloud filter, from the same
@@ -198,20 +246,31 @@ def compute_ndvi(polygon: Polygon, area_hectares: float | None = None) -> NdviAn
     POST /ndvi/analyze (public preview) and from the background
     `run_ndvi_job` (see ndvi_job_service.py) after POST /fields.
 
-    Raises SatelliteDataError or NoSatelliteImageFoundError on failure —
-    both are AppException subclasses, so the global exception handler
-    turns them into clean JSON error responses.
+    start_date/end_date let a caller request a specific window instead of
+    the global NDVI_SEARCH_WINDOW_DAYS default — both or neither, not one.
+    This is the sole call site of the CDSE pipeline, so validating here
+    covers every caller in one place.
+
+    Raises InvalidDateRangeError, SatelliteDataError, or
+    NoSatelliteImageFoundError on failure — all are AppException
+    subclasses, so the global exception handler turns them into clean
+    JSON error responses.
     """
-    end_date = datetime.now(timezone.utc)
-    start_date = end_date - timedelta(days=settings.NDVI_SEARCH_WINDOW_DAYS)
+    validate_search_window(start_date, end_date)
+
+    resolved_end = end_date or datetime.now(timezone.utc).date()
+    resolved_start = start_date or (resolved_end - timedelta(days=settings.NDVI_SEARCH_WINDOW_DAYS))
+
+    query_start = datetime.combine(resolved_start, datetime.min.time(), tzinfo=timezone.utc)
+    query_end = datetime.combine(resolved_end, datetime.min.time(), tzinfo=timezone.utc)
 
     try:
-        ndvi_array = _download_index_array(polygon, start_date, end_date, "B08", "B04")
+        ndvi_array = _download_index_array(polygon, query_start, query_end, "B08", "B04")
         ndvi_stats, ndvi_image_url = _stats_and_png(
             ndvi_array, NDVI_MIN_DISPLAY, NDVI_MAX_DISPLAY, NDVI_PALETTE, "ndvi"
         )
 
-        ndmi_array = _download_index_array(polygon, start_date, end_date, "B08", "B11")
+        ndmi_array = _download_index_array(polygon, query_start, query_end, "B08", "B11")
         ndmi_stats, ndmi_image_url = _stats_and_png(
             ndmi_array, NDMI_MIN_DISPLAY, NDMI_MAX_DISPLAY, NDMI_PALETTE, "ndmi"
         )
@@ -239,8 +298,8 @@ def compute_ndvi(polygon: Polygon, area_hectares: float | None = None) -> NdviAn
             ),
             source=NdviSourceInfo(
                 collection=settings.SENTINEL2_COLLECTION,
-                date_range_start=start_date.date(),
-                date_range_end=end_date.date(),
+                date_range_start=resolved_start,
+                date_range_end=resolved_end,
                 max_cloud_cover_filter_percent=settings.MAX_CLOUD_COVER_PERCENT,
             ),
             area_hectares=area_hectares,

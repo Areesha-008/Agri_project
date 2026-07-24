@@ -14,6 +14,28 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAP_TILES_KEY ?? "";
 // Faisalabad, Punjab — sample farmland the design's mock data centers on.
 const DEFAULT_CENTER: [number, number] = [73.135, 31.45];
 
+// Auto-geolocation fires at most once per browsing session, shared across every
+// autoLocate consumer (the landing hero and My Fields). Whichever mounts first
+// asks; the rest skip so the visitor isn't re-prompted while navigating.
+// sessionStorage (not in-memory) so it survives a same-tab reload but re-arms on
+// a genuinely new visit. Storage can throw in private mode — treat that as
+// "not located yet" so location still works, just without the once-guard.
+const GEO_LOCATED_KEY = "jk_geo_located";
+function hasAutoLocatedThisSession(): boolean {
+  try {
+    return sessionStorage.getItem(GEO_LOCATED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function markAutoLocated(): void {
+  try {
+    sessionStorage.setItem(GEO_LOCATED_KEY, "1");
+  } catch {
+    // no-op — storage unavailable; the guard just won't persist
+  }
+}
+
 export interface FieldOverlay {
   id: string;
   boundingBox: [number, number, number, number]; // [west, south, east, north]
@@ -103,7 +125,13 @@ export function FieldsMap({
           false,
         );
       });
-      map.on("load", () => geolocate.trigger());
+      // Only the first autoLocate map of the session prompts (see GEO_LOCATED_KEY).
+      // The consumer's manual locate button (locateSignal) bypasses this.
+      map.on("load", () => {
+        if (hasAutoLocatedThisSession()) return;
+        markAutoLocated();
+        geolocate.trigger();
+      });
     }
 
     const draw = new MapboxDraw({

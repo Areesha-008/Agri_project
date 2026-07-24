@@ -45,7 +45,7 @@ export default function SignupPage() {
             <Logo size={26} />
           </div>
           <div className="text-xl font-extrabold tracking-tight text-forest-ink-900">Create your account</div>
-          <div className="text-[12.5px] text-ink-500">Your fields, weather and mandi rates in one place</div>
+          <div className="text-[12.5px] text-ink-500">Your fields, weather and crop health in one place</div>
         </Link>
 
         <form

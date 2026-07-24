@@ -1,7 +1,7 @@
 """
 UserSettings model — one row per user (1:1), holding preferences that were
 previously only client-side state in the design mock: language, yield
-units, default mandi city, and the 4 alert toggles shown in Settings.
+units, and the alert toggles shown in Settings.
 
 Kept as its own table (rather than columns on User) so profile/auth
 concerns stay separate from app preferences — User only needs to change
@@ -38,15 +38,13 @@ class UserSettings(Base):
 
     language: Mapped[str] = mapped_column(String(8), default="en", nullable=False)
     yield_unit: Mapped[str] = mapped_column(String(32), default="maund_per_acre", nullable=False)
-    default_mandi: Mapped[str] = mapped_column(String(64), default="faisalabad", nullable=False)
 
     # Alert toggles — the alert engine (see services/alert_engine.py) checks
     # these before creating an Alert for a user's field. alert_sms is stored
-    # for schema completeness (matches the design's 4 toggles) but has no
-    # delivery effect yet — SMS is out of scope per GAPS.md.
+    # for schema completeness but has no delivery effect yet — SMS is out of
+    # scope per GAPS.md.
     alert_pest: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     alert_weather: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    alert_price: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     alert_sms: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(

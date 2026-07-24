@@ -11,7 +11,6 @@ export const dictionary = {
     fields: "My Fields",
     health: "Crop Health",
     scanner: "Disease Scanner",
-    market: "Market Prices",
     ledger: "Digital Ledger",
     settings: "Settings",
     signout: "Sign out",
@@ -32,7 +31,7 @@ export const dictionary = {
     alreadyRegistered: "Already registered?",
     tryGuest: "Try without an account",
     tryGuestDesc: "draw a field and analyze NDVI for free",
-    tagline: "Your fields, weather and mandi rates in one place",
+    tagline: "Your fields, weather and crop health in one place",
 
     // Dashboard
     greeting: "Assalam-o-Alaikum",
@@ -42,7 +41,6 @@ export const dictionary = {
     critical: "CRITICAL",
     projYield: "Projected yield",
     weather: "Weather",
-    mandiRates: "Mandi rates",
     recentLedger: "Recent ledger",
     viewAdvisory: "View advisory",
 
@@ -61,6 +59,14 @@ export const dictionary = {
     min: "Min",
     max: "Max",
     area: "Area",
+    windowLast7d: "7D",
+    windowLast30d: "30D",
+    windowLast90d: "90D",
+    windowCustom: "Custom",
+    windowApply: "Apply",
+    windowFrom: "From",
+    windowTo: "To",
+    windowRevisitCaption: "Sentinel-2 revisits every ~5 days — very short windows may find no cloud-free image.",
 
     // Ledger / report
     logAction: "Log action",
@@ -84,18 +90,15 @@ export const dictionary = {
     classificationBreakdown: "Classification breakdown",
     mitigationTitle: "Recommended mitigation — from our genome lab",
 
-    // Market/weather
-    priceChange: "Change",
+    // Weather
     sevenDay: "7-day",
 
     // Settings
     language: "Language",
     yieldUnit: "Yield units",
-    defaultMandi: "Default mandi",
     alertsNotifications: "Alerts & notifications",
     pestAlerts: "Pest & disease alerts",
     weatherAlerts: "Weather warnings",
-    priceAlerts: "Mandi price alerts",
     smsAlerts: "SMS notifications",
     changePassword: "Change password",
     downloadData: "Download my data",
@@ -114,7 +117,7 @@ export const dictionary = {
     landingHeadline2: "every acre",
     landingHeadline3: "you farm.",
     landingSubcopy:
-      "Draw your field on a map and Jadeed Kashtkar watches it from space: vegetation health, water stress, disease risk, weather and mandi rates, all in one place.",
+      "Draw your field on a map and Jadeed Kashtkar watches it from space: vegetation health, water stress, disease risk and weather, all in one place.",
     landingCtaPrimary: "Create your free account",
     landingCtaSecondary: "See all features ↓",
     landingStat1: "pixel resolution",
@@ -127,7 +130,7 @@ export const dictionary = {
     landingLedgerBannerDesc:
       "Log every input on a timeline, then compile it into a printable production report for buyers, banks, or subsidy programs.",
     landingLedgerBannerCta: "Open the ledger",
-    landingHowTitle: "From map to mandi in three steps",
+    landingHowTitle: "From map to harvest in three steps",
     landingMissionEyebrow: "OUR MISSION",
     landingMissionTitle: "Bridging genome engineering and the farmer's field",
     landingMissionBody:
@@ -150,6 +153,12 @@ export const dictionary = {
     landingDrawHint: "Trace your boundary on the live satellite map — get a real Sentinel-2 analysis, free.",
     landingDrawInstruction: "Click on the map to place points (≥3). Double-click to finish the shape.",
     landingDrawAreaLabel: "Estimated area",
+    landingDrawWindowLabel: "Satellite data window",
+    landingDrawFourWeeksHint: "You'll get the previous 4 weeks, week by week.",
+    landingDrawCustomRangeCta: "Create a free account for custom date ranges",
+    landingDrawWeekAnalyzing: "Analyzing this week…",
+    landingDrawWeekEmpty: "No cloud-free image for this week.",
+    landingDrawNoResults: "No cloud-free imagery found for the last 4 weeks.",
     landingDrawNameLabel: "Field name",
     landingDrawDistrictPlaceholder: "District",
     landingDrawCropPlaceholder: "Crop",
@@ -184,8 +193,6 @@ export const dictionary = {
     landingCardScannerDesc: "Photo → genome-backed diagnosis",
     landingCardWeatherTitle: "Weather & pest warnings",
     landingCardWeatherDesc: "7-day agromet forecast + outbreak risk.",
-    landingCardMandiTitle: "Real-time mandi prices",
-    landingCardMandiDesc: "Wheat, paddy, cotton",
     landingCardDroneSurveyTitle: "Drone surveying",
     landingCardDroneSurveyDesc: "High-res aerial imagery",
     landingCardDroneSprayTitle: "Drone spraying",
@@ -209,7 +216,6 @@ export const dictionary = {
     fields: "میرے کھیت",
     health: "فصل کی صحت",
     scanner: "بیماری اسکینر",
-    market: "منڈی ریٹ",
     ledger: "ڈیجیٹل کھاتہ",
     settings: "ترتیبات",
     signout: "سائن آؤٹ",
@@ -229,7 +235,7 @@ export const dictionary = {
     alreadyRegistered: "پہلے سے رجسٹرڈ ہیں؟",
     tryGuest: "بغیر اکاؤنٹ کے آزمائیں",
     tryGuestDesc: "کھیت بنائیں اور مفت NDVI تجزیہ کریں",
-    tagline: "آپ کے کھیت، موسم اور منڈی ریٹ ایک ہی جگہ",
+    tagline: "آپ کے کھیت، موسم اور فصل کی صحت ایک ہی جگہ",
 
     greeting: "السلام علیکم",
     cropHealth: "فصل کی صحت",
@@ -238,7 +244,6 @@ export const dictionary = {
     critical: "نازک",
     projYield: "متوقع پیداوار",
     weather: "موسم",
-    mandiRates: "منڈی ریٹ",
     recentLedger: "حالیہ کھاتہ",
     viewAdvisory: "ہدایت دیکھیں",
 
@@ -256,6 +261,14 @@ export const dictionary = {
     min: "کم از کم",
     max: "زیادہ سے زیادہ",
     area: "رقبہ",
+    windowLast7d: "7 دن",
+    windowLast30d: "30 دن",
+    windowLast90d: "90 دن",
+    windowCustom: "اپنی مرضی کا",
+    windowApply: "لاگو کریں",
+    windowFrom: "سے",
+    windowTo: "تک",
+    windowRevisitCaption: "سینٹینل-2 ہر ~5 دنوں بعد گزرتا ہے — بہت مختصر مدت میں صاف تصویر نہ ملنے کا امکان ہے۔",
 
     logAction: "اندراج کریں",
     downloadReport: "پی ڈی ایف رپورٹ ڈاؤن لوڈ کریں",
@@ -277,16 +290,13 @@ export const dictionary = {
     classificationBreakdown: "درجہ بندی کی تفصیل",
     mitigationTitle: "تجویز کردہ علاج — ہماری جینوم لیب سے",
 
-    priceChange: "تبدیلی",
     sevenDay: "7 دن",
 
     language: "زبان",
     yieldUnit: "پیداوار کی اکائی",
-    defaultMandi: "ڈیفالٹ منڈی",
     alertsNotifications: "الرٹس اور نوٹیفیکیشن",
     pestAlerts: "کیڑے اور بیماری کی وارننگ",
     weatherAlerts: "موسمی وارننگ",
-    priceAlerts: "منڈی قیمت الرٹ",
     smsAlerts: "ایس ایم ایس اطلاعات",
     changePassword: "پاس ورڈ تبدیل کریں",
     downloadData: "میرا ڈیٹا ڈاؤن لوڈ کریں",
@@ -304,7 +314,7 @@ export const dictionary = {
     landingHeadline2: "سیٹلائٹ ذہانت",
     landingHeadline3: "",
     landingSubcopy:
-      "نقشے پر اپنا کھیت بنائیں اور جدید کاشتکار خلا سے اس کی نگرانی کرے گا: فصل کی صحت، پانی کا دباؤ، بیماری کا خطرہ، موسم اور منڈی ریٹ، سب ایک ہی جگہ۔",
+      "نقشے پر اپنا کھیت بنائیں اور جدید کاشتکار خلا سے اس کی نگرانی کرے گا: فصل کی صحت، پانی کا دباؤ، بیماری کا خطرہ اور موسم، سب ایک ہی جگہ۔",
     landingCtaPrimary: "اپنا مفت اکاؤنٹ بنائیں",
     landingCtaSecondary: "تمام خصوصیات دیکھیں ↓",
     landingStat1: "پکسل ریزولیوشن",
@@ -317,7 +327,7 @@ export const dictionary = {
     landingLedgerBannerDesc:
       "ہر ان پٹ کو ٹائم لائن پر درج کریں، پھر اسے خریداروں، بینکوں یا سبسڈی پروگراموں کے لیے پرنٹ کے قابل رپورٹ میں مرتب کریں۔",
     landingLedgerBannerCta: "کھاتہ کھولیں",
-    landingHowTitle: "نقشے سے منڈی تک، تین مراحل میں",
+    landingHowTitle: "نقشے سے فصل تک، تین مراحل میں",
     landingMissionEyebrow: "ہمارا مشن",
     landingMissionTitle: "جینوم انجینئرنگ اور کسان کے کھیت کے درمیان پل",
     landingMissionBody:
@@ -340,6 +350,12 @@ export const dictionary = {
     landingDrawHint: "لائیو سیٹلائٹ نقشے پر اپنے کھیت کی حد بنائیں — مفت Sentinel-2 تجزیہ حاصل کریں۔",
     landingDrawInstruction: "پوائنٹس لگانے کے لیے نقشے پر کلک کریں (کم از کم 3)۔ شکل مکمل کرنے کے لیے ڈبل کلک کریں۔",
     landingDrawAreaLabel: "تخمینی رقبہ",
+    landingDrawWindowLabel: "سیٹلائٹ ڈیٹا ونڈو",
+    landingDrawFourWeeksHint: "آپ کو پچھلے 4 ہفتوں کا ڈیٹا ہفتہ وار ملے گا۔",
+    landingDrawCustomRangeCta: "اپنی مرضی کی تاریخوں کے لیے مفت اکاؤنٹ بنائیں",
+    landingDrawWeekAnalyzing: "اس ہفتے کا تجزیہ ہو رہا ہے…",
+    landingDrawWeekEmpty: "اس ہفتے کوئی بادلوں سے پاک تصویر نہیں۔",
+    landingDrawNoResults: "پچھلے 4 ہفتوں میں کوئی بادلوں سے پاک تصویر نہیں ملی۔",
     landingDrawNameLabel: "کھیت کا نام",
     landingDrawDistrictPlaceholder: "ضلع",
     landingDrawCropPlaceholder: "فصل",
@@ -374,8 +390,6 @@ export const dictionary = {
     landingCardScannerDesc: "تصویر ← جینوم پر مبنی تشخیص",
     landingCardWeatherTitle: "موسم اور کیڑوں کی وارننگ",
     landingCardWeatherDesc: "7 روزہ زرعی موسمیاتی پیشگوئی + وبا کا خطرہ۔",
-    landingCardMandiTitle: "منڈی کے تازہ ریٹ",
-    landingCardMandiDesc: "گندم، دھان، کپاس",
     landingCardDroneSurveyTitle: "ڈرون سروے",
     landingCardDroneSurveyDesc: "ہائی ریزولوشن فضائی تصاویر",
     landingCardDroneSprayTitle: "ڈرون سپرے",
