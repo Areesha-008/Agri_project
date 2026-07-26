@@ -49,12 +49,43 @@ class NdviHistory(Base):
     ndmi_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     ndmi_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
+    # NDRE (red-edge / nitrogen) and NBR2 (residue / burn), same scene as the
+    # stats above. Nullable for the same reason as NDMI — rows written before
+    # these indices existed have no value to backfill.
+    ndre_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndre_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndre_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    nbr2_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    nbr2_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    nbr2_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    # NDWI (open water), CCI (chlorophyll/carotenoid), EVI, SAVI — same scene,
+    # same nullable-for-back-compat treatment.
+    ndwi_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndwi_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    ndwi_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    cci_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    cci_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    cci_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    evi_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    evi_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    evi_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    savi_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    savi_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    savi_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
     # Absolute URLs to the rendered overlay PNGs (see
     # services/satellite/visualization.py), so history rows are
     # self-sufficient for the trend chart's map thumbnails without
     # recomputing anything.
     ndvi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     ndmi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ndre_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    nbr2_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ndwi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    cci_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    evi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    savi_png_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     # Start of the requested search window (end is satellite_image_date
     # below). Nullable because rows written before this column existed have

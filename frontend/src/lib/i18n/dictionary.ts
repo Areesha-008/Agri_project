@@ -30,7 +30,7 @@ export const dictionary = {
     newHere: "New here?",
     alreadyRegistered: "Already registered?",
     tryGuest: "Try without an account",
-    tryGuestDesc: "draw a field and analyze NDVI for free",
+    tryGuestDesc: "draw a field and analyse it for free",
     tagline: "Your fields, weather and crop health in one place",
 
     // Dashboard
@@ -46,12 +46,12 @@ export const dictionary = {
 
     // Fields / map
     drawBtn: "Draw new field boundary",
-    analyze: "Finish & analyze NDVI",
+    analyze: "Finish & analyse",
     save: "Save field",
     fieldName: "Field name",
     district: "District",
     crop: "Crop",
-    analyzing: "Analyzing via Sentinel-2…",
+    analyzing: "Analysing via Sentinel-2…",
     ndvi: "NDVI",
     ndmi: "NDMI",
     satellite: "Satellite",
@@ -122,7 +122,7 @@ export const dictionary = {
     landingCtaSecondary: "See all features ↓",
     landingStat1: "pixel resolution",
     landingStat2: "satellite revisit",
-    landingStat3: "to analyze a field",
+    landingStat3: "to analyse a field",
     landingFeaturesTitle: "Where the field meets the genome",
     landingFeaturesSubcopy:
       "Everyday tools for growers, research-grade tools for breeders — built on one shared satellite and genomic data pipeline.",
@@ -156,15 +156,12 @@ export const dictionary = {
     landingDrawWindowLabel: "Satellite data window",
     landingDrawFourWeeksHint: "You'll get the previous 4 weeks, week by week.",
     landingDrawCustomRangeCta: "Create a free account for custom date ranges",
-    landingDrawWeekAnalyzing: "Analyzing this week…",
+    landingDrawWeekAnalyzing: "Analysing this week…",
     landingDrawWeekEmpty: "No cloud-free image for this week.",
     landingDrawNoResults: "No cloud-free imagery found for the last 4 weeks.",
-    landingDrawNameLabel: "Field name",
-    landingDrawDistrictPlaceholder: "District",
-    landingDrawCropPlaceholder: "Crop",
-    landingDrawAnalyze: "Analyze NDVI",
-    landingDrawAnalyzing: "Analyzing via Sentinel-2…",
-    landingDrawAnalyzingHint: "Fetching cloud-free imagery and computing NDVI/NDMI.",
+    landingDrawAnalyze: "Analyse",
+    landingDrawAnalyzing: "Analysing via Sentinel-2…",
+    landingDrawAnalyzingHint: "Fetching cloud-free imagery and computing your field's indices.",
     landingDrawMean: "Mean",
     landingDrawMin: "Min",
     landingDrawMax: "Max",
@@ -181,14 +178,14 @@ export const dictionary = {
       "Trace your boundary on the satellite map. No account needed for your first analysis. We validate the polygon and compute the exact area.",
     landingStep2Title: "The satellite reads your crop",
     landingStep2Body:
-      "Cloud-free Sentinel-2 scenes are processed into NDVI and moisture maps within minutes, with per-field statistics saved to your history.",
+      "Cloud-free Sentinel-2 scenes are processed into vegetation, moisture and crop-health maps within minutes; save a field to keep its statistics in your history.",
     landingStep3Title: "Act with confidence",
     landingStep3Body:
       "Irrigate the stressed patch, treat the rust early, sell on the up-day and keep a ledger record of everything you did.",
 
     // Landing feature cards
     landingCardHealthTitle: "Crop health & yield",
-    landingCardHealthCompactDesc: "NDVI/NDMI vegetation & moisture maps · 74% healthy",
+    landingCardHealthCompactDesc: "Vegetation, moisture & nitrogen maps · 74% healthy",
     landingCardScannerTitle: "Leaf disease scanner",
     landingCardScannerDesc: "Photo → genome-backed diagnosis",
     landingCardWeatherTitle: "Weather & pest warnings",
@@ -234,7 +231,7 @@ export const dictionary = {
     newHere: "نئے صارف ہیں؟",
     alreadyRegistered: "پہلے سے رجسٹرڈ ہیں؟",
     tryGuest: "بغیر اکاؤنٹ کے آزمائیں",
-    tryGuestDesc: "کھیت بنائیں اور مفت NDVI تجزیہ کریں",
+    tryGuestDesc: "کھیت بنائیں اور مفت تجزیہ کریں",
     tagline: "آپ کے کھیت، موسم اور فصل کی صحت ایک ہی جگہ",
 
     greeting: "السلام علیکم",
@@ -248,7 +245,7 @@ export const dictionary = {
     viewAdvisory: "ہدایت دیکھیں",
 
     drawBtn: "نیا کھیت بنائیں",
-    analyze: "مکمل کریں — NDVI تجزیہ",
+    analyze: "مکمل کریں — تجزیہ",
     save: "کھیت محفوظ کریں",
     fieldName: "کھیت کا نام",
     district: "ضلع",
@@ -356,12 +353,9 @@ export const dictionary = {
     landingDrawWeekAnalyzing: "اس ہفتے کا تجزیہ ہو رہا ہے…",
     landingDrawWeekEmpty: "اس ہفتے کوئی بادلوں سے پاک تصویر نہیں۔",
     landingDrawNoResults: "پچھلے 4 ہفتوں میں کوئی بادلوں سے پاک تصویر نہیں ملی۔",
-    landingDrawNameLabel: "کھیت کا نام",
-    landingDrawDistrictPlaceholder: "ضلع",
-    landingDrawCropPlaceholder: "فصل",
-    landingDrawAnalyze: "NDVI تجزیہ کریں",
+    landingDrawAnalyze: "تجزیہ کریں",
     landingDrawAnalyzing: "Sentinel-2 کے ذریعے تجزیہ ہو رہا ہے…",
-    landingDrawAnalyzingHint: "بادلوں سے پاک تصاویر حاصل کر کے NDVI/NDMI کا حساب لگایا جا رہا ہے۔",
+    landingDrawAnalyzingHint: "بادلوں سے پاک تصاویر حاصل کر کے کھیت کے اشاریے شمار کیے جا رہے ہیں۔",
     landingDrawMean: "اوسط",
     landingDrawMin: "کم از کم",
     landingDrawMax: "زیادہ سے زیادہ",
@@ -378,14 +372,14 @@ export const dictionary = {
       "سیٹلائٹ نقشے پر اپنی حد بنائیں۔ پہلے تجزیے کے لیے اکاؤنٹ کی ضرورت نہیں۔ ہم کثیر الاضلاع کی تصدیق کر کے درست رقبہ نکالتے ہیں۔",
     landingStep2Title: "سیٹلائٹ آپ کی فصل پڑھتا ہے",
     landingStep2Body:
-      "بادلوں سے پاک Sentinel-2 مناظر منٹوں میں NDVI اور نمی کے نقشوں میں بدل جاتے ہیں، اور ہر کھیت کے اعداد و شمار آپ کی ہسٹری میں محفوظ ہوتے ہیں۔",
+      "بادلوں سے پاک Sentinel-2 مناظر منٹوں میں پودوں، نمی اور صحت کے نقشوں میں بدل جاتے ہیں؛ کھیت محفوظ کرنے پر اس کے اعداد و شمار آپ کی ہسٹری میں محفوظ رہتے ہیں۔",
     landingStep3Title: "اعتماد سے عمل کریں",
     landingStep3Body:
       "دباؤ والے حصے کو پانی دیں، کنگی کا جلد علاج کریں، اچھے ریٹ والے دن بیچیں اور اپنے ہر کام کا کھاتہ رکھیں۔",
 
     // Landing feature cards
     landingCardHealthTitle: "فصل کی صحت اور پیداوار",
-    landingCardHealthCompactDesc: "NDVI/NDMI پودوں اور نمی کے نقشے · 74% صحت مند",
+    landingCardHealthCompactDesc: "پودوں، نمی اور نائٹروجن کے نقشے · 74% صحت مند",
     landingCardScannerTitle: "پتوں کی بیماری اسکینر",
     landingCardScannerDesc: "تصویر ← جینوم پر مبنی تشخیص",
     landingCardWeatherTitle: "موسم اور کیڑوں کی وارننگ",

@@ -113,7 +113,7 @@ export default function LoginPage() {
             <path d="M2 8 L7.5 10.5 L13 8" opacity=".6" />
           </svg>
           <div className="text-[12.5px] leading-[1.4] text-forest-700">
-            <b>Try without an account</b> — draw a field and analyze NDVI for free
+            <b>Try without an account</b> — draw a field and analyse it for free
           </div>
         </button>
       </div>

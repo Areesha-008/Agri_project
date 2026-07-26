@@ -66,6 +66,20 @@ export function computeWeeklyTiles(period: DateRange): WeekTile[] {
   return tiles;
 }
 
+/**
+ * Turns the weekly rows a single job actually produced (NdviJobStatusResponse.history
+ * — see get_job_history_items on the backend) into scrubber tiles, oldest
+ * first. Unlike computeWeeklyTiles, these aren't speculative rolling windows
+ * computed ahead of the fetch — every tile here is backed by a real row, so
+ * there's no "empty" state to render.
+ */
+export function tilesFromJobHistory(history: NdviHistoryItem[]): WeekTile[] {
+  // date_range_start is nullable at the type level (old rows predating the
+  // column), but every row a job produces sets it — fall back to the end
+  // date rather than widen WeekTile.start to allow null everywhere.
+  return history.map((h) => ({ start: h.date_range_start ?? h.satellite_image_date, end: h.satellite_image_date }));
+}
+
 export function matchEntry(tile: WeekTile, history: NdviHistoryItem[]): NdviHistoryItem | null {
   // satellite_image_date is a plain `date` on the backend (YYYY-MM-DD over
   // the wire), so this is a safe plain string comparison — no Date parsing.

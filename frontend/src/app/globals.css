@@ -55,6 +55,20 @@
   --color-info-blue-bg: #e7f0f7;
   --color-info-blue-text: #3a719b;
   --color-down-red: #c1512f;
+
+  /* Per-measure chart identity colors — a CVD-validated categorical set
+     (dataviz skill's reference palette, validated against this app's
+     cream-card / dark surfaces). Fixed assignment, never cycled; every
+     mark that uses them is also labeled, which relieves the 3 hues that
+     sit under 3:1 on this light surface (aqua/yellow/magenta). */
+  --m-ndvi: #2a78d6;  /* blue */
+  --m-ndmi: #eb6834;  /* orange */
+  --m-ndre: #1baf7a;  /* aqua */
+  --m-nbr2: #eda100;  /* yellow */
+  --m-ndwi: #e87ba4;  /* magenta */
+  --m-cci: #008300;   /* green */
+  --m-evi: #4a3aa7;   /* violet */
+  --m-savi: #e34948;  /* red */
 }
 
 /* Dark mode theme — opt-in only (ThemeToggle sets data-theme, see lib/theme.ts).
@@ -106,6 +120,16 @@
     --color-info-blue-text: #b0d8ff;
 
     --color-down-red: #ff7a5c;
+
+    /* Dark steps of the same 8 hues (validated ≥3:1 on the dark surface). */
+    --m-ndvi: #3987e5;
+    --m-ndmi: #d95926;
+    --m-ndre: #199e70;
+    --m-nbr2: #c98500;
+    --m-ndwi: #d55181;
+    --m-cci: #008300;
+    --m-evi: #9085e9;
+    --m-savi: #e66767;
 }
 
 @theme inline {

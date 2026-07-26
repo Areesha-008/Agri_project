@@ -41,7 +41,9 @@ def render_ndvi_png(
     # which then blows up the palette index below. Substitute a real number
     # for NaN pixels first; the alpha mask (computed from the original
     # array) still makes them fully transparent regardless of this value.
-    nan_mask = np.isnan(ndvi_array)
+    # Treat any non-finite pixel (NaN nodata, or a stray inf from a local
+    # 0/0 index division) as transparent nodata.
+    nan_mask = ~np.isfinite(ndvi_array)
     safe_array = np.where(nan_mask, vmin, ndvi_array)
 
     clipped = np.clip(safe_array, vmin, vmax)

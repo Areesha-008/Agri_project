@@ -57,10 +57,6 @@ export function Sidebar() {
         })}
       </div>
       <div className="mt-auto flex flex-col gap-2.5">
-        <div className="rounded-[10px] bg-black/[.22] px-3 py-2.5 text-[11px] leading-[1.5] text-white/75">
-          <div className="mb-0.5 font-semibold text-mint-300">Sentinel-2 · CDSE</div>
-          Live NDVI/NDMI pipeline
-        </div>
         <Link
           href="/settings"
           className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-xs leading-[1.6] text-white/60 hover:bg-black/20"

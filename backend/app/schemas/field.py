@@ -79,12 +79,36 @@ class NdviHistoryItem(BaseModel):
     ndmi_mean: Optional[float] = None
     ndmi_min: Optional[float] = None
     ndmi_max: Optional[float] = None
+    ndre_mean: Optional[float] = None
+    ndre_min: Optional[float] = None
+    ndre_max: Optional[float] = None
+    nbr2_mean: Optional[float] = None
+    nbr2_min: Optional[float] = None
+    nbr2_max: Optional[float] = None
+    ndwi_mean: Optional[float] = None
+    ndwi_min: Optional[float] = None
+    ndwi_max: Optional[float] = None
+    cci_mean: Optional[float] = None
+    cci_min: Optional[float] = None
+    cci_max: Optional[float] = None
+    evi_mean: Optional[float] = None
+    evi_min: Optional[float] = None
+    evi_max: Optional[float] = None
+    savi_mean: Optional[float] = None
+    savi_min: Optional[float] = None
+    savi_max: Optional[float] = None
     date_range_start: Optional[date] = None
     satellite_image_date: date
     cloud_cover_percent: Optional[float] = None
     source_collection: str
     ndvi_png_url: Optional[str] = None
     ndmi_png_url: Optional[str] = None
+    ndre_png_url: Optional[str] = None
+    nbr2_png_url: Optional[str] = None
+    ndwi_png_url: Optional[str] = None
+    cci_png_url: Optional[str] = None
+    evi_png_url: Optional[str] = None
+    savi_png_url: Optional[str] = None
     computed_at: datetime
 
 

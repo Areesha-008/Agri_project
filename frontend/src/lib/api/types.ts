@@ -55,6 +55,8 @@ export interface NdviJobStatusResponse {
   ndvi_history_id: string | null;
   created_at: string;
   updated_at: string;
+  /** The weekly rows THIS job produced — only populated once status is "done". */
+  history: NdviHistoryItem[];
 }
 
 export interface NdviHistoryItem {
@@ -65,12 +67,36 @@ export interface NdviHistoryItem {
   ndmi_mean: number | null;
   ndmi_min: number | null;
   ndmi_max: number | null;
+  ndre_mean: number | null;
+  ndre_min: number | null;
+  ndre_max: number | null;
+  nbr2_mean: number | null;
+  nbr2_min: number | null;
+  nbr2_max: number | null;
+  ndwi_mean: number | null;
+  ndwi_min: number | null;
+  ndwi_max: number | null;
+  cci_mean: number | null;
+  cci_min: number | null;
+  cci_max: number | null;
+  evi_mean: number | null;
+  evi_min: number | null;
+  evi_max: number | null;
+  savi_mean: number | null;
+  savi_min: number | null;
+  savi_max: number | null;
   date_range_start: string | null;
   satellite_image_date: string;
   cloud_cover_percent: number | null;
   source_collection: string;
   ndvi_png_url: string | null;
   ndmi_png_url: string | null;
+  ndre_png_url: string | null;
+  nbr2_png_url: string | null;
+  ndwi_png_url: string | null;
+  cci_png_url: string | null;
+  evi_png_url: string | null;
+  savi_png_url: string | null;
   computed_at: string;
 }
 

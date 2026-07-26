@@ -13,6 +13,7 @@ from app.schemas.field import (
     FieldNdviLatestResponse,
     FieldResponse,
     FieldSaveRequest,
+    NdviHistoryItem,
 )
 from app.schemas.ndvi_job import FieldReanalyzeRequest, NdviJobStatusResponse
 from app.services.field_service import (
@@ -26,6 +27,7 @@ from app.services.ndvi_job_service import (
     create_field_with_job,
     create_reanalysis_job,
     get_field_ndvi,
+    get_job_history_items,
     get_job_or_404,
     run_ndvi_job,
 )
@@ -102,7 +104,10 @@ def get_field_job(
 ):
     # Ensure the field belongs to the caller before revealing job status.
     get_field_or_404(db, current_user.id, field_id)
-    return get_job_or_404(db, job_id)
+    job = get_job_or_404(db, job_id)
+    response = NdviJobStatusResponse.model_validate(job)
+    response.history = [NdviHistoryItem.model_validate(row) for row in get_job_history_items(db, job)]
+    return response
 
 
 @router.get("/{field_id}/ndvi", response_model=FieldNdviLatestResponse)

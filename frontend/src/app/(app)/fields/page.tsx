@@ -11,12 +11,14 @@ import {
   useFields,
   useNdviJob,
 } from "@/lib/api/hooks";
-import { useAppStore, type MapLayer } from "@/lib/store/useAppStore";
+import { useAppStore } from "@/lib/store/useAppStore";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TimeWindowPicker, type DateRange } from "@/components/ui/TimeWindowPicker";
 import { NdviLegend } from "@/components/map/NdviLegend";
+import { MeasureDropdown } from "@/components/map/MeasureDropdown";
 import { FieldReanalyzePanel } from "@/components/map/FieldReanalyzePanel";
+import { layerPng, layerStats, type IndexLayer } from "@/lib/measures";
 import type { NdviHistoryItem, PolygonGeometry } from "@/lib/api/types";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
 import { boundsFromGeometry } from "@/lib/geo";
@@ -27,12 +29,6 @@ const FieldsMap = dynamic(() => import("@/components/map/FieldsMap").then((m) =>
 });
 
 type Mode = "idle" | "drawing" | "naming" | "saving";
-
-const LAYERS: { key: MapLayer; label: string }[] = [
-  { key: "ndvi", label: "NDVI" },
-  { key: "ndmi", label: "NDMI" },
-  { key: "satellite", label: "Satellite" },
-];
 
 export default function FieldsPage() {
   const { data: fields } = useFields();
@@ -121,7 +117,7 @@ export default function FieldsPage() {
       ? {
           id: selectedField.id,
           boundingBox: boundsFromGeometry(selectedField.geometry),
-          imageUrl: mapLayer === "ndmi" ? (activeEntry.ndmi_png_url ?? "") : (activeEntry.ndvi_png_url ?? ""),
+          imageUrl: layerPng(activeEntry, mapLayer) ?? "",
         }
       : null;
 
@@ -199,7 +195,7 @@ export default function FieldsPage() {
             <Input label="District" placeholder="Faisalabad" value={district} onChange={(e) => setDistrict(e.target.value)} />
             <Input label="Crop" placeholder="Wheat" value={crop} onChange={(e) => setCrop(e.target.value)} />
             <Button onClick={handleSave} disabled={!name}>
-              Finish &amp; analyze NDVI
+              Finish &amp; analyse
             </Button>
             <Button variant="secondary" onClick={cancelDrawing}>
               Cancel
@@ -210,8 +206,8 @@ export default function FieldsPage() {
         {(mode === "saving" || (mode === "idle" && isAnalyzing)) && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-cream-card p-6 text-center">
             <div className="h-9 w-9 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
-            <div className="text-[13px] font-bold text-ink-900">Analyzing via Sentinel-2…</div>
-            <div className="text-xs text-ink-400">Fetching cloud-free imagery and computing NDVI/NDMI.</div>
+            <div className="text-[13px] font-bold text-ink-900">Analysing via Sentinel-2…</div>
+            <div className="text-xs text-ink-400">Fetching cloud-free imagery and computing your field&apos;s indices.</div>
           </div>
         )}
 
@@ -223,25 +219,37 @@ export default function FieldsPage() {
               history={ndvi?.history ?? []}
               onActiveEntryChange={setActiveEntry}
             />
-            {activeEntry && (
-              <div className="rounded-2xl border border-border bg-cream-card p-3.5">
-                <div className="mb-2 text-[13px] font-bold text-ink-900">{selectedField.name}</div>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <div className="text-ink-400">Mean</div>
-                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_mean}</div>
+            {activeEntry && (() => {
+              // Reflect whichever index the map is showing; satellite falls
+              // back to NDVI. Older rows may lack an index → show a dash.
+              const stat = layerStats(activeEntry, mapLayer);
+              const label = mapLayer === "satellite" ? "NDVI" : mapLayer.toUpperCase();
+              const fmt = (v: number | null) => (v == null ? "—" : v);
+              return (
+                <div className="rounded-2xl border border-border bg-cream-card p-3.5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-[13px] font-bold text-ink-900">{selectedField.name}</span>
+                    <span className="rounded-md bg-cream-inset px-1.5 py-0.5 text-[10px] font-semibold text-ink-500">
+                      {label}
+                    </span>
                   </div>
-                  <div>
-                    <div className="text-ink-400">Min</div>
-                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_min}</div>
-                  </div>
-                  <div>
-                    <div className="text-ink-400">Max</div>
-                    <div className="font-bold text-forest-ink-900">{activeEntry.ndvi_max}</div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div>
+                      <div className="text-ink-400">Mean</div>
+                      <div className="font-bold text-forest-ink-900">{fmt(stat.mean)}</div>
+                    </div>
+                    <div>
+                      <div className="text-ink-400">Min</div>
+                      <div className="font-bold text-forest-ink-900">{fmt(stat.min)}</div>
+                    </div>
+                    <div>
+                      <div className="text-ink-400">Max</div>
+                      <div className="font-bold text-forest-ink-900">{fmt(stat.max)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
       </div>
@@ -249,19 +257,7 @@ export default function FieldsPage() {
       {/* Map */}
       <div className="relative flex-1">
         <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
-          <div className="flex gap-1.5">
-            {LAYERS.map((l) => (
-              <button
-                key={l.key}
-                onClick={() => setMapLayer(l.key)}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold shadow-card ${
-                  mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
+          <MeasureDropdown value={mapLayer} onChange={setMapLayer} className="w-48" />
           {/* Manual re-locate — always live (user-initiated), unlike the
               once-per-session auto-locate that fires when the map first loads. */}
           <button
@@ -293,7 +289,8 @@ export default function FieldsPage() {
         />
         {overlay && mapLayer !== "satellite" && (
           <div className="absolute bottom-3 left-3 z-10 flex w-44 flex-col gap-2.5 rounded-card border border-border bg-cream-card p-2.5 shadow-card">
-            <NdviLegend layer={mapLayer === "ndmi" ? "ndmi" : "ndvi"} />
+            {/* guarded by mapLayer !== "satellite" above, so it's an index layer */}
+            <NdviLegend layer={mapLayer as IndexLayer} />
           </div>
         )}
       </div>

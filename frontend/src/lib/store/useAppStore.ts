@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import type { Lang } from "@/lib/i18n/dictionary";
 
-export type MapLayer = "ndvi" | "ndmi" | "satellite";
+export type MapLayer =
+  | "ndvi"
+  | "ndmi"
+  | "ndre"
+  | "nbr2"
+  | "ndwi"
+  | "cci"
+  | "evi"
+  | "savi"
+  | "satellite";
 
 interface AppState {
   lang: Lang;

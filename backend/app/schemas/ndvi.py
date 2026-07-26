@@ -51,5 +51,21 @@ class NdviAnalyzeResponse(BaseModel):
     # Optional so this response shape didn't need a breaking change.
     ndmi_stats: Optional[NdviStats] = None
     ndmi_visualization: Optional[NdviVisualization] = None
+    # NDRE (red-edge / nitrogen) and NBR2 (residue / burn) — same scene,
+    # same Optional-for-back-compat treatment as NDMI above.
+    ndre_stats: Optional[NdviStats] = None
+    ndre_visualization: Optional[NdviVisualization] = None
+    nbr2_stats: Optional[NdviStats] = None
+    nbr2_visualization: Optional[NdviVisualization] = None
+    # NDWI (open water), CCI (chlorophyll/carotenoid), EVI (enhanced veg),
+    # SAVI (soil-adjusted veg) — all from the same multiband fetch.
+    ndwi_stats: Optional[NdviStats] = None
+    ndwi_visualization: Optional[NdviVisualization] = None
+    cci_stats: Optional[NdviStats] = None
+    cci_visualization: Optional[NdviVisualization] = None
+    evi_stats: Optional[NdviStats] = None
+    evi_visualization: Optional[NdviVisualization] = None
+    savi_stats: Optional[NdviStats] = None
+    savi_visualization: Optional[NdviVisualization] = None
     source: NdviSourceInfo
     area_hectares: Optional[float] = None

@@ -24,8 +24,9 @@ from app.models.ndvi_history import NdviHistory
 from app.models.ndvi_job import NdviJob, NdviJobStatus
 from app.schemas.field import FieldCreateRequest, FieldNdviLatestResponse, NdviHistoryItem
 from app.schemas.ndvi_job import FieldReanalyzeRequest
+from app.schemas.ndvi import NdviAnalyzeResponse
 from app.services.geometry_validator import calculate_area_hectares, validate_polygon
-from app.services.satellite.ndvi_processor import compute_ndvi
+from app.services.satellite.ndvi_processor import compute_ndvi_periods
 
 logger = logging.getLogger("app")
 
@@ -80,10 +81,14 @@ def create_reanalysis_job(db: Session, field: Field, body: FieldReanalyzeRequest
     return job
 
 
-# compute_ndvi can block indefinitely on a hung CDSE call (BackgroundTasks
-# has no kill switch), and a --reload restart orphans in-flight jobs as
-# "running" forever. Normal jobs finish in well under a minute.
-JOB_STALE_AFTER = timedelta(minutes=10)
+# A single tile's CDSE call can block indefinitely (BackgroundTasks has no
+# kill switch), and a --reload restart orphans in-flight jobs as "running"
+# forever. Each tile in compute_ndvi_periods' loop is well under a minute
+# on its own, but a wide window means more tiles in sequence within one
+# job (30 days -> ~4, 90 days -> ~13) — generous on purpose so a
+# legitimately-progressing wide-window job isn't killed mid-flight, while
+# still catching a genuinely stuck one well before a user gives up waiting.
+JOB_STALE_AFTER = timedelta(minutes=20)
 
 
 def get_job_or_404(db: Session, job_id: uuid.UUID) -> NdviJob:
@@ -109,10 +114,55 @@ def _fail_job(db: Session, job: NdviJob, message: str) -> None:
     db.commit()
 
 
+def _build_history_row(field_id: uuid.UUID, result: NdviAnalyzeResponse) -> NdviHistory:
+    """
+    One compute_ndvi_periods() bucket -> one NdviHistory row. There's no
+    single "scene date" concept here — each bucket is a temporal mean of
+    every cloud-free scene in its ~week, so the bucket's end date is used as
+    the recorded image date (see ndvi_processor.py's module docstring).
+    """
+    history = NdviHistory(
+        field_id=field_id,
+        ndvi_mean=result.stats.mean,
+        ndvi_min=result.stats.min,
+        ndvi_max=result.stats.max,
+        ndvi_png_url=result.visualization.image_url,
+        date_range_start=result.source.date_range_start,
+        satellite_image_date=result.source.date_range_end,
+        cloud_cover_percent=result.source.max_cloud_cover_filter_percent,
+        source_collection=result.source.collection,
+    )
+    # Every secondary index shares the response's <key>_stats /
+    # <key>_visualization shape and the row's <key>_mean/min/max/png_url
+    # columns — map them in one loop instead of ~28 hand-written, easily
+    # transposed assignments.
+    for key in ("ndmi", "ndre", "nbr2", "ndwi", "cci", "evi", "savi"):
+        stats = getattr(result, f"{key}_stats", None)
+        vis = getattr(result, f"{key}_visualization", None)
+        if stats is not None:
+            setattr(history, f"{key}_mean", stats.mean)
+            setattr(history, f"{key}_min", stats.min)
+            setattr(history, f"{key}_max", stats.max)
+        if vis is not None:
+            setattr(history, f"{key}_png_url", vis.image_url)
+    return history
+
+
 def run_ndvi_job(job_id: uuid.UUID) -> None:
     """
     BackgroundTasks target. Owns its own DB session end-to-end (see module
     docstring) — never reuses a request-scoped session.
+
+    Uses compute_ndvi_periods, not compute_ndvi directly: it splits the
+    requested window into ~weekly tiles and yields one result per tile
+    (newest first), so ONE job can produce several weekly NdviHistory rows
+    (a 30-day window -> up to ~4) instead of needing one job per week. Each
+    yielded tile is written and committed here IMMEDIATELY, not batched —
+    every tile is its own proven-fast (well under a minute) satellite call,
+    but there are several of them per job, and a later tile being slow or
+    failing must not lose the ones that already succeeded. A tile with no
+    cloud-free scene is skipped by compute_ndvi_periods, not an error; the
+    job only fails outright if EVERY tile came back empty.
     """
     db = SessionLocal()
     try:
@@ -132,52 +182,45 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
 
         polygon = to_shape(field.geometry)
 
+        first_history_id = None
         try:
-            result = compute_ndvi(
+            for result in compute_ndvi_periods(
                 polygon,
                 area_hectares=field.area_hectares,
                 start_date=job.requested_start_date,
                 end_date=job.requested_end_date,
-            )
+            ):
+                # The field (and this job's own row, via cascade) may have
+                # been deleted while a tile's CDSE fetch was running — e.g.
+                # a user clicking "try again" after the client-side timeout,
+                # before this job actually finished. That's an expected
+                # outcome of deletion and analysis being unsynchronized, not
+                # a bug: re-check existence before each write instead of
+                # letting the insert crash on a foreign-key violation.
+                if db.query(Field).filter(Field.id == field.id).first() is None:
+                    logger.info(f"NDVI job {job_id}: field {field.id} deleted mid-analysis; stopping")
+                    return
+                history = _build_history_row(field.id, result)
+                db.add(history)
+                db.flush()
+                db.commit()
+                if first_history_id is None:
+                    first_history_id = history.id
         except Exception as e:
+            # A mid-loop failure (rather than a per-tile skip, which
+            # compute_ndvi_periods already swallows) still leaves any
+            # already-committed tiles in place — only fail the job outright
+            # if NOTHING was written at all.
             logger.error(f"NDVI job {job_id} analysis failed: {e}", exc_info=True)
-            _fail_job(db, job, str(e))
+            if first_history_id is None:
+                _fail_job(db, job, str(e))
+                return
+
+        if first_history_id is None:
+            _fail_job(db, job, "No cloud-free Sentinel-2 imagery found for this area/window")
             return
 
-        # The field (and this job's own row, via cascade) may have been
-        # deleted while compute_ndvi was running the multi-minute CDSE
-        # fetch — e.g. a user clicking "try again" after the client-side
-        # timeout, before this job actually finished. That's an expected
-        # outcome of deletion and analysis being unsynchronized, not a bug:
-        # re-check existence right before writing results instead of
-        # letting the insert below crash on a foreign-key violation.
-        if db.query(Field).filter(Field.id == field.id).first() is None:
-            logger.info(f"NDVI job {job_id}: field {field.id} was deleted mid-analysis; discarding result")
-            return
-
-        history = NdviHistory(
-            field_id=field.id,
-            ndvi_mean=result.stats.mean,
-            ndvi_min=result.stats.min,
-            ndvi_max=result.stats.max,
-            ndmi_mean=result.ndmi_stats.mean if result.ndmi_stats else None,
-            ndmi_min=result.ndmi_stats.min if result.ndmi_stats else None,
-            ndmi_max=result.ndmi_stats.max if result.ndmi_stats else None,
-            # There's no single "scene date" concept here — compute_ndvi
-            # temporal-means every cloud-free scene in the search window, so
-            # the window's end date is used as the recorded image date (see
-            # ndvi_processor.py's module docstring for why).
-            date_range_start=result.source.date_range_start,
-            satellite_image_date=result.source.date_range_end,
-            cloud_cover_percent=result.source.max_cloud_cover_filter_percent,
-            source_collection=result.source.collection,
-            ndvi_png_url=result.visualization.image_url,
-            ndmi_png_url=result.ndmi_visualization.image_url if result.ndmi_visualization else None,
-        )
-        db.add(history)
-        db.flush()
-
-        job.ndvi_history_id = history.id
+        job.ndvi_history_id = first_history_id
         job.status = NdviJobStatus.done
         job.finished_at = datetime.now(timezone.utc)
         db.commit()
@@ -192,6 +235,28 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
             db.rollback()
     finally:
         db.close()
+
+
+def get_job_history_items(db: Session, job: NdviJob) -> list[NdviHistory]:
+    """
+    The NdviHistory rows a completed job produced. Derived from
+    field_id + computed_at >= job.started_at rather than a dedicated join
+    table — one job can now write several weekly rows (see run_ndvi_job)
+    and NdviJob.ndvi_history_id is a single FK kept only for back-compat/
+    informational use. Every caller of reanalyze/create already guards
+    against firing a second job for the same field while one is pending, so
+    jobs for one field run sequentially in practice and this time-based
+    scoping is safe. Returned oldest first (explicit ORDER BY) regardless of
+    the write order (compute_ndvi_periods yields newest first).
+    """
+    if job.status != NdviJobStatus.done or job.started_at is None:
+        return []
+    return (
+        db.query(NdviHistory)
+        .filter(NdviHistory.field_id == job.field_id, NdviHistory.computed_at >= job.started_at)
+        .order_by(NdviHistory.satellite_image_date.asc())
+        .all()
+    )
 
 
 def get_field_ndvi(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> FieldNdviLatestResponse:

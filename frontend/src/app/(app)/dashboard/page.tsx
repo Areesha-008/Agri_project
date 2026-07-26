@@ -4,9 +4,11 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useCropHealth, useField, useFieldNdvi, useAlerts, useWeather, useLedgerEntries } from "@/lib/api/hooks";
 import { boundsFromGeometry, polygonCentroid } from "@/lib/geo";
-import { useAppStore, type MapLayer } from "@/lib/store/useAppStore";
+import { useAppStore } from "@/lib/store/useAppStore";
 import { Card } from "@/components/ui/Card";
 import { HealthGauge } from "@/components/ui/HealthGauge";
+import { MeasureDropdown } from "@/components/map/MeasureDropdown";
+import { layerPng, layerStats } from "@/lib/measures";
 import type { FieldListItem } from "@/lib/api/types";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
 
@@ -23,11 +25,6 @@ const CATEGORY_DOT: Record<string, string> = {
   Operation: "#8a927f",
 };
 
-const LAYERS: { key: MapLayer; label: string }[] = [
-  { key: "ndvi", label: "NDVI" },
-  { key: "ndmi", label: "NDMI" },
-  { key: "satellite", label: "Satellite" },
-];
 
 export default function DashboardPage() {
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
@@ -50,12 +47,14 @@ export default function DashboardPage() {
     ? [{ id: field.id, name: field.name, area_hectares: field.area_hectares, created_at: field.created_at }]
     : [];
   const mapGeometries = field ? { [field.id]: field.geometry } : {};
+  // MEAN/MIN/MAX track the measure the dropdown selects (satellite → NDVI).
+  const layerVals = latest ? layerStats(latest, mapLayer) : { mean: null, min: null, max: null };
   const overlay: FieldOverlay | null =
     field && latest
       ? {
           id: field.id,
           boundingBox: boundsFromGeometry(field.geometry),
-          imageUrl: mapLayer === "ndmi" ? (latest.ndmi_png_url ?? "") : (latest.ndvi_png_url ?? ""),
+          imageUrl: layerPng(latest, mapLayer) ?? "",
         }
       : null;
 
@@ -94,7 +93,7 @@ export default function DashboardPage() {
             half-width; resets to its own column once the 3-pane desktop grid kicks in. */}
         <Card className="flex min-h-0 flex-col gap-2.5 md:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <div className="text-[13px] font-bold text-ink-900">Field NDVI — {field?.name ?? "—"}</div>
+            <div className="text-[13px] font-bold text-ink-900">Field analysis — {field?.name ?? "—"}</div>
             <Link href="/fields" className="text-[11px] font-semibold text-forest-ink-700">
               Open map →
             </Link>
@@ -118,18 +117,8 @@ export default function DashboardPage() {
               </Link>
             )}
             {field && (
-              <div className="pointer-events-none absolute right-3 top-3 flex gap-1.5">
-                {LAYERS.map((l) => (
-                  <button
-                    key={l.key}
-                    onClick={() => setMapLayer(l.key)}
-                    className={`pointer-events-auto rounded-lg px-2.5 py-1.5 text-[11px] font-semibold shadow-card ${
-                      mapLayer === l.key ? "bg-forest-900 text-white" : "bg-cream-card text-ink-600"
-                    }`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+              <div className="absolute right-3 top-3 w-40">
+                <MeasureDropdown value={mapLayer} onChange={setMapLayer} />
               </div>
             )}
             {latest && (
@@ -143,9 +132,9 @@ export default function DashboardPage() {
                 forest-ink-900 (not the old hardcoded per-stat hex) so it stays readable once
                 cream-inset inverts to dark, and matches how every other NDVI stat box looks. */}
             {[
-              ["MEAN", latest?.ndvi_mean, "text-forest-ink-900"],
-              ["MIN", latest?.ndvi_min, "text-forest-ink-900"],
-              ["MAX", latest?.ndvi_max, "text-forest-ink-900"],
+              ["MEAN", layerVals.mean, "text-forest-ink-900"],
+              ["MIN", layerVals.min, "text-forest-ink-900"],
+              ["MAX", layerVals.max, "text-forest-ink-900"],
               ["AREA", field?.area_hectares ? `${field.area_hectares} ha` : "—", "text-ink-900"],
             ].map(([label, value, colorClass]) => (
               <div key={label as string} className="flex-1 rounded-lg bg-cream-inset px-2.5 py-2">
