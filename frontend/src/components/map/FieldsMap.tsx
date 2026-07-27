@@ -24,7 +24,19 @@ const OVERLAY_OPACITY = 0.85;
 // sessionStorage (not in-memory) so it survives a same-tab reload but re-arms on
 // a genuinely new visit. Storage can throw in private mode — treat that as
 // "not located yet" so location still works, just without the once-guard.
+//
+// Written only once the visitor has actually ANSWERED the prompt (allowed or
+// refused), never up-front: marking before triggering meant a prompt that was
+// simply ignored — or dismissed with the X — burned the single attempt for the
+// whole session, so no amount of reloading would ask again.
 const GEO_LOCATED_KEY = "jk_geo_located";
+
+// In-memory companion to the key above, covering the window while a prompt is
+// open and therefore still unanswered. sessionStorage can't cover it any more
+// (nothing is written until the answer arrives), and without this a second map
+// mounting mid-prompt — hero → My Fields — would trigger a second one.
+// Deliberately not persisted: it must not outlive the page.
+let autoLocatePending = false;
 function hasAutoLocatedThisSession(): boolean {
   try {
     return sessionStorage.getItem(GEO_LOCATED_KEY) === "1";
@@ -106,6 +118,10 @@ export function FieldsMap({
     map.addControl(navControl, "top-left");
     navControlRef.current = navControl;
 
+    // Whether the pending attempt (if any) belongs to THIS map, so tearing it
+    // down can release the in-flight guard without stomping another map's.
+    let ownsPendingLocate = false;
+
     // Google-Maps-style: on the landing hero, ask for the visitor's location and
     // fly there on first load. Denied/blocked → the map stays at DEFAULT_CENTER,
     // and the control's own button remains as a manual fallback.
@@ -124,16 +140,25 @@ export function FieldsMap({
       // Feed the located point into the geocoder so search biases to the
       // visitor; `false` keeps trackProximity active for later map moves.
       geolocate.on("geolocate", (pos: GeolocationPosition) => {
+        autoLocatePending = false;
+        markAutoLocated();
         geocoderRef.current?.setProximity(
           { longitude: pos.coords.longitude, latitude: pos.coords.latitude },
           false,
         );
       });
+      // A refusal is still an answer: record it so navigating on doesn't ask
+      // again, and so a hard browser-level block isn't retried on every map.
+      geolocate.on("error", () => {
+        autoLocatePending = false;
+        markAutoLocated();
+      });
       // Only the first autoLocate map of the session prompts (see GEO_LOCATED_KEY).
       // The consumer's manual locate button (locateSignal) bypasses this.
       map.on("load", () => {
-        if (hasAutoLocatedThisSession()) return;
-        markAutoLocated();
+        if (hasAutoLocatedThisSession() || autoLocatePending) return;
+        autoLocatePending = true;
+        ownsPendingLocate = true;
         geolocate.trigger();
       });
     }
@@ -163,6 +188,10 @@ export function FieldsMap({
     resizeObserver.observe(containerRef.current);
 
     return () => {
+      // Navigating away with the prompt still open kills the callbacks that
+      // would have cleared this, so release it here — otherwise the guard
+      // stays set for the life of the page and nothing auto-locates again.
+      if (ownsPendingLocate) autoLocatePending = false;
       resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
