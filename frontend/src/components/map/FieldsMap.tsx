@@ -14,6 +14,10 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAP_TILES_KEY ?? "";
 // Faisalabad, Punjab — sample farmland the design's mock data centers on.
 const DEFAULT_CENTER: [number, number] = [73.135, 31.45];
 
+// Resting opacity of the index overlay: enough to read the palette while the
+// basemap's field boundaries and roads still show through underneath.
+const OVERLAY_OPACITY = 0.85;
+
 // Auto-geolocation fires at most once per browsing session, shared across every
 // autoLocate consumer (the landing hero and My Fields). Whichever mounts first
 // asks; the rest skip so the visitor isn't re-prompted while navigating.
@@ -308,8 +312,17 @@ export function FieldsMap({
     const map = mapRef.current;
     if (!map) return;
 
+    let cancelled = false;
+    let rafId = 0;
+    let onSourceData: ((e: mapboxgl.MapSourceDataEvent) => void) | null = null;
+
     function apply(map: mapboxgl.Map) {
       const sourceId = "ndvi-overlay";
+      // Whether an overlay was already on screen decides how this one arrives:
+      // the FIRST result is the payoff the visitor just waited 20-70s for and
+      // is worth an authored fade, but swapping measures or scrubbing weeks is
+      // a routine state change that would feel laggy at the same duration.
+      const hadOverlay = map.getLayer("ndvi-overlay-layer") != null;
       if (map.getLayer("ndvi-overlay-layer")) map.removeLayer("ndvi-overlay-layer");
       if (map.getSource(sourceId)) map.removeSource(sourceId);
 
@@ -325,18 +338,76 @@ export function FieldsMap({
           [west, south],
         ],
       });
-      map.addLayer({ id: "ndvi-overlay-layer", type: "raster", source: sourceId, paint: { "raster-opacity": 0.85 } });
+      // Raster layers live in the map's WebGL context, so CSS can't touch them.
+      // Mapbox's own `raster-opacity-transition` was measured snapping straight
+      // to full opacity here rather than easing, so the fade is tweened by hand
+      // below and the built-in transition is pinned to 0 to keep it from
+      // fighting each per-frame write.
+      map.addLayer({
+        id: "ndvi-overlay-layer",
+        type: "raster",
+        source: sourceId,
+        paint: {
+          "raster-opacity": 0,
+          "raster-opacity-transition": { duration: 0, delay: 0 },
+        },
+      });
+      // The fade has to start only once the PNG has actually decoded. Kicking
+      // it off on the next frame instead runs the whole transition against an
+      // image that isn't there yet, so it arrives already at full opacity —
+      // measured on a real result: invisible at 90ms, fully opaque by 300ms,
+      // i.e. no visible fade at all. Waiting for the source makes the
+      // transition run over pixels the visitor can actually see.
+      const reveal = () => {
+        if (cancelled || !map.getLayer("ndvi-overlay-layer")) return;
+        // The first result is the payoff the visitor just waited 20-70s for and
+        // is worth an authored arrival; swapping measures or scrubbing weeks is
+        // a routine change that would feel laggy at the same duration.
+        const duration = hadOverlay ? 180 : 550;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          map.setPaintProperty("ndvi-overlay-layer", "raster-opacity", OVERLAY_OPACITY);
+          return;
+        }
+        const start = performance.now();
+        const step = (now: number) => {
+          if (cancelled || !map.getLayer("ndvi-overlay-layer")) return;
+          // Clamped at both ends: a rAF callback's timestamp is the frame's
+          // start time, which can precede the `start` captured just before
+          // scheduling it — that made the first frame compute a negative
+          // opacity before this was clamped.
+          const p = Math.min(1, Math.max(0, (now - start) / duration));
+          const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic, matches the site's arrivals
+          map.setPaintProperty("ndvi-overlay-layer", "raster-opacity", OVERLAY_OPACITY * eased);
+          if (p < 1) rafId = requestAnimationFrame(step);
+        };
+        rafId = requestAnimationFrame(step);
+      };
+      if (map.isSourceLoaded(sourceId)) {
+        requestAnimationFrame(reveal);
+        return;
+      }
+      onSourceData = (e: mapboxgl.MapSourceDataEvent) => {
+        if (e.sourceId !== sourceId || !map.isSourceLoaded(sourceId)) return;
+        if (onSourceData) map.off("sourcedata", onSourceData);
+        onSourceData = null;
+        requestAnimationFrame(reveal);
+      };
+      map.on("sourcedata", onSourceData);
     }
 
     // Same once-per-lifetime "load" pitfall as the outlines effect above.
+    let onIdle: (() => void) | null = null;
     if (map.isStyleLoaded()) {
       apply(map);
-      return;
+    } else {
+      onIdle = () => apply(map);
+      map.once("idle", onIdle);
     }
-    const onIdle = () => apply(map);
-    map.once("idle", onIdle);
     return () => {
-      map.off("idle", onIdle);
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (onIdle) map.off("idle", onIdle);
+      if (onSourceData) map.off("sourcedata", onSourceData);
     };
   }, [overlay, layer]);
 

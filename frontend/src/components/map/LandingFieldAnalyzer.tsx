@@ -16,6 +16,7 @@ import type { PolygonGeometry } from "@/lib/api/types";
 import type { MapLayer } from "@/lib/store/useAppStore";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
 import { MeasureDropdown } from "@/components/map/MeasureDropdown";
+import { ScanSweep } from "@/components/map/ScanSweep";
 import { layerPng, layerStats } from "@/lib/measures";
 import { boundsFromGeometry } from "@/lib/geo";
 
@@ -234,6 +235,8 @@ export function LandingFieldAnalyzer() {
             locateSignal={locateSignal}
           />
 
+          <ScanSweep active={isAnalyzing} />
+
           <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-1.5">
               {anyResults && (
@@ -307,9 +310,12 @@ export function LandingFieldAnalyzer() {
               </div>
             )}
 
+            {/* No spinner here (or in the per-week readout below): the scan
+                sweeping across the map behind this panel is the progress
+                indicator, and a second spinning thing next to it would just
+                split attention between two motions saying the same thing. */}
             {mode === "saving" && (
-              <div className="flex flex-col items-center gap-2.5 py-2 text-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
+              <div className="flex flex-col items-center gap-1.5 py-2 text-center">
                 <div className="text-[13px] font-bold text-ink-900">{t("landingDrawAnalyzing")}</div>
                 <div className="text-xs text-ink-400">{t("landingDrawAnalyzingHint")}</div>
               </div>
@@ -355,8 +361,7 @@ export function LandingFieldAnalyzer() {
                       </div>
                     );
                   })() : isAnalyzing ? (
-                    <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-400">
-                      <div className="h-3 w-3 flex-none animate-spin rounded-full border-2 border-cream-inset border-t-forest-500" />
+                    <div className="text-center text-[11px] text-ink-400">
                       {timedOut ? t("landingDrawTimeout") : t("landingDrawWeekAnalyzing")}
                     </div>
                   ) : (

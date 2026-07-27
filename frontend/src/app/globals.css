@@ -383,6 +383,71 @@
   animation: jkBackdropIn 0.25s ease backwards;
 }
 
+/* The satellite pass — see ScanSweep.tsx.
+   Sentinel-2 is a pushbroom sensor: it sweeps a swath across the ground as it
+   passes overhead, which is literally what the user is waiting on for 20-70s.
+   So the wait is drawn as that pass rather than as a spinner.
+
+   Travel is -110% -> 240% for a 42%-wide band, so it clears the frame at both
+   ends and the loop restart is never visible; the short gap between passes is
+   the next overpass, not a stutter. Linear, because a scanner crosses at a
+   constant rate — easing it would read as a decorative wipe instead.
+   transform only, so this stays on the compositor and never touches the map's
+   WebGL canvas; the "light" is baked into a static gradient + shadow. */
+/* Skewed, not vertical: Sentinel-2 flies a near-polar sun-synchronous orbit, so
+   its ground track crosses a north-up map on a slight tilt. A perfectly
+   vertical band reads as a loading bar; this reads as an overpass. */
+@keyframes jkScanSweep {
+  from {
+    transform: skewX(-9deg) translateX(-110%);
+  }
+  to {
+    transform: skewX(-9deg) translateX(240%);
+  }
+}
+.jk-scan-band {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  /* Narrow enough that the bright leading portion dominates — a wide band
+     reads as a gradient wash drifting past, not as a sensor crossing. */
+  width: 34%;
+  /* Additive light over the satellite basemap, so the swath brightens the
+     imagery instead of veiling it with a gray panel. Values are deliberately
+     strong: screen never darkens, so over bright imagery (bare soil, built-up
+     land) anything subtle washes out to invisible haze. */
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    90deg,
+    rgba(149, 213, 178, 0) 0%,
+    rgba(149, 213, 178, 0.1) 45%,
+    rgba(149, 213, 178, 0.26) 76%,
+    rgba(183, 228, 199, 0.55) 93%,
+    rgba(236, 253, 245, 0.95) 100%
+  );
+  /* The sensor line itself, plus the glow it throws ahead of the sweep. */
+  box-shadow:
+    2px 0 0 rgba(240, 255, 248, 0.9),
+    10px 0 26px rgba(149, 213, 178, 0.45);
+  /* Softens the band's top and bottom termini. Without this the swath ends in
+     two hard horizontal cuts at the map's edges and reads as a misplaced div
+     rather than a beam — and the skew above leaves its raggedest ends exactly
+     there. Static mask, so it composites once and costs nothing per frame. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  animation: jkScanSweep 2.8s linear infinite;
+  will-change: transform;
+}
+
+/* The sweep is the page's one looping animation, so it is also the one most
+   worth removing outright rather than collapsing to 0.01ms like the entrances
+   above — a band frozen mid-frame would sit on the map as a static smear. */
+@media (prefers-reduced-motion: reduce) {
+  .jk-scan-band {
+    display: none;
+  }
+}
+
 body {
   background: var(--color-cream-bg);
   color: var(--color-ink-900);

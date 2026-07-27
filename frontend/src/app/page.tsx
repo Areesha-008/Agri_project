@@ -382,7 +382,14 @@ export default function LandingPage() {
 
       {/* How it works */}
       <div id="how" className="mx-auto max-w-[1180px] scroll-mt-[70px] px-6 py-16">
-        <Reveal className="mb-9 text-center">
+        {/* Headings and banners deliberately do NOT animate in. A section
+            heading is the anchor its content arrives against, and giving every
+            section the same fade-up made that entrance the page's grammar
+            rather than a choice — which left the one moment that actually
+            deserves authorship (the satellite pass in the hero) competing with
+            six ambient copies of itself. Stagger stays only where a list
+            genuinely appears as a list: the steps below and the feature rows. */}
+        <div className="mb-9 text-center">
           {/* No eyebrow here — the STEP badges below already carry the "this is a
               sequence" signal, and the title names the section on its own. */}
           <h2
@@ -392,7 +399,7 @@ export default function LandingPage() {
           >
             {t("landingHowTitle")}
           </h2>
-        </Reveal>
+        </div>
         <div className="jk-how-grid relative grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-4.5">
           <div className="jk-how-connector absolute top-0 right-[16.6%] left-[16.6%] hidden border-t border-dashed border-mint-border-strong md:block" />
           {STEPS.map((s, i) => (
@@ -419,7 +426,7 @@ export default function LandingPage() {
 
       {/* Features bento */}
       <div id="features" className="mx-auto w-full max-w-[1180px] scroll-mt-[70px] px-6 pb-6 pt-16">
-        <Reveal className="mx-auto mb-11 max-w-[620px] text-center">
+        <div className="mx-auto mb-11 max-w-[620px] text-center">
           {/* No eyebrow — the subcopy paragraph below already frames what this section is. */}
           <h2
             className={`m-0 mb-3 text-[26px] tracking-tight text-ink-900 md:text-[32px] ${
@@ -429,7 +436,7 @@ export default function LandingPage() {
             {t("landingFeaturesTitle")}
           </h2>
           <p className="m-0 text-[14.5px] leading-relaxed text-ink-600">{t("landingFeaturesSubcopy")}</p>
-        </Reveal>
+        </div>
 
         <div className="flex flex-col gap-4">
           <Reveal index={0}>
@@ -454,7 +461,7 @@ export default function LandingPage() {
           </Reveal>
         </div>
 
-        <Reveal index={2} className="mt-4">
+        <div className="mt-4">
           <div className="jk-contours-dark relative flex flex-wrap items-center gap-7 overflow-hidden rounded-card-lg bg-forest-900 p-7 text-white">
             <div className="grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-white/[.18]">
               <LogoMark size={20} leafColor="#95D5B2" leafColorDark="#40916C" />
@@ -472,7 +479,7 @@ export default function LandingPage() {
               {t("landingLedgerBannerCta")}
             </Link>
           </div>
-        </Reveal>
+        </div>
       </div>
 
       {/* Mission */}
@@ -481,7 +488,7 @@ export default function LandingPage() {
           className="pointer-events-none absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70 blur-3xl"
           style={{ background: "radial-gradient(circle, rgba(149,213,178,.4), transparent 70%)" }}
         />
-        <Reveal className="relative mx-auto max-w-[900px] px-6 py-16 text-center">
+        <div className="relative mx-auto max-w-[900px] px-6 py-16 text-center">
           <div className="mb-3 text-xs font-bold tracking-[.12em] text-forest-ink-500">{t("landingMissionEyebrow")}</div>
           <h2
             className={`m-0 mb-3.5 text-2xl leading-tight tracking-tight text-ink-900 md:text-[28px] ${
@@ -496,12 +503,12 @@ export default function LandingPage() {
             <StatCounter value="+15%" label={t("landingMissionStat2")} />
             <StatCounter value="48 hrs" label={t("landingMissionStat3")} />
           </div>
-        </Reveal>
+        </div>
       </div>
 
       {/* CTA + footer */}
       <div className="mx-auto w-full max-w-[1180px] px-6 pb-7 pt-16">
-        <Reveal>
+        <div>
           <div className="relative flex flex-wrap items-center gap-7 overflow-hidden rounded-card-lg bg-forest-900 p-9">
             <Image src={FIELDS_TILE_IMAGE} alt="" fill sizes="100vw" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-forest-900 via-forest-900/92 to-forest-900/55" />
@@ -520,7 +527,7 @@ export default function LandingPage() {
               {t("landingCtaBannerButton")}
             </Link>
           </div>
-        </Reveal>
+        </div>
         <div className="flex flex-wrap items-center gap-3.5 px-1 pb-2 pt-7 text-xs text-ink-600">
           <div className="flex items-center gap-2 font-bold text-forest-ink-900">
             <Logo size={22} />
