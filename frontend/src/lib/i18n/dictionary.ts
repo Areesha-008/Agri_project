@@ -113,7 +113,7 @@ export const dictionary = {
     landingNavFeatures: "Features",
     landingNavHow: "How it works",
     landingNavMission: "Mission",
-    landingHeadline1: "Satellite intelligence for",
+    landingHeadline1: "Artificial intelligence for",
     landingHeadline2: "every acre",
     landingHeadline3: "you farm.",
     landingSubcopy:
@@ -308,7 +308,7 @@ export const dictionary = {
     landingNavHow: "یہ کیسے کام کرتا ہے",
     landingNavMission: "مشن",
     landingHeadline1: "آپ کی ہر ایکڑ زمین کے لیے",
-    landingHeadline2: "سیٹلائٹ ذہانت",
+    landingHeadline2: "مصنوعی ذہانت",
     landingHeadline3: "",
     landingSubcopy:
       "نقشے پر اپنا کھیت بنائیں اور جدید کاشتکار خلا سے اس کی نگرانی کرے گا: فصل کی صحت، پانی کا دباؤ، بیماری کا خطرہ اور موسم، سب ایک ہی جگہ۔",
