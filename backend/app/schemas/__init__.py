@@ -6,7 +6,7 @@ from app.schemas.ndvi import (
     NdviStats,
     NdviVisualization,
 )
-from app.schemas.field import FieldListItem, FieldResponse, FieldSaveRequest
+from app.schemas.field import FieldListItem, FieldResponse
 from app.schemas.user import Token, TokenPayload, UserCreate, UserLogin, UserResponse
 
 __all__ = [
@@ -19,7 +19,6 @@ __all__ = [
     "NdviVisualization",
     "FieldListItem",
     "FieldResponse",
-    "FieldSaveRequest",
     "Token",
     "TokenPayload",
     "UserCreate",

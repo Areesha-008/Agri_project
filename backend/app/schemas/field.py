@@ -19,27 +19,6 @@ class FieldCreateRequest(BaseModel):
     end_date: Optional[date] = None
 
 
-class FieldSaveRequest(BaseModel):
-    """
-    Deprecated — superseded by POST /fields, which triggers a real
-    server-side NDVI/NDMI analysis job instead of trusting stats the
-    frontend computed itself. Kept mounted at POST /fields/save for one
-    release so any in-flight callers don't break; do not build new
-    features against this.
-    """
-
-    name: str = Field(..., min_length=1, max_length=255)
-    geometry: PolygonGeometry
-    area_hectares: Optional[float] = None
-
-    ndvi_mean: float
-    ndvi_min: float
-    ndvi_max: float
-    satellite_image_date: date
-    cloud_cover_percent: Optional[float] = None
-    source_collection: str
-
-
 class FieldResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

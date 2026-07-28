@@ -22,6 +22,14 @@ interface AppState {
   mapLayer: MapLayer;
   setMapLayer: (layer: MapLayer) => void;
 
+  // The in-flight NDVI analysis job (if any), tracked here instead of in a
+  // page's local state so it survives navigating to another module — the
+  // job itself is a backend BackgroundTask that keeps running either way;
+  // this is just what lets the UI keep watching it. One slot, not a map:
+  // every caller already assumed a single tracked job at a time.
+  activeJob: { fieldId: string; jobId: string } | null;
+  setActiveJob: (job: { fieldId: string; jobId: string } | null) => void;
+
   notifOpen: boolean;
   fieldMenuOpen: boolean;
   reportOpen: boolean;
@@ -40,6 +48,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   mapLayer: "ndvi",
   setMapLayer: (layer) => set({ mapLayer: layer }),
+
+  activeJob: null,
+  setActiveJob: (job) => set({ activeJob: job }),
 
   notifOpen: false,
   fieldMenuOpen: false,

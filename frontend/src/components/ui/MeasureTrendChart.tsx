@@ -12,6 +12,28 @@ import {
 
 type Point = { date: string; mean: number; min: number; max: number };
 
+/**
+ * Repeated re-analysis of the same week (e.g. clicking a preset before the
+ * gap-check fix, or just re-running "Analyse this period") writes a NEW
+ * NdviHistory row instead of updating one — the backend keeps every row and
+ * only orders by computed_at as a tiebreak (see get_field_ndvi). Left
+ * undeduped, the chart plotted every one of those as its own point, which is
+ * exactly what reads as "the same value repeated across several dots": they
+ * ARE the same value, from the same week, computed more than once. history
+ * is newest-first with computed_at DESC as the tiebreak, so keeping the
+ * first occurrence per date keeps the most recently computed one.
+ */
+function dedupeByDate(history: NdviHistoryItem[]): NdviHistoryItem[] {
+  const seen = new Set<string>();
+  const out: NdviHistoryItem[] = [];
+  for (const r of history) {
+    if (seen.has(r.satellite_image_date)) continue;
+    seen.add(r.satellite_image_date);
+    out.push(r);
+  }
+  return out;
+}
+
 /** Oldest→newest series of a single measure, dropping rows that predate it. */
 function seriesFor(rows: NdviHistoryItem[], layer: IndexLayer): Point[] {
   const out: Point[] = [];
@@ -44,7 +66,7 @@ const COMPARE_CAP = 4;
  */
 export function MeasureTrendChart({ history }: { history: NdviHistoryItem[] }) {
   // get_field_ndvi returns newest-first; charts read left(old)→right(new).
-  const rows = useMemo(() => [...history].reverse(), [history]);
+  const rows = useMemo(() => dedupeByDate(history).reverse(), [history]);
   const [mode, setMode] = useState<"single" | "compare">("single");
   const [selected, setSelected] = useState<IndexLayer>("ndvi");
   const [compareSet, setCompareSet] = useState<IndexLayer[]>(["ndvi", "ndmi", "ndre"]);
@@ -203,16 +225,56 @@ const padB = 24;
 const plotW = W - padL - padR;
 const plotH = H - padT - padB;
 
-const xAt = (i: number, n: number) => (n === 1 ? padL + plotW / 2 : padL + (i / (n - 1)) * plotW);
+// Parsed once per relative-position calculation, never compared for exact
+// calendar-day equality — a systematic UTC-midnight offset cancels out when
+// every date is placed on the same shared timeline.
+function parseDateMs(iso: string): number {
+  return new Date(iso).getTime();
+}
+
+function dateDomain(dates: string[]): [number, number] {
+  const ms = dates.map(parseDateMs);
+  return [Math.min(...ms), Math.max(...ms)];
+}
+
+const xAt = (dateMs: number, [minMs, maxMs]: [number, number]) =>
+  maxMs === minMs ? padL + plotW / 2 : padL + ((dateMs - minMs) / (maxMs - minMs)) * plotW;
+
+// ~3x this app's own weekly NDVI bucketing cadence — a wider gap than that
+// means real missing satellite coverage, not just calendar noise.
+const GAP_BREAK_DAYS = 21;
+const DAY_MS = 86_400_000;
+
+/**
+ * Contiguous runs of indices with no real data gap between them. A line (or
+ * min/max band) is only ever drawn within one of these runs — never bridged
+ * straight across a gap, which would imply a smooth, unobserved change over
+ * a period with zero actual readings (e.g. months with no cloud-free scene).
+ */
+function splitSegments(dates: string[]): number[][] {
+  if (dates.length === 0) return [];
+  const segments: number[][] = [[0]];
+  for (let i = 1; i < dates.length; i++) {
+    const gapDays = (parseDateMs(dates[i]) - parseDateMs(dates[i - 1])) / DAY_MS;
+    if (gapDays > GAP_BREAK_DAYS) segments.push([i]);
+    else segments[segments.length - 1].push(i);
+  }
+  return segments;
+}
 
 function DateAxis({ dates }: { dates: string[] }) {
   const n = dates.length;
   const showEvery = n <= 6;
+  const domain = dateDomain(dates);
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 text-[10px] text-ink-400">
       {dates.map((d, i) =>
         showEvery || i === 0 || i === n - 1 ? (
-          <span key={i} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${(xAt(i, n) / W) * 100}%` }}>
+          <span
+            key={i}
+            className="absolute -translate-x-1/2 whitespace-nowrap"
+            style={{ left: `${(xAt(parseDateMs(d), domain) / W) * 100}%` }}
+          >
             {fmtDate(d)}
           </span>
         ) : null,
@@ -223,6 +285,8 @@ function DateAxis({ dates }: { dates: string[] }) {
 
 function DetailChart({ label, color, series }: { label: string; color: string; series: Point[] }) {
   const [hover, setHover] = useState<number | null>(null);
+  const domain = useMemo(() => dateDomain(series.map((p) => p.date)), [series]);
+  const segments = useMemo(() => splitSegments(series.map((p) => p.date)), [series]);
 
   const geom = useMemo(() => {
     if (series.length === 0) return null;
@@ -249,18 +313,25 @@ function DetailChart({ label, color, series }: { label: string; color: string; s
 
   const { y } = geom;
   const n = series.length;
-  const x = (i: number) => xAt(i, n);
-  const meanLine = series.map((p, i) => `${x(i).toFixed(1)},${y(p.mean).toFixed(1)}`).join(" ");
-  const bandTop = series.map((p, i) => `${x(i).toFixed(1)},${y(p.max).toFixed(1)}`);
-  const bandBot = series.map((p, i) => `${x(i).toFixed(1)},${y(p.min).toFixed(1)}`).reverse();
-  const band = n === 1 ? "" : `M ${bandTop.join(" L ")} L ${bandBot.join(" L ")} Z`;
+  const x = (i: number) => xAt(parseDateMs(series[i].date), domain);
   const hoverPoint = hover != null ? series[hover] : null;
 
+  // Points are no longer evenly spaced (x is date-proportional), so the old
+  // closed-form index-from-position inverse no longer holds — find whichever
+  // point is actually closest to the pointer instead.
   function onMove(e: React.PointerEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const vbX = ((e.clientX - rect.left) / rect.width) * W;
-    const idx = n === 1 ? 0 : Math.round(((vbX - padL) / plotW) * (n - 1));
-    setHover(Math.max(0, Math.min(n - 1, idx)));
+    let best = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < n; i++) {
+      const dist = Math.abs(x(i) - vbX);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    setHover(best);
   }
 
   return (
@@ -279,11 +350,50 @@ function DetailChart({ label, color, series }: { label: string; color: string; s
           onPointerLeave={() => setHover(null)}
         >
           <line x1={padL} y1={padT + plotH} x2={W - padR} y2={padT + plotH} stroke="var(--color-border)" strokeWidth="1" />
-          {band && <path d={band} fill={color} fillOpacity="0.15" />}
-          {n === 1 && (
-            <line x1={x(0)} y1={y(series[0].min)} x2={x(0)} y2={y(series[0].max)} stroke={color} strokeWidth="6" strokeOpacity="0.24" strokeLinecap="round" />
+          {/* One shape per segment — a real gap in coverage (see
+              splitSegments) never gets bridged by a band or line implying a
+              smooth change we have no reading for. An isolated point (its
+              own one-item segment) gets the same min/max tick a whole
+              single-reading series already used. */}
+          {segments.map((seg, si) =>
+            seg.length === 1 ? (
+              <line
+                key={si}
+                x1={x(seg[0])}
+                y1={y(series[seg[0]].min)}
+                x2={x(seg[0])}
+                y2={y(series[seg[0]].max)}
+                stroke={color}
+                strokeWidth="6"
+                strokeOpacity="0.24"
+                strokeLinecap="round"
+              />
+            ) : (
+              <path
+                key={si}
+                d={`M ${seg.map((i) => `${x(i).toFixed(1)},${y(series[i].max).toFixed(1)}`).join(" L ")} L ${[...seg]
+                  .reverse()
+                  .map((i) => `${x(i).toFixed(1)},${y(series[i].min).toFixed(1)}`)
+                  .join(" L ")} Z`}
+                fill={color}
+                fillOpacity="0.15"
+              />
+            ),
           )}
-          <polyline points={meanLine} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          {segments.map((seg, si) =>
+            seg.length > 1 ? (
+              <polyline
+                key={si}
+                points={seg.map((i) => `${x(i).toFixed(1)},${y(series[i].mean).toFixed(1)}`).join(" ")}
+                fill="none"
+                stroke={color}
+                strokeWidth="2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            ) : null,
+          )}
           {series.map((p, i) => (
             <circle key={i} cx={x(i)} cy={y(p.mean)} r={hover === i ? 4 : 2.5} fill={color} />
           ))}
@@ -318,6 +428,9 @@ function DetailChart({ label, color, series }: { label: string; color: string; s
 function CompareChart({ rows, layers }: { rows: NdviHistoryItem[]; layers: IndexLayer[] }) {
   const [hover, setHover] = useState<number | null>(null);
   const n = rows.length;
+  // Computed even on the early-return paths below (Rules of Hooks) — unused
+  // there, harmless.
+  const domain = useMemo(() => dateDomain(rows.map((r) => r.satellite_image_date)), [rows]);
 
   if (layers.length === 0) {
     return (
@@ -334,7 +447,7 @@ function CompareChart({ rows, layers }: { rows: NdviHistoryItem[]; layers: Index
     );
   }
 
-  const x = (i: number) => xAt(i, n);
+  const x = (i: number) => xAt(parseDateMs(rows[i].satellite_image_date), domain);
   const yN = (norm: number) => padT + (1 - norm) * plotH; // norm 0..1 → y
 
   // Per-layer normalized points (row-index aligned, so a measure that starts
@@ -352,11 +465,21 @@ function CompareChart({ rows, layers }: { rows: NdviHistoryItem[]; layers: Index
 
   const hoverDate = hover != null ? rows[hover]?.satellite_image_date : null;
 
+  // See DetailChart's onMove — x is date-proportional, not evenly spaced, so
+  // the nearest point has to be searched for rather than computed in closed form.
   function onMove(e: React.PointerEvent<SVGSVGElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const vbX = ((e.clientX - rect.left) / rect.width) * W;
-    const idx = n === 1 ? 0 : Math.round(((vbX - padL) / plotW) * (n - 1));
-    setHover(Math.max(0, Math.min(n - 1, idx)));
+    let best = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < n; i++) {
+      const dist = Math.abs(x(i) - vbX);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    setHover(best);
   }
 
   return (

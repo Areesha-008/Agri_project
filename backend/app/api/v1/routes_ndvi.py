@@ -15,8 +15,7 @@ def analyze_ndvi(request: NdviAnalyzeRequest):
     Accepts a GeoJSON polygon, validates it, queries Sentinel-2 via CDSE
     (openEO), computes NDVI, and returns stats plus an image URL + bounding
     box the frontend can overlay directly on the ESRI map. Nothing is
-    persisted here; saving happens separately via POST /fields/save after
-    the user logs in.
+    persisted here.
     """
     polygon = validate_polygon(request.geometry)
     area_hectares = calculate_area_hectares(polygon)

@@ -301,7 +301,7 @@ export function LandingFieldAnalyzer() {
                   </Link>
                 </div>
                 {saveFailed && <div className="text-xs font-semibold text-alert-red-text">{t("landingDrawError")}</div>}
-                <Button onClick={handleAnalyze}>
+                <Button onClick={handleAnalyze} disabled={createField.isPending}>
                   {saveFailed ? t("landingDrawRetry") : t("landingDrawAnalyze")}
                 </Button>
                 <Button variant="secondary" onClick={reset}>

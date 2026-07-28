@@ -3,7 +3,7 @@ FastAPI dependencies for authentication.
 
 Two variants are provided:
 - get_current_user: required auth — used on protected routes like
-  /fields/save. Raises 401 if no valid token is present.
+  POST /fields. Raises 401 if no valid token is present.
 - get_optional_current_user: used on routes that behave differently for
   authenticated vs anonymous users (not needed for Module 1's public NDVI
   endpoint, but kept here since future modules will likely want it).

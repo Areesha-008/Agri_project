@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import {
   useAllCropHealth,
   useCropHealth,
@@ -16,6 +15,7 @@ import { Card } from "@/components/ui/Card";
 import { HealthGauge } from "@/components/ui/HealthGauge";
 import { TimeWindowPicker, type DateRange } from "@/components/ui/TimeWindowPicker";
 import { MeasureTrendChart } from "@/components/ui/MeasureTrendChart";
+import { computeWeeklyTiles, matchEntry } from "@/lib/weekTiles";
 
 // forest-ink-700 (not forest-700 — that's a frozen fill token, not the
 // inverting text ramp) since these render as standalone text on a neutral
@@ -27,7 +27,6 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function HealthPage() {
-  const queryClient = useQueryClient();
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
   const setSelectedFieldId = useAppStore((s) => s.setSelectedFieldId);
   const { data: field } = useField(selectedFieldId);
@@ -38,37 +37,51 @@ export default function HealthPage() {
   const { data: allHealth } = useAllCropHealth(fieldIds);
 
   const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
-  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  // Shared across modules (see useAppStore) rather than local state — the
+  // (app) layout owns polling this job to completion and invalidating
+  // /clearing it, so switching to another module and back doesn't lose
+  // track of an in-flight analysis.
+  const activeJob = useAppStore((s) => s.activeJob);
+  const setActiveJob = useAppStore((s) => s.setActiveJob);
   const reanalyzeField = useReanalyzeField();
-  const jobStatus = useNdviJob(activeFieldId, activeJobId);
+  const jobStatus = useNdviJob(activeJob?.fieldId ?? null, activeJob?.jobId ?? null);
   // Scope "analyzing" to the field that started the job — switching fields
   // mid-analysis should immediately restore the new field's controls, not
   // leave the spinner up because some *other* field is still processing.
   const isAnalyzing =
-    activeJobId !== null &&
-    activeFieldId === selectedFieldId &&
+    activeJob !== null &&
+    activeJob.fieldId === selectedFieldId &&
     jobStatus.data?.status !== "done" &&
     jobStatus.data?.status !== "failed";
 
-  // Job completion isn't observable any other way (no websocket/SSE) — this
-  // effect is what actually refreshes the trend chart/gauge once the
-  // background job finishes; a broad ["fields"] invalidation matches what
-  // useCreateField already does on success, just triggered at the right
-  // time (job done, not job created).
-  useEffect(() => {
-    if (jobStatus.data?.status === "done") {
-      queryClient.invalidateQueries({ queryKey: ["fields"] });
-    }
-  }, [jobStatus.data?.status, queryClient]);
+  // Only the picked window's rows — the chart used to always render the
+  // field's entire history regardless of this selection.
+  const filteredHistory = useMemo(() => {
+    const rows = ndvi?.history ?? [];
+    if (!timeWindow) return rows;
+    return rows.filter(
+      (r) => r.satellite_image_date >= timeWindow.start_date && r.satellite_image_date <= timeWindow.end_date
+    );
+  }, [ndvi?.history, timeWindow]);
 
   function handleWindowChange(range: DateRange) {
     if (!selectedFieldId || reanalyzeField.isPending) return;
     setTimeWindow(range);
-    setActiveFieldId(selectedFieldId);
+    // Mirrors FieldReanalyzePanel's gap check — only kick off a satellite
+    // fetch for weeks this window is actually missing from cached history,
+    // instead of unconditionally re-fetching data we may already have.
+    const tiles = computeWeeklyTiles(range);
+    const missing = tiles.filter((tile) => matchEntry(tile, ndvi?.history ?? []) === null);
+    if (missing.length === 0) return;
+    // Request only the missing span, not the whole picked window — a wide
+    // range (e.g. a few months) is usually mostly already cached, and
+    // re-fetching the covered part too just writes more duplicate rows for
+    // weeks that already have a reading (see MeasureTrendChart's dedup).
+    const spanStart = missing.reduce((min, t) => (t.start < min ? t.start : min), missing[0].start);
+    const spanEnd = missing.reduce((max, t) => (t.end > max ? t.end : max), missing[0].end);
     reanalyzeField.mutate(
-      { fieldId: selectedFieldId, input: range },
-      { onSuccess: (job) => setActiveJobId(job.id) }
+      { fieldId: selectedFieldId, input: { start_date: spanStart, end_date: spanEnd } },
+      { onSuccess: (job) => setActiveJob({ fieldId: selectedFieldId, jobId: job.id }) }
     );
   }
 
@@ -114,7 +127,7 @@ export default function HealthPage() {
               <TimeWindowPicker value={timeWindow} onChange={handleWindowChange} disabled={!selectedFieldId || reanalyzeField.isPending} />
             )}
           </div>
-          <MeasureTrendChart history={ndvi?.history ?? []} />
+          <MeasureTrendChart history={filteredHistory} />
         </Card>
       </div>
 

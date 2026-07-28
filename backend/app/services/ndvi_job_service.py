@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 from geoalchemy2.shape import from_shape, to_shape
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
@@ -114,24 +115,26 @@ def _fail_job(db: Session, job: NdviJob, message: str) -> None:
     db.commit()
 
 
-def _build_history_row(field_id: uuid.UUID, result: NdviAnalyzeResponse) -> NdviHistory:
+def _history_fields(result: NdviAnalyzeResponse) -> dict:
     """
-    One compute_ndvi_periods() bucket -> one NdviHistory row. There's no
-    single "scene date" concept here — each bucket is a temporal mean of
-    every cloud-free scene in its ~week, so the bucket's end date is used as
-    the recorded image date (see ndvi_processor.py's module docstring).
+    One compute_ndvi_periods() bucket -> one NdviHistory row's column
+    values. There's no single "scene date" concept here — each bucket is a
+    temporal mean of every cloud-free scene in its ~week, so the bucket's
+    end date is used as the recorded image date (see ndvi_processor.py's
+    module docstring). Returns a plain dict (rather than building the
+    NdviHistory directly) so run_ndvi_job can use the same field values for
+    either an insert or an update — see its upsert-by-date there.
     """
-    history = NdviHistory(
-        field_id=field_id,
-        ndvi_mean=result.stats.mean,
-        ndvi_min=result.stats.min,
-        ndvi_max=result.stats.max,
-        ndvi_png_url=result.visualization.image_url,
-        date_range_start=result.source.date_range_start,
-        satellite_image_date=result.source.date_range_end,
-        cloud_cover_percent=result.source.max_cloud_cover_filter_percent,
-        source_collection=result.source.collection,
-    )
+    fields: dict = {
+        "ndvi_mean": result.stats.mean,
+        "ndvi_min": result.stats.min,
+        "ndvi_max": result.stats.max,
+        "ndvi_png_url": result.visualization.image_url,
+        "date_range_start": result.source.date_range_start,
+        "satellite_image_date": result.source.date_range_end,
+        "cloud_cover_percent": result.source.max_cloud_cover_filter_percent,
+        "source_collection": result.source.collection,
+    }
     # Every secondary index shares the response's <key>_stats /
     # <key>_visualization shape and the row's <key>_mean/min/max/png_url
     # columns — map them in one loop instead of ~28 hand-written, easily
@@ -140,12 +143,38 @@ def _build_history_row(field_id: uuid.UUID, result: NdviAnalyzeResponse) -> Ndvi
         stats = getattr(result, f"{key}_stats", None)
         vis = getattr(result, f"{key}_visualization", None)
         if stats is not None:
-            setattr(history, f"{key}_mean", stats.mean)
-            setattr(history, f"{key}_min", stats.min)
-            setattr(history, f"{key}_max", stats.max)
+            fields[f"{key}_mean"] = stats.mean
+            fields[f"{key}_min"] = stats.min
+            fields[f"{key}_max"] = stats.max
         if vis is not None:
-            setattr(history, f"{key}_png_url", vis.image_url)
-    return history
+            fields[f"{key}_png_url"] = vis.image_url
+    return fields
+
+
+def upsert_history_row(db: Session, field_id: uuid.UUID, fields: dict) -> uuid.UUID:
+    """
+    Writes one NdviHistory row for (field_id, fields["satellite_image_date"]),
+    updating it in place if a row for that field+date already exists instead
+    of inserting a duplicate. A real INSERT ... ON CONFLICT upsert (not a
+    select-then-branch) against uq_ndvi_history_field_id_satellite_image_date
+    (migration 8a5201e2041d), so two callers committing for the same week at
+    the same instant can't both see "no existing row" and both insert.
+    Extracted from run_ndvi_job so this — the actual duplicate-prevention
+    guarantee — is exercised directly by test_ndvi_history_upsert.py without
+    needing a real satellite call.
+    """
+    stmt = (
+        pg_insert(NdviHistory)
+        .values(field_id=field_id, **fields)
+        .on_conflict_do_update(
+            index_elements=[NdviHistory.field_id, NdviHistory.satellite_image_date],
+            set_={**fields, "computed_at": datetime.now(timezone.utc)},
+        )
+        .returning(NdviHistory.id)
+    )
+    history_id = db.execute(stmt).scalar_one()
+    db.commit()
+    return history_id
 
 
 def run_ndvi_job(job_id: uuid.UUID) -> None:
@@ -200,12 +229,9 @@ def run_ndvi_job(job_id: uuid.UUID) -> None:
                 if db.query(Field).filter(Field.id == field.id).first() is None:
                     logger.info(f"NDVI job {job_id}: field {field.id} deleted mid-analysis; stopping")
                     return
-                history = _build_history_row(field.id, result)
-                db.add(history)
-                db.flush()
-                db.commit()
+                history_id = upsert_history_row(db, field.id, _history_fields(result))
                 if first_history_id is None:
-                    first_history_id = history.id
+                    first_history_id = history_id
         except Exception as e:
             # A mid-loop failure (rather than a per-tile skip, which
             # compute_ndvi_periods already swallows) still leaves any

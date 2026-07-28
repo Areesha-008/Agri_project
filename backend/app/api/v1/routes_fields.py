@@ -12,7 +12,6 @@ from app.schemas.field import (
     FieldListItem,
     FieldNdviLatestResponse,
     FieldResponse,
-    FieldSaveRequest,
     NdviHistoryItem,
 )
 from app.schemas.ndvi_job import FieldReanalyzeRequest, NdviJobStatusResponse
@@ -21,7 +20,6 @@ from app.services.field_service import (
     field_to_response,
     get_field_or_404,
     list_fields_for_user,
-    save_field,
 )
 from app.services.ndvi_job_service import (
     create_field_with_job,
@@ -51,21 +49,6 @@ def create_field(
     field, job = create_field_with_job(db, current_user.id, field_in)
     background_tasks.add_task(run_ndvi_job, job.id)
     return FieldCreateResponse(field=field_to_response(field), job_id=job.id)
-
-
-@router.post("/save", response_model=FieldResponse, status_code=201, deprecated=True)
-def save_field_endpoint(
-    field_in: FieldSaveRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Deprecated — use POST /fields instead, which triggers real server-side
-    NDVI/NDMI analysis rather than trusting frontend-computed stats. Kept
-    mounted for one release so in-flight callers don't break.
-    """
-    field = save_field(db, current_user.id, field_in)
-    return field_to_response(field)
 
 
 @router.get("", response_model=list[FieldListItem])

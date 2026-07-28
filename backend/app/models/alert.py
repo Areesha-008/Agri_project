@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, DateTime, Enum as SAEnum, Float, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, Float, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +30,21 @@ class AlertCategory(str, enum.Enum):
 
 class Alert(Base):
     __tablename__ = "alerts"
+    __table_args__ = (
+        # At most one ACTIVE (non-dismissed) alert per field+category —
+        # matches _has_active_alert's app-level check in alert_engine.py, as
+        # a real DB backstop against the sweep somehow inserting twice (e.g.
+        # two overlapping sweep runs). Partial, not a plain UniqueConstraint,
+        # because re-triggering after a dismissal is intentional: a
+        # dismissed row must not block a fresh one.
+        Index(
+            "uq_alerts_active_field_category",
+            "field_id",
+            "category",
+            unique=True,
+            postgresql_where=text("dismissed = false"),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4

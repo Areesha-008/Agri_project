@@ -1,23 +1,19 @@
 """
-NdviHistory model — one row per NDVI computation for a given Field.
+NdviHistory model — one row per (field, satellite image date), written by
+the background analysis job (see services/ndvi_job_service.py's
+run_ndvi_job/upsert_history_row) rather than a synchronous save.
 
 Kept separate from Field (rather than storing "latest NDVI" columns on
 Field itself) because a field will be re-analyzed repeatedly over time.
 This table is what the future "Historical Vegetation Analysis" module
 queries directly — no schema change needed when that module is built.
-
-Note: in Module 1, NDVI is computed synchronously and returned directly to
-the (possibly anonymous) user without touching this table. A row is only
-written here when an authenticated user clicks "Save" on an already-viewed
-NDVI result — see services/earth_engine/ndvi_processor.py and the
-fields/save route for how the two connect.
 """
 
 import uuid
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +26,13 @@ if TYPE_CHECKING:
 
 class NdviHistory(Base):
     __tablename__ = "ndvi_history"
+    __table_args__ = (
+        # One row per field per computed week — re-analysing an
+        # already-covered week must update that row, never add another.
+        # See run_ndvi_job's upsert in ndvi_job_service.py and migration
+        # 8a5201e2041d.
+        UniqueConstraint("field_id", "satellite_image_date", name="uq_ndvi_history_field_id_satellite_image_date"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4

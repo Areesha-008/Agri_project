@@ -1,8 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNdviJob, useReanalyzeField } from "@/lib/api/hooks";
+import { useAppStore } from "@/lib/store/useAppStore";
 import { TimeWindowPicker, isoDaysAgo, todayIso, type DateRange } from "@/components/ui/TimeWindowPicker";
 import { WeekScrubber } from "@/components/map/WeekScrubber";
 import { computeWeeklyTiles, matchEntry } from "@/lib/weekTiles";
@@ -17,36 +17,26 @@ interface FieldReanalyzePanelProps {
 }
 
 export function FieldReanalyzePanel({ fieldId, history, onActiveEntryChange }: FieldReanalyzePanelProps) {
-  const queryClient = useQueryClient();
   // Default: last 30 days. Lands activeTileIndex 0 (most recent tile) on
   // "this week" without scanning `history` for a min/max span, which could
   // be arbitrarily wide/sparse for an old field.
   const [period, setPeriod] = useState<DateRange>(() => ({ start_date: isoDaysAgo(30), end_date: todayIso() }));
   const [activeTileIndex, setActiveTileIndex] = useState(0);
 
-  // Mirrors health/page.tsx's handleWindowChange fix: track the field a job
-  // was actually submitted against, not a live prop, and guard against
-  // firing a second reanalyze while one is still pending.
-  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  // Shared across modules (see useAppStore), not local state — this panel
+  // remounts via key={selectedField.id} on field switch (fields/page.tsx),
+  // which used to drop tracking of an in-flight job; the (app) layout now
+  // owns polling it to completion and invalidating/clearing it centrally.
+  const activeJob = useAppStore((s) => s.activeJob);
+  const setActiveJob = useAppStore((s) => s.setActiveJob);
 
   const reanalyzeField = useReanalyzeField();
-  const jobStatus = useNdviJob(activeFieldId, activeJobId);
+  const jobStatus = useNdviJob(activeJob?.fieldId ?? null, activeJob?.jobId ?? null);
   const isAnalyzing =
-    activeJobId !== null &&
-    activeFieldId === fieldId &&
+    activeJob !== null &&
+    activeJob.fieldId === fieldId &&
     jobStatus.data?.status !== "done" &&
     jobStatus.data?.status !== "failed";
-
-  // Same invalidation precedent as useCreateField (hooks.ts) and
-  // health/page.tsx — refetches useFieldNdvi globally via React Query's
-  // shared cache, so no callback back to the parent is needed for it to see
-  // new history.
-  useLayoutEffect(() => {
-    if (jobStatus.data?.status === "done") {
-      queryClient.invalidateQueries({ queryKey: ["fields"] });
-    }
-  }, [jobStatus.data?.status, queryClient]);
 
   const tiles = computeWeeklyTiles(period);
   const activeTile = tiles[activeTileIndex] ?? null;
@@ -71,10 +61,13 @@ export function FieldReanalyzePanel({ fieldId, history, onActiveEntryChange }: F
   function handlePeriodChange(range: DateRange) {
     setPeriod(range);
     setActiveTileIndex(0); // most recent tile of the new period
-    // Drop tracking of the previous period's job so its stale
-    // analyzing/failed state can't bleed into the newly picked period.
-    setActiveJobId(null);
-    setActiveFieldId(null);
+    // Drop tracking of this field's previous-period job so its stale
+    // analyzing/failed state can't bleed into the newly picked period —
+    // but only if it's actually this field's job: activeJob is a shared
+    // global slot, and a different field's in-flight job (started
+    // elsewhere, e.g. before the user switched selected field) must not be
+    // clobbered just because this field's period picker was touched.
+    if (activeJob?.fieldId === fieldId) setActiveJob(null);
   }
 
   function handleAnalyze() {
@@ -90,10 +83,9 @@ export function FieldReanalyzePanel({ fieldId, history, onActiveEntryChange }: F
     // which is rare.
     const spanStart = missing.reduce((min, t) => (t.start < min ? t.start : min), missing[0].start);
     const spanEnd = missing.reduce((max, t) => (t.end > max ? t.end : max), missing[0].end);
-    setActiveFieldId(fieldId);
     reanalyzeField.mutate(
       { fieldId, input: { start_date: spanStart, end_date: spanEnd } },
-      { onSuccess: (job) => setActiveJobId(job.id) },
+      { onSuccess: (job) => setActiveJob({ fieldId, jobId: job.id }) },
     );
   }
 

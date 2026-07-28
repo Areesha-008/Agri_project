@@ -54,17 +54,30 @@ export default function FieldsPage() {
   const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
   const [clearSignal, setClearSignal] = useState(0);
   const [locateSignal, setLocateSignal] = useState(0);
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  // Shared across modules (see useAppStore) rather than local state — an
+  // in-flight job must keep being tracked even if this page unmounts when
+  // the user switches to another module; the (app) layout owns polling it
+  // to completion and clearing it, so this page just reads the slot.
+  const activeJob = useAppStore((s) => s.activeJob);
+  const setActiveJob = useAppStore((s) => s.setActiveJob);
 
   const createField = useCreateField();
   const deleteField = useDeleteField();
-  const jobStatus = useNdviJob(activeFieldId, activeJobId);
+  const jobStatus = useNdviJob(activeJob?.fieldId ?? null, activeJob?.jobId ?? null);
   // Derived, not stored: once useNdviJob's polling (see hooks.ts) reports a
   // terminal status, this just naturally becomes false on the next render —
   // no effect needed to "notice" the job finished and flip local state.
   const isAnalyzing =
-    activeJobId !== null && jobStatus.data?.status !== "done" && jobStatus.data?.status !== "failed";
+    activeJob !== null && jobStatus.data?.status !== "done" && jobStatus.data?.status !== "failed";
+  // activeJob is now a shared slot (see useAppStore) — FieldReanalyzePanel's
+  // "re-analyse a past period" writes to it too, so isAnalyzing alone can no
+  // longer tell "just-created field's first analysis" (which should block
+  // this whole panel behind the big spinner) apart from "re-analysing one
+  // gap week of a field whose data is already on screen" (which shouldn't:
+  // FieldReanalyzePanel already shows its own compact analysing state).
+  // A field with zero history rows yet has never finished a first analysis,
+  // which is exactly the distinction needed, with no extra state to track.
+  const showBlockingSpinner = isAnalyzing && (ndvi?.history?.length ?? 0) === 0;
 
   function startDrawing() {
     setMode("drawing");
@@ -103,8 +116,7 @@ export default function FieldsPage() {
         crop: crop || undefined,
         ...(timeWindow ?? {}),
       });
-      setActiveFieldId(result.field.id);
-      setActiveJobId(result.job_id);
+      setActiveJob({ fieldId: result.field.id, jobId: result.job_id });
       setSelectedFieldId(result.field.id);
       setMode("idle");
     } catch {
@@ -131,7 +143,7 @@ export default function FieldsPage() {
         id="fieldsPanel"
         className="flex max-h-[45vh] w-full flex-none flex-col gap-3.5 overflow-auto border-b border-border bg-cream-card p-4 md:max-h-none md:w-[290px] md:border-b-0 md:border-r"
       >
-        {mode === "idle" && !isAnalyzing && (
+        {mode === "idle" && !showBlockingSpinner && (
           <>
             <Button onClick={startDrawing}>+ Draw new field boundary</Button>
             <div className="flex flex-col gap-2">
@@ -194,7 +206,7 @@ export default function FieldsPage() {
             <Input label="Field name" value={name} onChange={(e) => setName(e.target.value)} />
             <Input label="District" placeholder="Faisalabad" value={district} onChange={(e) => setDistrict(e.target.value)} />
             <Input label="Crop" placeholder="Wheat" value={crop} onChange={(e) => setCrop(e.target.value)} />
-            <Button onClick={handleSave} disabled={!name}>
+            <Button onClick={handleSave} disabled={!name || createField.isPending}>
               Finish &amp; analyse
             </Button>
             <Button variant="secondary" onClick={cancelDrawing}>
@@ -203,7 +215,7 @@ export default function FieldsPage() {
           </div>
         )}
 
-        {(mode === "saving" || (mode === "idle" && isAnalyzing)) && (
+        {(mode === "saving" || (mode === "idle" && showBlockingSpinner)) && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-cream-card p-6 text-center">
             <div className="h-9 w-9 animate-spin rounded-full border-4 border-cream-inset border-t-forest-500" />
             <div className="text-[13px] font-bold text-ink-900">Analysing via Sentinel-2…</div>
@@ -211,7 +223,7 @@ export default function FieldsPage() {
           </div>
         )}
 
-        {selectedField && mode === "idle" && !isAnalyzing && (
+        {selectedField && mode === "idle" && !showBlockingSpinner && (
           <div className="mt-auto flex flex-col gap-3.5">
             <FieldReanalyzePanel
               key={selectedField.id}
