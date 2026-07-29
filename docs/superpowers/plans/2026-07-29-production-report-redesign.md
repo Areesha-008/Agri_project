@@ -907,10 +907,13 @@ git commit -m "Add field_id to the report API layer: types, resources, hook"
 
 **Files:**
 - Modify: `frontend/src/app/(app)/ledger/page.tsx`
+- Modify: `frontend/src/app/(app)/settings/page.tsx` (removes an orphaned second caller of the report-PDF download discovered during Task 5 — see Step 6 below; not part of the original spec)
 
 **Interfaces:**
 - Consumes: `Report`, `Transaction` (Task 5, `@/lib/api/types`); `useReport(fieldId)`, `ledgerApi.downloadReportPdf(fieldId)` (Task 5).
 - Produces: nothing further downstream — this is the page-level integration point and the last file in the feature's dependency chain.
+
+**Plan-gap note:** Task 5's implementer discovered that `frontend/src/app/(app)/settings/page.tsx:24` has its own "Download my data" button calling `ledgerApi.downloadReportPdf()` with no field — a second caller the original spec and this plan never accounted for. Now that `field_id` is required, this call has nothing to download. Escalated to the human, who decided: **remove the button entirely** (not redirect to `/ledger`, not default to the first field) — "my data" no longer maps to one whole-farm PDF now that reports are per-field, and the Ledger page's report builder is the one place to get a report, for any field. Step 6 below implements that removal.
 
 - [ ] **Step 1: Add field-selection state and resolve the active field**
 
@@ -1169,7 +1172,46 @@ with:
 
 The Financial Summary block right below this (`Total spent`/`Total earned`/`Net` tiles) and the footnote are **unchanged** — they already read `report?.total_spent`/`total_earned`/`net`, field names that still exist on the redefined `Report` type, and now resolve to this one field's numbers automatically since `report` itself is field-scoped.
 
-- [ ] **Step 6: Typecheck and lint**
+- [ ] **Step 6: Remove the orphaned "Download my data" button from Settings**
+
+Per the plan-gap note above — `field_id` is now required, and this second entry point has no field to download, so it's removed entirely rather than adapted.
+
+In `frontend/src/app/(app)/settings/page.tsx`, remove the now-unused import:
+
+```typescript
+import { ledgerApi } from "@/lib/api/resources";
+```
+
+Remove the `handleDownloadData` function (currently right after `handleSignOut`):
+
+```typescript
+  async function handleDownloadData() {
+    const blob = await ledgerApi.downloadReportPdf();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "my-data-report.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+```
+
+Remove the button itself (inside the "Data & account" card — keep the "Satellite sync" row above it and the "Sign out" button below it; only this middle row goes):
+
+```tsx
+          <button
+            onClick={handleDownloadData}
+            className="flex cursor-pointer items-center gap-2.5 border-t border-cream-inset py-2.5 text-left hover:bg-[#FBFAF4]"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-semibold">Download my data</div>
+              <div className="text-[11px] text-ink-400">Fields, readings and ledger as a PDF report</div>
+            </div>
+          </button>
+```
+
+- [ ] **Step 7: Typecheck and lint**
 
 ```bash
 export PATH="/usr/local/bin:$PATH"
@@ -1178,19 +1220,24 @@ npx tsc --noEmit
 npm run lint
 ```
 
-Expected: both pass — this is the point where every `field_summaries`/`total_hectares`/`avg_health_score`/`field_count`/`ledger_entry_count` reference in the whole project must be gone.
+Expected: both fully pass now (no known-broken files remain) — this is the point where every `field_summaries`/`total_hectares`/`avg_health_score`/`field_count`/`ledger_entry_count` reference, and every no-argument `downloadReportPdf()` call, must be gone from the whole project.
 
 ```bash
 grep -rn "field_summaries\|total_hectares\|avg_health_score\|ledger_entry_count" frontend/src --include="*.ts" --include="*.tsx"
+grep -rn "downloadReportPdf()" frontend/src --include="*.ts" --include="*.tsx"
 ```
 
-Expected: no matches.
+Expected: no matches for either.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add frontend/src/app/"(app)"/ledger/page.tsx
-git commit -m "Add field selector; rebuild the report card and modal around one field"
+git add frontend/src/app/"(app)"/ledger/page.tsx frontend/src/app/"(app)"/settings/page.tsx
+git commit -m "Add field selector; rebuild the report card and modal around one field
+
+Also removes Settings' orphaned 'Download my data' button, which called
+the same report-PDF endpoint with no field — a second caller the
+original spec missed, now unsupported since field_id is required."
 ```
 
 ---
