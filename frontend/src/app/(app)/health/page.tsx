@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   useAllCropHealth,
-  useCropHealth,
   useField,
   useFieldNdvi,
   useFields,
@@ -14,8 +13,10 @@ import { useAppStore } from "@/lib/store/useAppStore";
 import { Card } from "@/components/ui/Card";
 import { HealthGauge } from "@/components/ui/HealthGauge";
 import { TimeWindowPicker, type DateRange } from "@/components/ui/TimeWindowPicker";
-import { MeasureTrendChart } from "@/components/ui/MeasureTrendChart";
+import { MeasureIndexList } from "@/components/ui/MeasureIndexList";
+import { MeasureDetailChart } from "@/components/ui/MeasureDetailChart";
 import { computeWeeklyTiles, matchEntry } from "@/lib/weekTiles";
+import type { IndexLayer } from "@/lib/measures";
 
 // forest-ink-700 (not forest-700 — that's a frozen fill token, not the
 // inverting text ramp) since these render as standalone text on a neutral
@@ -30,13 +31,13 @@ export default function HealthPage() {
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
   const setSelectedFieldId = useAppStore((s) => s.setSelectedFieldId);
   const { data: field } = useField(selectedFieldId);
-  const { data: health } = useCropHealth(selectedFieldId);
   const { data: ndvi } = useFieldNdvi(selectedFieldId);
   const { data: fields } = useFields();
   const fieldIds = useMemo(() => fields?.map((f) => f.id) ?? [], [fields]);
   const { data: allHealth } = useAllCropHealth(fieldIds);
 
   const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
+  const [selected, setSelected] = useState<IndexLayer>("ndvi");
   // Shared across modules (see useAppStore) rather than local state — the
   // (app) layout owns polling this job to completion and invalidating
   // /clearing it, so switching to another module and back doesn't lose
@@ -89,32 +90,15 @@ export default function HealthPage() {
     <div className="flex flex-col gap-3.5 p-5.5">
       <h1 className="text-lg font-bold text-ink-900">Crop health</h1>
 
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-        {/* Yield projection */}
-        <Card className="flex items-center gap-5">
-          <HealthGauge score={health?.health_score ?? 0} size={130} label={(health?.status_label ?? "—").toUpperCase()} />
-          <div className="flex flex-1 flex-col gap-2.5">
-            <div className="text-sm font-bold">Projected yield — {field?.name ?? "—"}</div>
-            <div className="text-2xl font-extrabold leading-none text-forest-ink-900">
-              {health?.yield_maund_per_acre ?? "—"}{" "}
-              <span className="text-[13px] font-semibold text-ink-400">
-                maund/acre · {health?.yield_t_per_ha ?? "—"} t/ha
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-cream-inset">
-              <div
-                className="h-2 rounded-full bg-gradient-to-r from-mint-300 to-forest-500"
-                style={{ width: `${health?.health_score ?? 0}%` }}
-              />
-            </div>
-            <div className="text-[11.5px] leading-snug text-ink-500">
-              Based on {field?.area_hectares ?? "—"} ha area and district baseline ({health?.baseline_district ?? "—"}
-              , {health?.baseline_crop ?? "—"}).
-            </div>
-          </div>
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[300px_1fr]">
+        {/* Indices — replaces the yield/health-gauge card. Selecting a row
+            loads it into the expanded chart on the right. */}
+        <Card className="flex flex-col gap-2.5">
+          <div className="text-sm font-bold">Indices — {field?.name ?? "—"}</div>
+          <MeasureIndexList history={filteredHistory} selected={selected} onSelect={setSelected} />
         </Card>
 
-        {/* Season trend — all measures (sparkline overview) + selected-measure detail */}
+        {/* Season trend — expanded detail chart for the selected index */}
         <Card className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3">
             <div className="text-sm font-bold">Season trend — {field?.name ?? "—"}</div>
@@ -127,7 +111,7 @@ export default function HealthPage() {
               <TimeWindowPicker value={timeWindow} onChange={handleWindowChange} disabled={!selectedFieldId || reanalyzeField.isPending} />
             )}
           </div>
-          <MeasureTrendChart history={filteredHistory} />
+          <MeasureDetailChart history={filteredHistory} selected={selected} />
         </Card>
       </div>
 
