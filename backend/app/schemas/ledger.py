@@ -37,21 +37,24 @@ class LedgerCategoryCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=64)
 
 
-class FieldReportSummary(BaseModel):
-    name: str
+class TransactionItem(BaseModel):
+    id: uuid.UUID
+    timestamp: datetime
+    category: str
+    title: str
+    detail: str
+    amount: Optional[float]
+    entry_type: str
+
+
+class ReportResponse(BaseModel):
+    field_name: str
     crop: Optional[str]
     area_hectares: Optional[float]
     ndvi_mean: Optional[float]
     health_score: Optional[int]
-
-
-class ReportResponse(BaseModel):
-    total_hectares: float
-    field_count: int
-    avg_health_score: int
-    ledger_entry_count: int
+    transactions: list[TransactionItem]
     total_spent: float
     total_earned: float
     net: float
-    field_summaries: list[FieldReportSummary]
     generated_at: datetime
