@@ -1,3 +1,6 @@
+import re
+import uuid
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -21,6 +24,10 @@ from app.services.ledger_service import (
 from app.services.report_pdf import render_report_pdf
 
 router = APIRouter(tags=["Ledger & Report"])
+
+
+def _slugify(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "field"
 
 
 @router.post("/ledger", response_model=LedgerEntryResponse, status_code=201)
@@ -59,21 +66,24 @@ def post_ledger_category(
 
 @router.get("/report", response_model=ReportResponse)
 def get_report(
+    field_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return build_report(db, current_user.id)
+    return build_report(db, current_user.id, field_id)
 
 
 @router.get("/report/pdf")
 def get_report_pdf(
+    field_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    report = build_report(db, current_user.id)
+    report = build_report(db, current_user.id, field_id)
     pdf_bytes = render_report_pdf(report, current_user.email)
+    filename = f"production-report-{_slugify(report.field_name)}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=production-report.pdf"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
