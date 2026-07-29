@@ -31,7 +31,7 @@
 **Interfaces:**
 - Consumes: nothing new.
 - Produces (used by Tasks 2, 3, 4):
-  - `class TransactionItem(BaseModel)` — fields `timestamp: datetime`, `category: str`, `title: str`, `detail: str`, `amount: Optional[float]`, `entry_type: str`.
+  - `class TransactionItem(BaseModel)` — fields `id: uuid.UUID`, `timestamp: datetime`, `category: str`, `title: str`, `detail: str`, `amount: Optional[float]`, `entry_type: str`. `id` mirrors the underlying `LedgerEntry.id` — it exists purely so the frontend has a stable React key for the transactions list (Task 6), not because the PDF/modal display it.
   - `class ReportResponse(BaseModel)` — fields `field_name: str`, `crop: Optional[str]`, `area_hectares: Optional[float]`, `ndvi_mean: Optional[float]`, `health_score: Optional[int]`, `transactions: list[TransactionItem]`, `total_spent: float`, `total_earned: float`, `net: float`, `generated_at: datetime`.
   - `FieldReportSummary` is **removed** — no longer used anywhere after this task.
 
@@ -64,6 +64,7 @@ Replace it with:
 
 ```python
 class TransactionItem(BaseModel):
+    id: uuid.UUID
     timestamp: datetime
     category: str
     title: str
@@ -342,6 +343,7 @@ def build_report(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Report
 
     transactions = [
         TransactionItem(
+            id=e.id,
             timestamp=e.timestamp,
             category=e.category,
             title=e.title,
@@ -524,6 +526,7 @@ template (sign, color class, or an em dash for no-amount entries) — pure
 functions, no DB or WeasyPrint rendering needed to check them.
 """
 
+import uuid
 from datetime import datetime, timezone
 
 from app.schemas.ledger import TransactionItem
@@ -532,6 +535,7 @@ from app.services.report_pdf import _amount_class, _amount_str
 
 def _tx(amount, entry_type):
     return TransactionItem(
+        id=uuid.uuid4(),
         timestamp=datetime(2026, 6, 15, tzinfo=timezone.utc),
         category="Fertilizer",
         title="t",
@@ -786,6 +790,7 @@ with:
 
 ```typescript
 export interface Transaction {
+  id: string;
   timestamp: string;
   category: LedgerCategory;
   title: string;
@@ -1135,10 +1140,8 @@ with:
               {report?.transactions.length === 0 && (
                 <div className="text-xs text-ink-400">No transactions yet.</div>
               )}
-              {/* ponytail: TransactionItem has no id — the list is read-only
-                  per render, so an index key is safe here. */}
-              {report?.transactions.map((tx, i) => (
-                <div key={i} className="flex items-center gap-2 border-b border-dashed border-[#EAE7DA] py-1.5 text-xs">
+              {report?.transactions.map((tx) => (
+                <div key={tx.id} className="flex items-center gap-2 border-b border-dashed border-[#EAE7DA] py-1.5 text-xs">
                   <span className="w-14 flex-none text-[10.5px] text-ink-400">
                     {new Date(tx.timestamp).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                   </span>
@@ -1216,6 +1219,7 @@ const MOCK_REPORT = {
   health_score: 42,
   transactions: [
     {
+      id: "33333333-3333-3333-3333-333333333333",
       timestamp: "2026-06-15T00:00:00Z",
       category: "Fertilizer",
       title: "Fertilizer logged",
@@ -1224,6 +1228,7 @@ const MOCK_REPORT = {
       entry_type: "expense",
     },
     {
+      id: "44444444-4444-4444-4444-444444444444",
       timestamp: "2026-07-28T00:00:00Z",
       category: "Sale",
       title: "Wheat — sold",
