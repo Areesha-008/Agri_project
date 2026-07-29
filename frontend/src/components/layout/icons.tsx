@@ -32,6 +32,12 @@ export const NavIcons = {
       <path d="M5 5 H10 M5 7.5 H10 M5 10 H8" />
     </svg>
   ),
+  fertilizer: (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.6" className="flex-none">
+      <path d="M5.5 1.5 H9.5 V4 L11.5 6.5 V12.5 A1 1 0 0 1 10.5 13.5 H4.5 A1 1 0 0 1 3.5 12.5 V6.5 L5.5 4 Z" />
+      <path d="M4.8 9 H10.2" opacity=".6" />
+    </svg>
+  ),
   settings: (
     <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.6">
       <circle cx="7.5" cy="7.5" r="2.2" />

@@ -70,3 +70,8 @@ class ScanNotFoundError(AppException):
 class InvalidImageError(AppException):
     def __init__(self, message: str = "Invalid image upload"):
         super().__init__(message, status_code=422)
+
+
+class UnsupportedCropError(AppException):
+    def __init__(self, message: str = "Fertilizer recommendations aren't available for this crop yet"):
+        super().__init__(message, status_code=422)

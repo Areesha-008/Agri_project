@@ -7,6 +7,8 @@ import { NavIcons } from "./icons";
 const TABS = [
   { href: "/dashboard", label: "Home", icon: NavIcons.dashboard },
   { href: "/fields", label: "Fields", icon: NavIcons.fields },
+  { href: "/health", label: "Health", icon: NavIcons.health },
+  { href: "/fertilizer", label: "Fertilizer", icon: NavIcons.fertilizer },
   { href: "/scanner", label: "Scan", icon: NavIcons.scanner },
   { href: "/ledger", label: "Ledger", icon: NavIcons.ledger },
 ];

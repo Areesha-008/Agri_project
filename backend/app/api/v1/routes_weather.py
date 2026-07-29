@@ -27,6 +27,7 @@ def get_weather(
             wind_kmh=d.wind_kmh,
             rain=d.rain,
             desc=d.desc,
+            precipitation_mm=d.precipitation_mm,
         )
         for d in forecast
     ]

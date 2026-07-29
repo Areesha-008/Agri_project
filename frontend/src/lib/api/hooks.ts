@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   alertsApi,
   CreateFieldInput,
+  FertilizerRecommendationParams,
   fieldsApi,
   ledgerApi,
   ReanalyzeFieldInput,
@@ -39,6 +40,14 @@ export function useCropHealth(fieldId: string | null) {
   return useQuery({
     queryKey: ["fields", fieldId, "crop-health"],
     queryFn: () => fieldsApi.getCropHealth(fieldId as string),
+    enabled: Boolean(fieldId),
+  });
+}
+
+export function useFertilizerRecommendation(fieldId: string | null, params?: FertilizerRecommendationParams) {
+  return useQuery({
+    queryKey: ["fields", fieldId, "fertilizer-recommendation", params ?? null],
+    queryFn: () => fieldsApi.getFertilizerRecommendation(fieldId as string, params),
     enabled: Boolean(fieldId),
   });
 }

@@ -1,10 +1,12 @@
 import uuid
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.geometry import PolygonGeometry
+
+IrrigationType = Literal["irrigated", "rainfed"]
 
 
 class FieldCreateRequest(BaseModel):
@@ -15,6 +17,8 @@ class FieldCreateRequest(BaseModel):
     geometry: PolygonGeometry
     district: Optional[str] = Field(default=None, max_length=100)
     crop: Optional[str] = Field(default=None, max_length=50)
+    irrigation_type: Optional[IrrigationType] = None
+    sowing_date: Optional[date] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -28,6 +32,8 @@ class FieldResponse(BaseModel):
     area_hectares: Optional[float] = None
     district: Optional[str] = None
     crop: Optional[str] = None
+    irrigation_type: Optional[IrrigationType] = None
+    sowing_date: Optional[date] = None
     created_at: datetime
     updated_at: datetime
 

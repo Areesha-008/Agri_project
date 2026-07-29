@@ -10,6 +10,7 @@ from app.exceptions.custom_exceptions import (
     NoSatelliteImageFoundError,
     SatelliteDataError,
     ScanNotFoundError,
+    UnsupportedCropError,
     UserAlreadyExistsError,
     WeatherServiceError,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "JobNotFoundError",
     "NoSatelliteImageFoundError",
     "ScanNotFoundError",
+    "UnsupportedCropError",
     "UserAlreadyExistsError",
     "WeatherServiceError",
     "register_exception_handlers",

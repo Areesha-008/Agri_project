@@ -49,6 +49,8 @@ def create_field_with_job(
         area_hectares=area_hectares,
         district=field_in.district,
         crop=field_in.crop,
+        irrigation_type=field_in.irrigation_type,
+        sowing_date=field_in.sowing_date,
     )
     db.add(field)
     db.flush()  # get field.id before creating the related NdviJob row

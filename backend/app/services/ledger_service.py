@@ -1,16 +1,5 @@
 """
 Digital ledger CRUD + production report aggregation.
-
-Report formula (from design_handoff/designs/Jadeed Kashtkar App.dc.html,
-~line 935-946 — the report-builder's live calculation):
-    acres = total_hectares * 2.47
-    urea_bags = round(acres * 1.6)
-    dap_bags  = round(acres * 1.0)
-    sop_bags  = round(acres * 0.5)
-Flagged in GAPS.md alongside the health/yield formula: these are the
-design's placeholder rates ("per PARC guidance, verify with local
-extension officer" per the report footnote), not a validated agronomy
-model.
 """
 
 import uuid
@@ -29,21 +18,6 @@ from app.models.ledger_entry import (
 from app.models.ndvi_history import NdviHistory
 from app.schemas.ledger import FieldReportSummary, LedgerEntryCreateRequest, ReportResponse
 from app.services.crop_health_service import get_crop_health
-
-HECTARES_TO_ACRES = 2.47
-UREA_BAGS_PER_ACRE = 1.6
-DAP_BAGS_PER_ACRE = 1.0
-SOP_BAGS_PER_ACRE = 0.5
-
-
-def calculate_fertilizer_bags(total_hectares: float) -> tuple[int, int, int]:
-    """Pure formula, split out from build_report so it's unit-testable without a DB session."""
-    acres = total_hectares * HECTARES_TO_ACRES
-    return (
-        round(acres * UREA_BAGS_PER_ACRE),
-        round(acres * DAP_BAGS_PER_ACRE),
-        round(acres * SOP_BAGS_PER_ACRE),
-    )
 
 
 def create_ledger_entry(
@@ -132,7 +106,6 @@ def build_report(db: Session, user_id: uuid.UUID) -> ReportResponse:
     net = round(total_earned - total_spent, 2)
 
     total_hectares = round(sum(f.area_hectares or 0.0 for f in fields), 1)
-    urea_bags, dap_bags, sop_bags = calculate_fertilizer_bags(total_hectares)
 
     field_summaries: list[FieldReportSummary] = []
     health_scores: list[int] = []
@@ -162,9 +135,6 @@ def build_report(db: Session, user_id: uuid.UUID) -> ReportResponse:
         total_hectares=total_hectares,
         field_count=len(fields),
         avg_health_score=avg_health,
-        urea_bags=urea_bags,
-        dap_bags=dap_bags,
-        sop_bags=sop_bags,
         ledger_entry_count=ledger_count,
         total_spent=total_spent,
         total_earned=total_earned,

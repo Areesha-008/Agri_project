@@ -30,6 +30,8 @@ def field_to_response(field: Field) -> FieldResponse:
         area_hectares=field.area_hectares,
         district=field.district,
         crop=field.crop,
+        irrigation_type=field.irrigation_type,
+        sowing_date=field.sowing_date,
         created_at=field.created_at,
         updated_at=field.updated_at,
     )

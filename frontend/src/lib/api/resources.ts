@@ -2,10 +2,12 @@ import { api, getToken } from "./client";
 import type {
   Alert,
   CropHealthResponse,
+  FertilizerRecommendation,
   FieldCreateResponse,
   FieldListItem,
   FieldNdviLatestResponse,
   FieldResponse,
+  IrrigationType,
   LedgerEntry,
   LedgerEntryCreate,
   MessageResponse,
@@ -37,8 +39,25 @@ export interface CreateFieldInput {
   geometry: PolygonGeometry;
   district?: string;
   crop?: string;
+  irrigation_type?: IrrigationType;
+  sowing_date?: string;
   start_date?: string;
   end_date?: string;
+}
+
+export interface FertilizerRecommendationParams {
+  soilTier?: string;
+  previousCrop?: string;
+  variety?: string;
+}
+
+function fertilizerRecommendationQuery(params?: FertilizerRecommendationParams): string {
+  const search = new URLSearchParams();
+  if (params?.soilTier) search.set("soil_tier", params.soilTier);
+  if (params?.previousCrop) search.set("previous_crop", params.previousCrop);
+  if (params?.variety) search.set("variety", params.variety);
+  const query = search.toString();
+  return query ? `?${query}` : "";
 }
 
 export interface ReanalyzeFieldInput {
@@ -57,6 +76,27 @@ export const fieldsApi = {
   getNdvi: (fieldId: string) => api.get<FieldNdviLatestResponse>(`/fields/${fieldId}/ndvi`),
   getCropHealth: (fieldId: string) => api.get<CropHealthResponse>(`/fields/${fieldId}/crop-health`),
   delete: (fieldId: string) => api.delete<void>(`/fields/${fieldId}`),
+  getFertilizerRecommendation: (fieldId: string, params?: FertilizerRecommendationParams) =>
+    api.get<FertilizerRecommendation>(
+      `/fields/${fieldId}/fertilizer-recommendation${fertilizerRecommendationQuery(params)}`
+    ),
+  // GET .../pdf requires the JWT bearer header, so a plain <a href> can't
+  // hit it directly — fetch as a blob and let the caller trigger the
+  // download from an object URL instead (same pattern as
+  // ledgerApi.downloadReportPdf below).
+  downloadFertilizerRecommendationPdf: async (
+    fieldId: string,
+    params?: FertilizerRecommendationParams
+  ): Promise<Blob> => {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+    const token = getToken();
+    const response = await fetch(
+      `${base}/fields/${fieldId}/fertilizer-recommendation/pdf${fertilizerRecommendationQuery(params)}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+    );
+    if (!response.ok) throw new Error("Failed to download recommendation");
+    return response.blob();
+  },
 };
 
 // --- Settings ---

@@ -15,11 +15,11 @@ module will read from.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 
 from geoalchemy2 import Geometry
-from sqlalchemy import DateTime, Float, ForeignKey, String
+from sqlalchemy import Date, DateTime, Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -55,6 +55,13 @@ class Field(Base):
     # without these falls back to the baseline table's DEFAULT row.
     district: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     crop: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    # Used by services/fertilizer_recommendation_service.py to pick the
+    # right SFRI tier and estimate crop stage. Nullable — irrigation_type
+    # falls back to a district-based inference, sowing_date just means the
+    # recommendation can't estimate stage/timing as precisely.
+    irrigation_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    sowing_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

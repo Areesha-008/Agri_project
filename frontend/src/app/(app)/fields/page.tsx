@@ -19,7 +19,7 @@ import { NdviLegend } from "@/components/map/NdviLegend";
 import { MeasureDropdown } from "@/components/map/MeasureDropdown";
 import { FieldReanalyzePanel } from "@/components/map/FieldReanalyzePanel";
 import { layerPng, layerStats, type IndexLayer } from "@/lib/measures";
-import type { NdviHistoryItem, PolygonGeometry } from "@/lib/api/types";
+import type { IrrigationType, NdviHistoryItem, PolygonGeometry } from "@/lib/api/types";
 import type { FieldOverlay } from "@/components/map/FieldsMap";
 import { boundsFromGeometry } from "@/lib/geo";
 
@@ -51,6 +51,8 @@ export default function FieldsPage() {
   const [name, setName] = useState("");
   const [district, setDistrict] = useState("");
   const [crop, setCrop] = useState("");
+  const [irrigationType, setIrrigationType] = useState<IrrigationType | undefined>(undefined);
+  const [sowingDate, setSowingDate] = useState("");
   const [timeWindow, setTimeWindow] = useState<DateRange | null>(null);
   const [clearSignal, setClearSignal] = useState(0);
   const [locateSignal, setLocateSignal] = useState(0);
@@ -114,6 +116,8 @@ export default function FieldsPage() {
         geometry: pendingGeometry,
         district: district || undefined,
         crop: crop || undefined,
+        irrigation_type: irrigationType,
+        sowing_date: sowingDate || undefined,
         ...(timeWindow ?? {}),
       });
       setActiveJob({ fieldId: result.field.id, jobId: result.job_id });
@@ -206,6 +210,29 @@ export default function FieldsPage() {
             <Input label="Field name" value={name} onChange={(e) => setName(e.target.value)} />
             <Input label="District" placeholder="Faisalabad" value={district} onChange={(e) => setDistrict(e.target.value)} />
             <Input label="Crop" placeholder="Wheat" value={crop} onChange={(e) => setCrop(e.target.value)} />
+            <Input
+              label="Sowing date"
+              type="date"
+              value={sowingDate}
+              onChange={(e) => setSowingDate(e.target.value)}
+            />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-ink-600">Irrigation</label>
+              <div role="group" aria-label="Irrigation" className="flex rounded-lg bg-cream-inset p-0.5 text-[12.5px] font-semibold">
+                {(["irrigated", "rainfed"] as IrrigationType[]).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setIrrigationType(option)}
+                    aria-pressed={irrigationType === option}
+                    className="h-9 flex-1 cursor-pointer rounded-md px-3 capitalize"
+                    style={irrigationType === option ? { background: "var(--color-forest-900)", color: "#fff" } : undefined}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Button onClick={handleSave} disabled={!name || createField.isPending}>
               Finish &amp; analyse
             </Button>

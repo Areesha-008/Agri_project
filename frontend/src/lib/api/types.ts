@@ -22,6 +22,8 @@ export interface MessageResponse {
   dev_reset_url: string | null;
 }
 
+export type IrrigationType = "irrigated" | "rainfed";
+
 export interface FieldResponse {
   id: string;
   name: string;
@@ -29,6 +31,8 @@ export interface FieldResponse {
   area_hectares: number | null;
   district: string | null;
   crop: string | null;
+  irrigation_type: IrrigationType | null;
+  sowing_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -192,14 +196,67 @@ export interface Report {
   total_hectares: number;
   field_count: number;
   avg_health_score: number;
-  urea_bags: number;
-  dap_bags: number;
-  sop_bags: number;
   ledger_entry_count: number;
   total_spent: number;
   total_earned: number;
   net: number;
   field_summaries: FieldReportSummary[];
+  generated_at: string;
+}
+
+export type EvidenceLabel =
+  | "adequate"
+  | "possible_n_stress"
+  | "possible_water_stress"
+  | "waterlogged"
+  | "insufficient_observation";
+
+export type TimingStatus = "due" | "upcoming" | "deferred_weather" | "past";
+
+export interface FertilizerNutrientTargets {
+  n_kg_acre: number;
+  p2o5_kg_acre: number;
+  k2o_kg_acre: number;
+}
+
+export interface FertilizerBags {
+  urea_bags: number;
+  dap_bags: number;
+  sop_bags: number;
+}
+
+export interface FertilizerTimingEvent {
+  stage: string;
+  action: string;
+  status: TimingStatus;
+  note: string | null;
+}
+
+export interface FertilizerEvidenceClassification {
+  label: EvidenceLabel;
+  basis: string;
+  ndre_mean: number | null;
+  ndmi_mean: number | null;
+  ndwi_mean: number | null;
+  cci_mean: number | null;
+}
+
+export interface FertilizerRecommendation {
+  field_id: string;
+  crop: string;
+  district: string | null;
+  irrigation_type: string;
+  irrigation_source: "field_setting" | "district_default" | "fallback_irrigated";
+  soil_tier: string;
+  soil_tier_source: "user_override" | "assumed_medium_default" | "not_applicable";
+  nutrient_targets: FertilizerNutrientTargets;
+  previous_crop_n_credit_kg_acre: number;
+  bags: FertilizerBags;
+  micronutrient_notes: string[];
+  timing: FertilizerTimingEvent[];
+  evidence: FertilizerEvidenceClassification;
+  confidence: string;
+  warnings: string[];
   generated_at: string;
 }
 

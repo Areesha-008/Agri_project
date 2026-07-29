@@ -49,9 +49,6 @@ class ReportResponse(BaseModel):
     total_hectares: float
     field_count: int
     avg_health_score: int
-    urea_bags: int
-    dap_bags: int
-    sop_bags: int
     ledger_entry_count: int
     total_spent: float
     total_earned: float

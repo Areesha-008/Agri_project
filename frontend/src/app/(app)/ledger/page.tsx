@@ -335,8 +335,8 @@ export default function LedgerPage() {
           <Card className="flex flex-col gap-3">
             <div className="text-sm font-bold">Production report builder</div>
             <div className="text-xs leading-relaxed text-ink-500">
-              Compiles acreage, live health data, money spent &amp; earned, and calculated fertilizer requirements
-              across all fields into a printable report.
+              Compiles acreage, live health data, and money spent &amp; earned across all fields into a printable
+              report.
             </div>
             <div className="flex flex-col gap-1.5 text-xs">
               <Row label="Total farm area" value={`${report?.total_hectares ?? "—"} ha`} />
@@ -412,28 +412,8 @@ export default function LedgerPage() {
                 </div>
               </div>
             </div>
-            <div>
-              <div className="mb-1.5 text-[11px] font-extrabold tracking-[.06em] text-ink-400">
-                CALCULATED FERTILIZER REQUIREMENT
-              </div>
-              <div className="flex gap-2 text-xs">
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
-                  Urea (46-0-0)
-                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.urea_bags ?? "—"} bags</div>
-                </div>
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
-                  DAP (18-46-0)
-                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.dap_bags ?? "—"} bags</div>
-                </div>
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
-                  SOP (0-0-50)
-                  <div className="text-[15px] font-extrabold text-forest-ink-900">{report?.sop_bags ?? "—"} bags</div>
-                </div>
-              </div>
-            </div>
             <div className="border-t border-[#EAE7DA] pt-2.5 text-[10px] text-ink-400">
-              Data: Sentinel-2 L2A via CDSE/openEO · Fertilizer rates per PARC guidance, verify with local extension
-              officer.
+              Data: Sentinel-2 L2A via CDSE/openEO
             </div>
             <div className="flex gap-2.5">
               <Button className="flex-1" onClick={handleDownloadPdf} disabled={downloading}>

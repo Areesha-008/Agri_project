@@ -31,9 +31,6 @@ table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
 th, td { text-align: left; padding: 6px 4px; font-size: 12px; border-bottom: 1px dashed #EAE7DA; }
 th { color: #8a927f; font-weight: 700; text-transform: uppercase; font-size: 10px; }
 td.num { text-align: right; }
-.fert { display: flex; gap: 8px; margin-bottom: 20px; }
-.fert div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; font-size: 12px; }
-.fert .amount { font-weight: 800; font-size: 16px; color: #1B4332; }
 .money { display: flex; gap: 8px; margin-bottom: 20px; }
 .money div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; font-size: 12px; }
 .money .amount { font-weight: 800; font-size: 16px; }
@@ -76,15 +73,8 @@ def render_report_pdf(report: ReportResponse, owner_email: str) -> bytes:
         <div>Total earned<div class="amount" style="color:#1B4332">PKR {report.total_earned:,.0f}</div></div>
         <div>Net<div class="amount" style="color:{'#1B4332' if report.net >= 0 else '#B4362A'}">PKR {report.net:,.0f}</div></div>
       </div>
-      <h2>CALCULATED FERTILIZER REQUIREMENT</h2>
-      <div class="fert">
-        <div>Urea (46-0-0)<div class="amount">{report.urea_bags} bags</div></div>
-        <div>DAP (18-46-0)<div class="amount">{report.dap_bags} bags</div></div>
-        <div>SOP (0-0-50)<div class="amount">{report.sop_bags} bags</div></div>
-      </div>
       <div class="footnote">
-        Data: Sentinel-2 L2A via CDSE/openEO · Ledger entries: {report.ledger_entry_count} ·
-        Fertilizer rates per PARC guidance, verify with local extension officer.
+        Data: Sentinel-2 L2A via CDSE/openEO · Ledger entries: {report.ledger_entry_count}
       </div>
     </body></html>
     """

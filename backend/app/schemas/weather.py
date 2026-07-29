@@ -12,3 +12,4 @@ class ForecastDayResponse(BaseModel):
     wind_kmh: int
     rain: bool
     desc: str
+    precipitation_mm: float

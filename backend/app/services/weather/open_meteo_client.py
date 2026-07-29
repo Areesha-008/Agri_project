@@ -51,13 +51,22 @@ class ForecastDay:
     wind_kmh: int
     rain: bool
     desc: str
+    precipitation_mm: float = 0.0
 
 
-_cache: dict[tuple[float, float], tuple[float, list[ForecastDay]]] = {}
+_cache: dict[tuple[float, float, int], tuple[float, list[ForecastDay]]] = {}
 
 
-def get_forecast(lat: float, lon: float) -> list[ForecastDay]:
-    cache_key = (round(lat, 3), round(lon, 3))
+def get_forecast(lat: float, lon: float, past_days: int = 0) -> list[ForecastDay]:
+    """
+    past_days > 0 pulls that many days of recent history in the same call
+    (Open-Meteo's forecast endpoint supports this natively, no separate
+    archive/history API needed) — used by the fertilizer recommendation
+    service for rainfall-accumulation and weather-gate logic. Included in
+    the cache key so a past_days=7 call is never served a plain
+    forward-only cache entry from a past_days=0 call, or vice versa.
+    """
+    cache_key = (round(lat, 3), round(lon, 3), past_days)
     now = time.time()
 
     cached = _cache.get(cache_key)
@@ -65,20 +74,19 @@ def get_forecast(lat: float, lon: float) -> list[ForecastDay]:
         return cached[1]
 
     try:
-        response = requests.get(
-            settings.OPEN_METEO_BASE_URL,
-            params={
-                "latitude": lat,
-                "longitude": lon,
-                "daily": (
-                    "temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,"
-                    "wind_speed_10m_max,precipitation_sum,weathercode"
-                ),
-                "timezone": "auto",
-                "forecast_days": 7,
-            },
-            timeout=10,
-        )
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "daily": (
+                "temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,"
+                "wind_speed_10m_max,precipitation_sum,weathercode"
+            ),
+            "timezone": "auto",
+            "forecast_days": 7,
+        }
+        if past_days > 0:
+            params["past_days"] = past_days
+        response = requests.get(settings.OPEN_METEO_BASE_URL, params=params, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
         logger.error(f"Open-Meteo request failed for ({lat}, {lon}): {e}")
@@ -102,6 +110,7 @@ def get_forecast(lat: float, lon: float) -> list[ForecastDay]:
                 wind_kmh=round(daily["wind_speed_10m_max"][i]),
                 rain=code in _RAIN_CODES,
                 desc=_WEATHER_CODE_DESC.get(code, "—"),
+                precipitation_mm=daily["precipitation_sum"][i],
             )
         )
 
