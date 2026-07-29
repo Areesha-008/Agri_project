@@ -31,13 +31,12 @@ _DEFAULT_DOT = "#8a927f"
 _STYLE = """
 body { font-family: sans-serif; color: #1e2b23; padding: 32px; }
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-          border-bottom: 2px solid #1B4332; padding-bottom: 14px; margin-bottom: 16px; }
+          margin-bottom: 16px; }
 .header .title { font-size: 18px; font-weight: 800; color: #1B4332; }
-.header .subtitle { font-size: 11px; color: #8a927f; }
 .header .field { text-align: right; font-size: 13px; font-weight: 700; color: #1e2b23; }
 .header .field .crop { display: block; font-weight: 500; color: #8a927f; font-size: 11px; margin-top: 2px; }
-.stats { display: flex; gap: 8px; text-align: center; margin-bottom: 20px; }
-.stats div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; }
+.stats { display: flex; gap: 16px; text-align: center; margin-bottom: 20px; }
+.stats div { flex: 1; padding: 10px 0; }
 .stats .value { font-size: 20px; font-weight: 800; color: #1B4332; font-variant-numeric: tabular-nums; }
 .stats .label { font-size: 10px; color: #8a927f; font-weight: 600; }
 h2 { font-size: 12px; font-weight: 800; color: #8a927f; letter-spacing: .06em; margin-bottom: 8px; }
@@ -52,8 +51,8 @@ th.num, td.num { text-align: right; }
 .amt-in { color: #1B4332; font-weight: 700; }
 .amt-out { color: #B4362A; font-weight: 700; }
 .amt-none { color: #9aa290; }
-.money { display: flex; gap: 8px; margin-bottom: 20px; }
-.money div { flex: 1; background: #F6F4ED; border-radius: 10px; padding: 10px; font-size: 12px; }
+.money { display: flex; gap: 16px; margin-bottom: 20px; }
+.money div { flex: 1; padding: 10px 0; font-size: 12px; }
 .money .amount { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
 .footnote { font-size: 10px; color: #9aa290; border-top: 1px solid #EAE7DA; padding-top: 10px; }
 """
@@ -86,7 +85,7 @@ def _transaction_row(tx: TransactionItem) -> str:
     )
 
 
-def render_report_pdf(report: ReportResponse, owner_email: str) -> bytes:
+def render_report_pdf(report: ReportResponse) -> bytes:
     generated_str = report.generated_at.strftime("%d %b %Y")
     area_str = f"{report.area_hectares:.1f}" if report.area_hectares is not None else "—"
     ndvi_str = f"{report.ndvi_mean:.2f}" if report.ndvi_mean is not None else "—"
@@ -97,10 +96,7 @@ def render_report_pdf(report: ReportResponse, owner_email: str) -> bytes:
     body = f"""
     <html><head><meta charset="utf-8"><style>{_STYLE}</style></head><body>
       <div class="header">
-        <div>
-          <div class="title">Production Report</div>
-          <div class="subtitle">Jadeed Kashtkar · {html.escape(owner_email)} · {generated_str}</div>
-        </div>
+        <div class="title">Production Report</div>
         <div class="field">
           {html.escape(report.field_name)}
           <span class="crop">{html.escape(report.crop or "—")}</span>
@@ -124,7 +120,7 @@ def render_report_pdf(report: ReportResponse, owner_email: str) -> bytes:
         <div>Net<div class="amount" style="color:{'#1B4332' if report.net >= 0 else '#B4362A'}">PKR {report.net:,.0f}</div></div>
       </div>
       <div class="footnote">
-        Data: Sentinel-2 L2A via CDSE/openEO · Ledger entries: {len(report.transactions)}
+        Data: Sentinel-2 L2A via CDSE/openEO · Ledger entries: {len(report.transactions)} · Generated {generated_str}
       </div>
     </body></html>
     """

@@ -80,7 +80,7 @@ def get_report_pdf(
     current_user: User = Depends(get_current_user),
 ):
     report = build_report(db, current_user.id, field_id)
-    pdf_bytes = render_report_pdf(report, current_user.email)
+    pdf_bytes = render_report_pdf(report)
     filename = f"production-report-{_slugify(report.field_name)}.pdf"
     return Response(
         content=pdf_bytes,

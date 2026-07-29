@@ -396,7 +396,7 @@ export default function LedgerPage() {
             onClick={(e) => e.stopPropagation()}
             className="flex max-h-[90vh] w-[520px] max-w-full flex-col gap-3.5 overflow-auto rounded-2xl bg-cream-card p-7 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
           >
-            <div className="flex items-center gap-2.5 border-b-2 border-forest-ink-900 pb-3.5">
+            <div className="flex items-center gap-2.5 pb-3.5">
               <div className="flex-1">
                 <div className="text-[15px] font-extrabold text-forest-ink-900">Production Report</div>
                 <div className="text-[10.5px] text-ink-400">Jadeed Kashtkar</div>
@@ -406,7 +406,7 @@ export default function LedgerPage() {
               <span className="text-[15px] font-extrabold text-forest-ink-900">{report?.field_name ?? "—"}</span>
               <span className="text-[11px] text-ink-400">{report?.crop ?? "—"}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-3 gap-4 text-center">
               <Stat label="Hectares" value={report?.area_hectares != null ? report.area_hectares.toFixed(1) : "—"} color="var(--color-forest-ink-900)" />
               <Stat label="NDVI" value={report?.ndvi_mean != null ? report.ndvi_mean.toFixed(2) : "—"} color="var(--color-forest-ink-700)" />
               <Stat label="Health" value={report?.health_score != null ? `${report.health_score}%` : "—"} color="var(--color-ink-900)" />
@@ -443,16 +443,16 @@ export default function LedgerPage() {
             </div>
             <div>
               <div className="mb-1.5 text-[11px] font-extrabold tracking-[.06em] text-ink-400">FINANCIAL SUMMARY</div>
-              <div className="flex gap-2 text-xs">
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
+              <div className="flex gap-4 text-xs">
+                <div className="flex-1 p-2.5">
                   Total spent
                   <div className="text-[15px] font-extrabold" style={{ color: "#B4362A" }}>{pkr(report?.total_spent)}</div>
                 </div>
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
+                <div className="flex-1 p-2.5">
                   Total earned
                   <div className="text-[15px] font-extrabold text-forest-ink-900">{pkr(report?.total_earned)}</div>
                 </div>
-                <div className="flex-1 rounded-[10px] bg-cream-inset p-2.5">
+                <div className="flex-1 p-2.5">
                   Net
                   <div
                     className="text-[15px] font-extrabold"
@@ -492,7 +492,7 @@ function Row({ label, value, valueColor }: { label: string; value: string | numb
 
 function Stat({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div className="rounded-[10px] bg-cream-inset p-2.5">
+    <div className="p-2.5">
       <div className="text-lg font-extrabold" style={{ color }}>
         {value}
       </div>
