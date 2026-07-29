@@ -146,27 +146,6 @@ export default function HealthPage() {
           );
         })}
       </div>
-
-      <Card className="flex flex-col gap-2.5">
-        <div className="text-sm font-bold">Lab recommendations — {field?.name ?? "—"}</div>
-        <div className="grid grid-cols-1 gap-3 text-xs leading-relaxed text-ink-900 md:grid-cols-3">
-          <div className="rounded-xl bg-cream-inset p-3">
-            <b className="text-ink-900">Nitrogen top-dress</b>
-            <br />
-            NDVI dip suggests possible N deficiency — consider a urea top-dress after the next rain window.
-          </div>
-          <div className="rounded-xl bg-cream-inset p-3">
-            <b className="text-ink-900">Targeted irrigation</b>
-            <br />
-            Check NDMI for moisture-stressed zones and irrigate selectively rather than the whole field.
-          </div>
-          <div className="rounded-xl bg-cream-inset p-3">
-            <b className="text-ink-900">Rust scouting</b>
-            <br />
-            Scout for stripe rust pustules twice this week. If found, photograph with the Disease Scanner.
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
