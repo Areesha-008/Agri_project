@@ -123,14 +123,14 @@ export const ledgerApi = {
   create: (entry: LedgerEntryCreate) => api.post<LedgerEntry>("/ledger", entry),
   listCategories: () => api.get<string[]>("/ledger/categories"),
   createCategory: (name: string) => api.post<string[]>("/ledger/categories", { name }),
-  report: () => api.get<Report>("/report"),
+  report: (fieldId: string) => api.get<Report>(`/report?field_id=${fieldId}`),
   // GET /report/pdf requires the JWT bearer header, so a plain <a href>
   // can't hit it directly — fetch as a blob and let the caller trigger
   // the download from an object URL instead.
-  downloadReportPdf: async (): Promise<Blob> => {
+  downloadReportPdf: async (fieldId: string): Promise<Blob> => {
     const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
     const token = getToken();
-    const response = await fetch(`${base}/report/pdf`, {
+    const response = await fetch(`${base}/report/pdf?field_id=${fieldId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     if (!response.ok) throw new Error("Failed to download report");

@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useSettings, useUpdateSettings } from "@/lib/api/hooks";
-import { ledgerApi } from "@/lib/api/resources";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { Card } from "@/components/ui/Card";
@@ -18,16 +17,6 @@ export default function SettingsPage() {
   function handleSignOut() {
     logout();
     router.push("/login");
-  }
-
-  async function handleDownloadData() {
-    const blob = await ledgerApi.downloadReportPdf();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "my-data-report.pdf";
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   return (
@@ -119,15 +108,6 @@ export default function SettingsPage() {
             </div>
             <div className="flex-none rounded-md bg-mint-100 px-2.5 py-1 text-[11px] font-bold text-forest-700">ACTIVE</div>
           </div>
-          <button
-            onClick={handleDownloadData}
-            className="flex cursor-pointer items-center gap-2.5 border-t border-cream-inset py-2.5 text-left hover:bg-[#FBFAF4]"
-          >
-            <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] font-semibold">Download my data</div>
-              <div className="text-[11px] text-ink-400">Fields, readings and ledger as a PDF report</div>
-            </div>
-          </button>
           <button
             onClick={handleSignOut}
             className="mt-1 cursor-pointer rounded-lg bg-alert-red-bg px-3 py-2.5 text-left text-[12.5px] font-semibold text-alert-red-text"

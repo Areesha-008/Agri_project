@@ -53,11 +53,17 @@ function pkr(value: number | null | undefined): string {
   return value == null ? "—" : `PKR ${value.toLocaleString()}`;
 }
 
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "field";
+}
+
 export default function LedgerPage() {
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
   const { data: fields } = useFields();
   const { data: entries } = useLedgerEntries();
-  const { data: report } = useReport();
+  const [reportFieldId, setReportFieldId] = useState(selectedFieldId ?? "");
+  const activeReportFieldId = reportFieldId || fields?.[0]?.id;
+  const { data: report } = useReport(activeReportFieldId);
   const { data: categories } = useLedgerCategories();
   const createEntry = useCreateLedgerEntry();
   const createCategory = useCreateLedgerCategory();
@@ -79,6 +85,7 @@ export default function LedgerPage() {
   const categoryFieldId = `${idPrefix}category`;
   const newHeadFieldId = `${idPrefix}new-head`;
   const targetFieldFieldId = `${idPrefix}target-field`;
+  const reportFieldSelectId = `${idPrefix}report-field`;
   const amountFieldId = `${idPrefix}amount`;
   const quantityFieldId = `${idPrefix}quantity`;
   const noteFieldId = `${idPrefix}note`;
@@ -112,13 +119,14 @@ export default function LedgerPage() {
   }
 
   async function handleDownloadPdf() {
+    if (!activeReportFieldId) return;
     setDownloading(true);
     try {
-      const blob = await ledgerApi.downloadReportPdf();
+      const blob = await ledgerApi.downloadReportPdf(activeReportFieldId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "production-report.pdf";
+      a.download = `production-report-${slugify(report?.field_name ?? "field")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -335,13 +343,35 @@ export default function LedgerPage() {
           <Card className="flex flex-col gap-3">
             <div className="text-sm font-bold">Production report builder</div>
             <div className="text-xs leading-relaxed text-ink-500">
-              Compiles acreage, live health data, and money spent &amp; earned across all fields into a printable
-              report.
+              Compiles one field&apos;s acreage, live health data, and transaction log into a printable report.
+            </div>
+            <div>
+              <label htmlFor={reportFieldSelectId} className="sr-only">
+                Report field
+              </label>
+              <div className="relative">
+                <select
+                  id={reportFieldSelectId}
+                  value={activeReportFieldId ?? ""}
+                  onChange={(e) => setReportFieldId(e.target.value)}
+                  className={`${INPUT_CLASS} ${SELECT_CLASS} w-full`}
+                >
+                  {fields?.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-400">
+                  {NavIcons.chevron}
+                </span>
+              </div>
             </div>
             <div className="flex flex-col gap-1.5 text-xs">
-              <Row label="Total farm area" value={`${report?.total_hectares ?? "—"} ha`} />
-              <Row label="Fields tracked" value={report?.field_count ?? "—"} />
-              <Row label="Avg. health score" value={`${report?.avg_health_score ?? "—"}%`} valueColor="#2D6A4F" />
+              <Row label="Field area" value={report?.area_hectares != null ? `${report.area_hectares.toFixed(1)} ha` : "—"} />
+              <Row label="Crop" value={report?.crop ?? "—"} />
+              <Row label="NDVI" value={report?.ndvi_mean != null ? report.ndvi_mean.toFixed(2) : "—"} valueColor="#2D6A4F" />
+              <Row label="Health score" value={report?.health_score != null ? `${report.health_score}%` : "—"} valueColor="#2D6A4F" />
               <Row label="Total spent" value={pkr(report?.total_spent)} valueColor="#B4362A" />
               <Row label="Total earned" value={pkr(report?.total_earned)} valueColor="#2D6A4F" />
               <Row
@@ -349,9 +379,10 @@ export default function LedgerPage() {
                 value={pkr(report?.net)}
                 valueColor={report && report.net >= 0 ? "#2D6A4F" : "#B4362A"}
               />
-              <Row label="Ledger entries" value={report?.ledger_entry_count ?? "—"} />
             </div>
-            <Button onClick={() => setReportOpen(true)}>Download production PDF report</Button>
+            <Button onClick={() => setReportOpen(true)} disabled={!activeReportFieldId}>
+              Download production PDF report
+            </Button>
           </Card>
         </div>
       </div>
@@ -371,22 +402,42 @@ export default function LedgerPage() {
                 <div className="text-[10.5px] text-ink-400">Jadeed Kashtkar</div>
               </div>
             </div>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[15px] font-extrabold text-forest-ink-900">{report?.field_name ?? "—"}</span>
+              <span className="text-[11px] text-ink-400">{report?.crop ?? "—"}</span>
+            </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <Stat label="Hectares" value={report?.total_hectares ?? "—"} color="var(--color-forest-ink-900)" />
-              <Stat label="Avg Health" value={`${report?.avg_health_score ?? "—"}%`} color="var(--color-forest-ink-700)" />
-              <Stat label="Fields" value={report?.field_count ?? "—"} color="var(--color-ink-900)" />
+              <Stat label="Hectares" value={report?.area_hectares != null ? report.area_hectares.toFixed(1) : "—"} color="var(--color-forest-ink-900)" />
+              <Stat label="NDVI" value={report?.ndvi_mean != null ? report.ndvi_mean.toFixed(2) : "—"} color="var(--color-forest-ink-700)" />
+              <Stat label="Health" value={report?.health_score != null ? `${report.health_score}%` : "—"} color="var(--color-ink-900)" />
             </div>
             <div>
-              <div className="mb-1.5 text-[11px] font-extrabold tracking-[.06em] text-ink-400">FIELD SUMMARY</div>
-              {report?.field_summaries.map((fs) => (
-                <div key={fs.name} className="flex items-center gap-2 border-b border-dashed border-[#EAE7DA] py-1.5 text-xs">
-                  <span className="flex-1 font-bold">{fs.name}</span>
-                  <span className="text-ink-500">{fs.crop ?? "—"}</span>
-                  <span className="w-14 text-right">{fs.area_hectares ?? "—"} ha</span>
-                  <span className="w-16 text-right font-bold text-forest-ink-700">
-                    NDVI {fs.ndvi_mean?.toFixed(2) ?? "—"}
+              <div className="mb-1.5 text-[11px] font-extrabold tracking-[.06em] text-ink-400">TRANSACTIONS</div>
+              {report?.transactions.length === 0 && (
+                <div className="text-xs text-ink-400">No transactions yet.</div>
+              )}
+              {report?.transactions.map((tx) => (
+                <div key={tx.id} className="flex items-center gap-2 border-b border-dashed border-[#EAE7DA] py-1.5 text-xs">
+                  <span className="w-14 flex-none text-[10.5px] text-ink-400">
+                    {new Date(tx.timestamp).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                   </span>
-                  <span className="w-11 text-right font-bold">{fs.health_score ?? "—"}%</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-ink-900">{tx.title}</span>
+                    <span className="block truncate text-[11px] text-ink-400">{tx.detail}</span>
+                  </span>
+                  <span
+                    className="flex-none whitespace-nowrap text-[12px] font-bold"
+                    style={{
+                      color:
+                        tx.amount == null
+                          ? "var(--color-ink-400)"
+                          : tx.entry_type === "income"
+                            ? "var(--color-forest-ink-700)"
+                            : "var(--color-down-red)",
+                    }}
+                  >
+                    {tx.amount == null ? "—" : `${tx.entry_type === "income" ? "+" : "−"}${pkr(tx.amount)}`}
+                  </span>
                 </div>
               ))}
             </div>

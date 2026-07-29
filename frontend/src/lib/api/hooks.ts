@@ -198,9 +198,13 @@ export function useCreateLedgerCategory() {
   });
 }
 
-export function useReport() {
+export function useReport(fieldId: string | undefined) {
   const { isAuthenticated } = useAuth();
-  return useQuery({ queryKey: ["report"], queryFn: ledgerApi.report, enabled: isAuthenticated });
+  return useQuery({
+    queryKey: ["report", fieldId],
+    queryFn: () => ledgerApi.report(fieldId as string),
+    enabled: isAuthenticated && Boolean(fieldId),
+  });
 }
 
 export function useScans() {

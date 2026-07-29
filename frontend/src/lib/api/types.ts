@@ -184,23 +184,26 @@ export interface LedgerEntryCreate {
   entry_type: LedgerEntryType;
 }
 
-export interface FieldReportSummary {
-  name: string;
+export interface Transaction {
+  id: string;
+  timestamp: string;
+  category: LedgerCategory;
+  title: string;
+  detail: string;
+  amount: number | null;
+  entry_type: LedgerEntryType;
+}
+
+export interface Report {
+  field_name: string;
   crop: string | null;
   area_hectares: number | null;
   ndvi_mean: number | null;
   health_score: number | null;
-}
-
-export interface Report {
-  total_hectares: number;
-  field_count: number;
-  avg_health_score: number;
-  ledger_entry_count: number;
+  transactions: Transaction[];
   total_spent: number;
   total_earned: number;
   net: number;
-  field_summaries: FieldReportSummary[];
   generated_at: string;
 }
 
