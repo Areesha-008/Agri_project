@@ -20,7 +20,7 @@ export function MeasureIndexList({ history, selected, onSelect }: MeasureIndexLi
   const rows = dedupeByDate(history).reverse();
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div data-testid="measure-index-list" className="flex flex-col gap-1.5">
       {INDEX_LAYERS.map((layer) => {
         const series = seriesFor(rows, layer);
         const latest = series.at(-1)?.mean;

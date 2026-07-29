@@ -99,7 +99,13 @@ test("crop health page shows the index list and swaps the expanded chart on sele
   // see the test.setTimeout comment above) before asserting anything about
   // *absence*: an absence check against a still-"Loading…" page would pass
   // vacuously for the wrong reason.
-  const ndviRowLocator = page.getByRole("button", { name: /NDVI/ });
+  //
+  // Scoped to the index list specifically: the unrelated "All fields" grid
+  // further down this same page also renders literal text "NDVI —" for each
+  // field's trend summary, so an unscoped getByRole("button", {name: /NDVI/})
+  // matches both that card and this row once both sections have loaded.
+  const indexList = page.getByTestId("measure-index-list");
+  const ndviRowLocator = indexList.getByRole("button", { name: /NDVI/ });
   await expect(ndviRowLocator).toBeVisible({ timeout: 30_000 });
 
   // Yield/health-gauge card is gone from this page.
@@ -118,7 +124,7 @@ test("crop health page shows the index list and swaps the expanded chart on sele
   await expect(page.getByText("NDVI — vegetation")).toBeVisible();
 
   // Selecting NDMI swaps the expanded chart's header.
-  await page.getByRole("button", { name: /NDMI/ }).click();
+  await indexList.getByRole("button", { name: /NDMI/ }).click();
   await expect(page.getByText("NDMI — moisture")).toBeVisible();
 
   // The chart has real y-axis tick labels now (Recharts renders them as SVG
