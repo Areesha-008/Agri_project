@@ -1,38 +1,24 @@
 import type { MapLayer } from "@/lib/store/useAppStore";
 import type { NdviHistoryItem } from "@/lib/api/types";
-import {
-  NDVI_MIN_DISPLAY, NDVI_MAX_DISPLAY,
-  NDMI_MIN_DISPLAY, NDMI_MAX_DISPLAY,
-  NDRE_MIN_DISPLAY, NDRE_MAX_DISPLAY,
-  NBR2_MIN_DISPLAY, NBR2_MAX_DISPLAY,
-  NDWI_MIN_DISPLAY, NDWI_MAX_DISPLAY,
-  CCI_MIN_DISPLAY, CCI_MAX_DISPLAY,
-  EVI_MIN_DISPLAY, EVI_MAX_DISPLAY,
-  SAVI_MIN_DISPLAY, SAVI_MAX_DISPLAY,
-} from "@/lib/ndviPalette";
 
 /** The index layers (everything except the raw satellite basemap). */
 export type IndexLayer = Exclude<MapLayer, "satellite">;
 
 /**
- * Chart-facing metadata per index: a short code for compact sparkline labels
- * and its meaningful display range (mirrors the map legend). The trend chart
- * reads `short`/`range` here and full labels from MEASURES above.
+ * Chart-facing metadata per index: a short code for compact labels and its
+ * CVD-validated categorical identity hue (the --m-* tokens in globals.css),
+ * used consistently across the index list and the detail chart so a hue
+ * always means the same index.
  */
-// `color` is a CVD-validated categorical identity hue per measure (see the
-// --m-* tokens in globals.css); used consistently across sparklines, the
-// single-measure detail line, and the compare overlay so a hue always means
-// the same index. `range` is the measure's display range (mirrors the map
-// legend), used to normalize the compare overlay onto one 0-100% axis.
-export const INDEX_META: Record<IndexLayer, { short: string; range: [number, number]; color: string }> = {
-  ndvi: { short: "NDVI", range: [NDVI_MIN_DISPLAY, NDVI_MAX_DISPLAY], color: "var(--m-ndvi)" },
-  ndmi: { short: "NDMI", range: [NDMI_MIN_DISPLAY, NDMI_MAX_DISPLAY], color: "var(--m-ndmi)" },
-  ndre: { short: "NDRE", range: [NDRE_MIN_DISPLAY, NDRE_MAX_DISPLAY], color: "var(--m-ndre)" },
-  nbr2: { short: "NBR2", range: [NBR2_MIN_DISPLAY, NBR2_MAX_DISPLAY], color: "var(--m-nbr2)" },
-  ndwi: { short: "NDWI", range: [NDWI_MIN_DISPLAY, NDWI_MAX_DISPLAY], color: "var(--m-ndwi)" },
-  cci: { short: "CIre", range: [CCI_MIN_DISPLAY, CCI_MAX_DISPLAY], color: "var(--m-cci)" },
-  evi: { short: "EVI", range: [EVI_MIN_DISPLAY, EVI_MAX_DISPLAY], color: "var(--m-evi)" },
-  savi: { short: "SAVI", range: [SAVI_MIN_DISPLAY, SAVI_MAX_DISPLAY], color: "var(--m-savi)" },
+export const INDEX_META: Record<IndexLayer, { short: string; color: string }> = {
+  ndvi: { short: "NDVI", color: "var(--m-ndvi)" },
+  ndmi: { short: "NDMI", color: "var(--m-ndmi)" },
+  ndre: { short: "NDRE", color: "var(--m-ndre)" },
+  nbr2: { short: "NBR2", color: "var(--m-nbr2)" },
+  ndwi: { short: "NDWI", color: "var(--m-ndwi)" },
+  cci: { short: "CIre", color: "var(--m-cci)" },
+  evi: { short: "EVI", color: "var(--m-evi)" },
+  savi: { short: "SAVI", color: "var(--m-savi)" },
 };
 
 /** The 8 index layers in canonical display order. */
