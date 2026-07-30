@@ -37,13 +37,11 @@ const JOB_TIMEOUT_MS = 150_000;
 
 /**
  * Landing-page hero: the real field-drawing + NDVI/NDMI analysis flow from
- * /fields, runnable by anonymous visitors. Guests get the previous 4 weeks as
- * separate weekly readings, NOT a single averaged window — custom date
- * ranges are gated behind an account. The whole 4-week window is fetched in
- * ONE satellite query (compute_ndvi_periods on the backend splits it into
- * weekly composites server-side), so this fires exactly one job, not one
- * per week. If no token exists yet, we log in as the shared guest user
- * right before saving.
+ * /fields, runnable by anonymous visitors. Guests get the most recent week
+ * only — custom date ranges are gated behind an account. Fetched via the
+ * same compute_ndvi_periods path used for longer windows, just with a
+ * single-tile span, so this still fires exactly one job. If no token
+ * exists yet, we log in as the shared guest user right before saving.
  */
 export function LandingFieldAnalyzer() {
   const { t } = useTranslation();
@@ -67,11 +65,11 @@ export function LandingFieldAnalyzer() {
   // (real or earlier-guest) session.
   const mintedGuestSession = useRef(false);
 
-  // The four weekly tiles (newest first), fixed for the component's life —
-  // just used to label the scrubber and drive the one createField request's
-  // start/end (oldest tile's start to newest tile's end).
+  // The single most-recent week's tile, fixed for the component's life —
+  // just used to label the readout and drive the one createField request's
+  // start/end.
   const [tiles] = useState<WeekTile[]>(() =>
-    computeWeeklyTiles({ start_date: isoDaysAgo(28), end_date: todayIso() }),
+    computeWeeklyTiles({ start_date: isoDaysAgo(7), end_date: todayIso() }),
   );
 
   const createField = useCreateField();
@@ -163,9 +161,8 @@ export function LandingFieldAnalyzer() {
         await loginAsGuest();
         mintedGuestSession.current = true;
       }
-      // tiles is newest-first — span the whole 4-week window in ONE
-      // request; compute_ndvi_periods splits it into weekly readings
-      // server-side from a single satellite fetch.
+      // Single tile, but keep spanning oldest→newest for symmetry with the
+      // multi-tile path this reuses (compute_ndvi_periods on the backend).
       const oldest = tiles[tiles.length - 1];
       const newest = tiles[0];
       const result = await createField.mutateAsync({
@@ -293,7 +290,7 @@ export function LandingFieldAnalyzer() {
                   {t("landingDrawAreaLabel")}: <b>{pendingArea} ha</b>
                 </div>
                 {/* Custom date ranges are an account feature; guests get a fixed
-                    last-4-weeks view. */}
+                    last-week view. */}
                 <div className="rounded-xl bg-cream-inset px-3 py-2 text-[11px] leading-relaxed text-ink-500">
                   {t("landingDrawFourWeeksHint")}{" "}
                   <Link href="/signup" className="font-bold text-forest-700 underline-offset-2 hover:underline">
