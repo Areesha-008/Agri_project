@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 from geoalchemy2.shape import from_shape, to_shape
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -27,7 +28,7 @@ from app.schemas.field import FieldCreateRequest, FieldNdviLatestResponse, NdviH
 from app.schemas.ndvi_job import FieldReanalyzeRequest
 from app.schemas.ndvi import NdviAnalyzeResponse
 from app.services.geometry_validator import calculate_area_hectares, validate_polygon
-from app.services.satellite.ndvi_processor import compute_ndvi_periods
+from app.services.satellite.ndvi_processor import compute_ndvi_periods, compute_weekly_tiles
 
 logger = logging.getLogger("app")
 
@@ -87,11 +88,31 @@ def create_reanalysis_job(db: Session, field: Field, body: FieldReanalyzeRequest
 # A single tile's CDSE call can block indefinitely (BackgroundTasks has no
 # kill switch), and a --reload restart orphans in-flight jobs as "running"
 # forever. Each tile in compute_ndvi_periods' loop is well under a minute
-# on its own, but a wide window means more tiles in sequence within one
-# job (30 days -> ~4, 90 days -> ~13) — generous on purpose so a
-# legitimately-progressing wide-window job isn't killed mid-flight, while
-# still catching a genuinely stuck one well before a user gives up waiting.
-JOB_STALE_AFTER = timedelta(minutes=20)
+# on its own — but that's the fast path (a skipped/no-data tile); a tile
+# that actually finds cloud-free scenes can take close to a minute for the
+# 8-band fetch + composite, and a wide window means many tiles in sequence
+# within one job. A flat threshold sized for a narrow window (e.g. 20
+# minutes for ~4 tiles in a 30-day request) false-fires on a wide window
+# that's still genuinely progressing (a 365-day/~52-tile request measured
+# taking over 20 minutes with zero tiles actually stuck) — and a false
+# "failed" status is worse than a slow spinner: it un-disables the
+# frontend's "Analyse this period" button (FieldReanalyzePanel's
+# `isAnalyzing` goes false on any terminal status), so the user retries
+# and now has two jobs racing the same field.
+JOB_STALE_AFTER_FLOOR = timedelta(minutes=20)
+JOB_STALE_AFTER_PER_TILE = timedelta(seconds=90)
+
+
+def _job_stale_after(job: NdviJob) -> timedelta:
+    """How long job can sit in "running" before the watchdog calls it stuck.
+    Scales with the requested window's tile count (see compute_weekly_tiles)
+    so a wide-window job legitimately still working isn't marked failed
+    mid-flight; floored at the original flat 20 minutes for narrow/default
+    windows where tile count alone would under-budget it."""
+    if job.requested_start_date is None or job.requested_end_date is None:
+        return JOB_STALE_AFTER_FLOOR
+    tile_count = len(compute_weekly_tiles(job.requested_start_date, job.requested_end_date))
+    return max(JOB_STALE_AFTER_FLOOR, JOB_STALE_AFTER_PER_TILE * tile_count)
 
 
 def get_job_or_404(db: Session, job_id: uuid.UUID) -> NdviJob:
@@ -100,12 +121,13 @@ def get_job_or_404(db: Session, job_id: uuid.UUID) -> NdviJob:
         raise JobNotFoundError()
     # Watchdog on the polling read path: expire jobs stuck in "running" so
     # clients see a terminal status instead of spinning forever.
+    stale_after = _job_stale_after(job)
     if (
         job.status == NdviJobStatus.running
         and job.started_at is not None
-        and datetime.now(timezone.utc) - job.started_at > JOB_STALE_AFTER
+        and datetime.now(timezone.utc) - job.started_at > stale_after
     ):
-        logger.error(f"NDVI job {job_id} stuck in running past {JOB_STALE_AFTER}; marking failed")
+        logger.error(f"NDVI job {job_id} stuck in running past {stale_after}; marking failed")
         _fail_job(db, job, "Analysis timed out")
     return job
 
@@ -175,22 +197,37 @@ def upsert_history_row(db: Session, field_id: uuid.UUID, fields: dict) -> uuid.U
     computed data is refreshed — so a point already on the chart doesn't
     jump position just because a later run's grid landed a few days off.
 
-    # ponytail: select-then-branch (not atomic) for the range-match path;
-    # safe because jobs for one field already run sequentially in practice
-    # (see get_job_history_items) — add row locking if that guarantee ever
-    # changes.
+    The match is a symmetric interval-overlap test (new.start <=
+    existing.end AND existing.start <= new.end), not just "does the
+    existing row's date fall inside the new tile's window" — an
+    existing-row-only check misses the reverse case (new tile's window
+    starts before an existing row it still overlaps), which is exactly what
+    let two runs anchored a few days apart each fail to see the other's
+    row and both insert a "new" one for the same real week.
+
+    # ponytail: select-then-branch (not atomic) for the range-match path —
+    # a genuinely simultaneous pair of writes for the same field (two
+    # concurrent jobs, confirmed to happen in practice: a stale "failed"
+    # job status doesn't stop the underlying BackgroundTasks run, so a user
+    # retrying can race the still-running original) could still both SELECT
+    # before either INSERTs. Add row locking (`.with_for_update()`) if that
+    # narrow race is ever observed to actually produce a duplicate; the
+    # overlap-matching fix above already closes the far more common case
+    # (sequential runs with differently-anchored grids).
 
     Extracted from run_ndvi_job so this — the actual duplicate-prevention
     guarantee — is exercised directly by test_ndvi_history_upsert.py without
     needing a real satellite call.
     """
     window_start = fields.get("date_range_start", fields["satellite_image_date"])
+    window_end = fields["satellite_image_date"]
+    existing_start = func.coalesce(NdviHistory.date_range_start, NdviHistory.satellite_image_date)
     existing = (
         db.query(NdviHistory)
         .filter(
             NdviHistory.field_id == field_id,
             NdviHistory.satellite_image_date >= window_start,
-            NdviHistory.satellite_image_date <= fields["satellite_image_date"],
+            existing_start <= window_end,
         )
         .order_by(NdviHistory.satellite_image_date.asc())
         .first()

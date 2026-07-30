@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     # NDVI / Sentinel-2 processing defaults
     # ------------------------------------------------------------------
     SENTINEL2_COLLECTION: str = Field(default="SENTINEL2_L2A")
-    MAX_CLOUD_COVER_PERCENT: float = Field(default=20.0)
+    MAX_CLOUD_COVER_PERCENT: float = Field(default=55.0)
     NDVI_SEARCH_WINDOW_DAYS: int = Field(
         default=30, description="Rolling date window to average cloud-free scenes over"
     )

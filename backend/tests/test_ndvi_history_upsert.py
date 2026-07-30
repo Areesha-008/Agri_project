@@ -138,3 +138,58 @@ def test_upsert_collapses_drifted_duplicate_into_existing_row():
             db.query(User).filter(User.id == field.user_id).delete()
             db.commit()
         db.close()
+
+
+def test_upsert_collapses_backward_drifted_duplicate_into_existing_row():
+    """
+    The reverse direction of the case above: an existing row whose window
+    ends AFTER the new tile's window, but the two still overlap (e.g. an
+    earlier run anchored a job's grid a few days later than a subsequent
+    run). This was live-observed to slip through the old existing-row-only
+    range check and insert a near-duplicate a few days apart instead of
+    updating the existing row — the match must be symmetric.
+    """
+    db = SessionLocal()
+    field = None
+    try:
+        field = _make_field(db)
+        db.commit()
+
+        first_id = upsert_history_row(
+            db,
+            field.id,
+            {
+                "ndvi_mean": 0.1,
+                "ndvi_min": 0.05,
+                "ndvi_max": 0.15,
+                "date_range_start": "2099-01-19",
+                "satellite_image_date": "2099-01-25",
+                "source_collection": "TEST",
+            },
+        )
+        # A later run's grid drifted a few days EARLIER — its window ends
+        # before the existing row's own date, but the two windows overlap.
+        second_id = upsert_history_row(
+            db,
+            field.id,
+            {
+                "ndvi_mean": 0.9,
+                "ndvi_min": 0.85,
+                "ndvi_max": 0.95,
+                "date_range_start": "2099-01-14",
+                "satellite_image_date": "2099-01-20",
+                "source_collection": "TEST",
+            },
+        )
+
+        assert first_id == second_id
+
+        rows = db.query(NdviHistory).filter(NdviHistory.field_id == field.id).all()
+        assert len(rows) == 1
+        assert str(rows[0].satellite_image_date) == "2099-01-25"
+        assert rows[0].ndvi_mean == 0.9
+    finally:
+        if field is not None:
+            db.query(User).filter(User.id == field.user_id).delete()
+            db.commit()
+        db.close()
