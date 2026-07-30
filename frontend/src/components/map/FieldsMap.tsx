@@ -18,39 +18,22 @@ const DEFAULT_CENTER: [number, number] = [73.135, 31.45];
 // basemap's field boundaries and roads still show through underneath.
 const OVERLAY_OPACITY = 0.85;
 
-// Auto-geolocation fires at most once per browsing session, shared across every
-// autoLocate consumer (the landing hero and My Fields). Whichever mounts first
-// asks; the rest skip so the visitor isn't re-prompted while navigating.
-// sessionStorage (not in-memory) so it survives a same-tab reload but re-arms on
-// a genuinely new visit. Storage can throw in private mode — treat that as
-// "not located yet" so location still works, just without the once-guard.
+// Auto-geolocation fires at most once per page load, shared across every
+// autoLocate consumer (the landing hero and My Fields) so that whichever
+// mounts first asks and the rest skip — a hero → My Fields client-side
+// navigation doesn't trigger a second prompt. Both flags are in-memory only
+// (not sessionStorage): a full reload of the landing page is a fresh ask,
+// which matches what reload-testing the geolocation prompt expects.
 //
-// Written only once the visitor has actually ANSWERED the prompt (allowed or
-// refused), never up-front: marking before triggering meant a prompt that was
-// simply ignored — or dismissed with the X — burned the single attempt for the
-// whole session, so no amount of reloading would ask again.
-const GEO_LOCATED_KEY = "jk_geo_located";
-
-// In-memory companion to the key above, covering the window while a prompt is
-// open and therefore still unanswered. sessionStorage can't cover it any more
-// (nothing is written until the answer arrives), and without this a second map
-// mounting mid-prompt — hero → My Fields — would trigger a second one.
-// Deliberately not persisted: it must not outlive the page.
+// autoLocateAnswered is written only once the visitor has actually ANSWERED
+// the prompt (allowed or refused), never up-front: marking before triggering
+// meant a prompt that was simply ignored — or dismissed with the X — burned
+// the single attempt for the rest of the page's life.
+let autoLocateAnswered = false;
+// Covers the window while a prompt is open and therefore still unanswered —
+// without this a second map mounting mid-prompt (hero → My Fields) would
+// trigger a second one.
 let autoLocatePending = false;
-function hasAutoLocatedThisSession(): boolean {
-  try {
-    return sessionStorage.getItem(GEO_LOCATED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-function markAutoLocated(): void {
-  try {
-    sessionStorage.setItem(GEO_LOCATED_KEY, "1");
-  } catch {
-    // no-op — storage unavailable; the guard just won't persist
-  }
-}
 
 export interface FieldOverlay {
   id: string;
@@ -141,7 +124,7 @@ export function FieldsMap({
       // visitor; `false` keeps trackProximity active for later map moves.
       geolocate.on("geolocate", (pos: GeolocationPosition) => {
         autoLocatePending = false;
-        markAutoLocated();
+        autoLocateAnswered = true;
         geocoderRef.current?.setProximity(
           { longitude: pos.coords.longitude, latitude: pos.coords.latitude },
           false,
@@ -151,12 +134,12 @@ export function FieldsMap({
       // again, and so a hard browser-level block isn't retried on every map.
       geolocate.on("error", () => {
         autoLocatePending = false;
-        markAutoLocated();
+        autoLocateAnswered = true;
       });
-      // Only the first autoLocate map of the session prompts (see GEO_LOCATED_KEY).
+      // Only the first autoLocate map of this page load prompts.
       // The consumer's manual locate button (locateSignal) bypasses this.
       map.on("load", () => {
-        if (hasAutoLocatedThisSession() || autoLocatePending) return;
+        if (autoLocateAnswered || autoLocatePending) return;
         autoLocatePending = true;
         ownsPendingLocate = true;
         geolocate.trigger();
