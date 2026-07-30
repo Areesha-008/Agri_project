@@ -61,8 +61,20 @@ class LedgerEntry(Base):
     # default keeps existing rows and the scan-logging path valid.
     entry_type: Mapped[str] = mapped_column(String(16), nullable=False, server_default="expense")
 
+    # User-facing entry date/time — settable at create/edit time to allow
+    # backdating. Not the true insert time; see created_at for that.
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
     field: Mapped["Field"] = relationship("Field")

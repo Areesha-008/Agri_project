@@ -182,6 +182,19 @@ export interface LedgerEntryCreate {
   category: LedgerCategory;
   amount?: number | null;
   entry_type: LedgerEntryType;
+  // "YYYY-MM-DD" from a native date input. Omitted -> now (unchanged behavior).
+  entry_date?: string;
+}
+
+// Same editable surface as create, minus field_id — which field an entry
+// belongs to is locked on edit.
+export interface LedgerEntryUpdate {
+  title: string;
+  detail: string;
+  category: LedgerCategory;
+  amount?: number | null;
+  entry_type: LedgerEntryType;
+  entry_date?: string;
 }
 
 export interface Transaction {

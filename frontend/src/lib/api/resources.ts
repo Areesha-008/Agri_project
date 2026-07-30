@@ -10,6 +10,7 @@ import type {
   IrrigationType,
   LedgerEntry,
   LedgerEntryCreate,
+  LedgerEntryUpdate,
   MessageResponse,
   NdviJobStatusResponse,
   PolygonGeometry,
@@ -121,6 +122,8 @@ export const alertsApi = {
 export const ledgerApi = {
   list: () => api.get<LedgerEntry[]>("/ledger"),
   create: (entry: LedgerEntryCreate) => api.post<LedgerEntry>("/ledger", entry),
+  update: (id: string, entry: LedgerEntryUpdate) => api.patch<LedgerEntry>(`/ledger/${id}`, entry),
+  delete: (id: string) => api.delete<void>(`/ledger/${id}`),
   listCategories: () => api.get<string[]>("/ledger/categories"),
   createCategory: (name: string) => api.post<string[]>("/ledger/categories", { name }),
   report: (fieldId: string) => api.get<Report>(`/report?field_id=${fieldId}`),

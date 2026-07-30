@@ -12,14 +12,17 @@ from app.schemas.ledger import (
     LedgerCategoryCreateRequest,
     LedgerEntryCreateRequest,
     LedgerEntryResponse,
+    LedgerEntryUpdateRequest,
     ReportResponse,
 )
 from app.services.ledger_service import (
     build_report,
     create_ledger_category,
     create_ledger_entry,
+    delete_ledger_entry,
     list_ledger_categories,
     list_ledger_entries_for_user,
+    update_ledger_entry,
 )
 from app.services.report_pdf import render_report_pdf
 
@@ -45,6 +48,25 @@ def get_ledger_entries(
     current_user: User = Depends(get_current_user),
 ):
     return list_ledger_entries_for_user(db, current_user.id)
+
+
+@router.patch("/ledger/{entry_id}", response_model=LedgerEntryResponse)
+def patch_ledger_entry(
+    entry_id: uuid.UUID,
+    entry_in: LedgerEntryUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return update_ledger_entry(db, current_user.id, entry_id, entry_in)
+
+
+@router.delete("/ledger/{entry_id}", status_code=204)
+def delete_ledger_entry_endpoint(
+    entry_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    delete_ledger_entry(db, current_user.id, entry_id)
 
 
 @router.get("/ledger/categories", response_model=list[str])

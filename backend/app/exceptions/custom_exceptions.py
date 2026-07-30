@@ -75,3 +75,13 @@ class InvalidImageError(AppException):
 class UnsupportedCropError(AppException):
     def __init__(self, message: str = "Fertilizer recommendations aren't available for this crop yet"):
         super().__init__(message, status_code=422)
+
+
+class LedgerEntryNotFoundError(AppException):
+    def __init__(self, message: str = "Ledger entry not found"):
+        super().__init__(message, status_code=404)
+
+
+class FutureEntryDateError(AppException):
+    def __init__(self, message: str = "Entry date cannot be in the future"):
+        super().__init__(message, status_code=422)

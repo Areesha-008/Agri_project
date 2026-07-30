@@ -3,11 +3,16 @@ Digital ledger CRUD + field-scoped production report.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.exceptions.custom_exceptions import FieldNotFoundError
+from app.exceptions.custom_exceptions import (
+    FieldNotFoundError,
+    FutureEntryDateError,
+    LedgerEntryNotFoundError,
+)
 from app.models.field import Field
 from app.models.ledger_entry import (
     BUILTIN_LEDGER_CATEGORIES,
@@ -15,9 +20,48 @@ from app.models.ledger_entry import (
     LedgerEntry,
 )
 from app.models.ndvi_history import NdviHistory
-from app.schemas.ledger import LedgerEntryCreateRequest, ReportResponse, TransactionItem
+from app.schemas.ledger import (
+    LedgerEntryCreateRequest,
+    LedgerEntryUpdateRequest,
+    ReportResponse,
+    TransactionItem,
+)
 from app.services.crop_health_service import get_crop_health
 from app.services.field_service import get_field_or_404
+
+
+def _resolve_timestamp(entry_date: Optional[date]) -> datetime:
+    """Anchor a user-picked entry date at noon UTC. Noon (not midnight, and
+    not the current time-of-day) matters: this DB's session TimeZone is
+    Asia/Karachi (+5), so TIMESTAMPTZ values are converted to +05:00 on every
+    read. Combining `entry_date` with the current UTC time-of-day would push
+    the displayed local date across midnight for part of each day (reliably
+    reproduced during Karachi's ~00:00-05:00 window), silently landing the
+    entry on the wrong day. Noon UTC has +-12h of headroom either side, so no
+    realistic timezone conversion flips the calendar date. Same-day entries
+    still sort deterministically via the created_at tie-break (see
+    list_ledger_entries_for_user/build_report), so no time-of-day precision is
+    lost by using a fixed anchor. Rejects dates more than a day in the future
+    - the day of slack covers positive UTC offsets, where a user's local
+    "today" can be one calendar day ahead of the server's UTC "today"."""
+    now = datetime.now(timezone.utc)
+    if entry_date is None:
+        return now
+    if entry_date > (now.date() + timedelta(days=1)):
+        raise FutureEntryDateError()
+    return datetime(entry_date.year, entry_date.month, entry_date.day, 12, tzinfo=timezone.utc)
+
+
+def _get_owned_entry(db: Session, user_id: uuid.UUID, entry_id: uuid.UUID) -> LedgerEntry:
+    entry = (
+        db.query(LedgerEntry)
+        .join(Field)
+        .filter(LedgerEntry.id == entry_id, Field.user_id == user_id)
+        .first()
+    )
+    if entry is None:
+        raise LedgerEntryNotFoundError()
+    return entry
 
 
 def create_ledger_entry(
@@ -38,11 +82,36 @@ def create_ledger_entry(
         category=entry_in.category,
         amount=entry_in.amount,
         entry_type=entry_in.entry_type,
+        timestamp=_resolve_timestamp(entry_in.entry_date),
     )
     db.add(entry)
     db.commit()
     db.refresh(entry)
     return entry
+
+
+def update_ledger_entry(
+    db: Session, user_id: uuid.UUID, entry_id: uuid.UUID, entry_in: LedgerEntryUpdateRequest
+) -> LedgerEntry:
+    entry = _get_owned_entry(db, user_id, entry_id)
+
+    _register_category(db, user_id, entry_in.category)
+
+    entry.title = entry_in.title
+    entry.detail = entry_in.detail
+    entry.category = entry_in.category
+    entry.amount = entry_in.amount
+    entry.entry_type = entry_in.entry_type
+    entry.timestamp = _resolve_timestamp(entry_in.entry_date)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
+def delete_ledger_entry(db: Session, user_id: uuid.UUID, entry_id: uuid.UUID) -> None:
+    entry = _get_owned_entry(db, user_id, entry_id)
+    db.delete(entry)
+    db.commit()
 
 
 def _register_category(db: Session, user_id: uuid.UUID, name: str) -> None:
@@ -81,7 +150,9 @@ def list_ledger_entries_for_user(db: Session, user_id: uuid.UUID) -> list[Ledger
         db.query(LedgerEntry)
         .join(Field)
         .filter(Field.user_id == user_id)
-        .order_by(LedgerEntry.timestamp.desc())
+        # created_at tie-breaks entries that share the same (now user-editable)
+        # entry date, so same-day ordering stays deterministic.
+        .order_by(LedgerEntry.timestamp.desc(), LedgerEntry.created_at.desc())
         .all()
     )
 
@@ -92,7 +163,7 @@ def build_report(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Report
     entries = (
         db.query(LedgerEntry)
         .filter(LedgerEntry.field_id == field_id)
-        .order_by(LedgerEntry.timestamp.asc())
+        .order_by(LedgerEntry.timestamp.asc(), LedgerEntry.created_at.asc())
         .all()
     )
 

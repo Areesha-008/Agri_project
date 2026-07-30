@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,6 +18,20 @@ class LedgerEntryCreateRequest(BaseModel):
     category: str = Field(min_length=1, max_length=64)
     amount: Optional[float] = Field(default=None, ge=0)
     entry_type: LedgerEntryType = "expense"
+    # Lets a user backdate an entry. Omitted -> now (unchanged behavior).
+    entry_date: Optional[date] = None
+
+
+class LedgerEntryUpdateRequest(BaseModel):
+    """Same editable surface as create, minus field_id — which field an entry
+    belongs to is locked on edit; move it by deleting and re-creating."""
+
+    title: str
+    detail: str
+    category: str = Field(min_length=1, max_length=64)
+    amount: Optional[float] = Field(default=None, ge=0)
+    entry_type: LedgerEntryType = "expense"
+    entry_date: Optional[date] = None
 
 
 class LedgerEntryResponse(BaseModel):

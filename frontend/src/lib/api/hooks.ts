@@ -13,7 +13,7 @@ import {
   settingsApi,
   weatherApi,
 } from "./resources";
-import type { LedgerEntryCreate, UserSettingsUpdate } from "./types";
+import type { LedgerEntryCreate, LedgerEntryUpdate, UserSettingsUpdate } from "./types";
 
 export function useFields() {
   const { isAuthenticated } = useAuth();
@@ -176,6 +176,29 @@ export function useCreateLedgerEntry() {
       queryClient.invalidateQueries({ queryKey: ["report"] });
       // A logged entry may introduce a new head — keep the dropdown fresh.
       queryClient.invalidateQueries({ queryKey: ["ledger-categories"] });
+    },
+  });
+}
+
+export function useUpdateLedgerEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, entry }: { id: string; entry: LedgerEntryUpdate }) => ledgerApi.update(id, entry),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ledger"] });
+      queryClient.invalidateQueries({ queryKey: ["report"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger-categories"] });
+    },
+  });
+}
+
+export function useDeleteLedgerEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => ledgerApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ledger"] });
+      queryClient.invalidateQueries({ queryKey: ["report"] });
     },
   });
 }

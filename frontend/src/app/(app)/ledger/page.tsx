@@ -5,17 +5,20 @@ import Link from "next/link";
 import {
   useCreateLedgerCategory,
   useCreateLedgerEntry,
+  useDeleteLedgerEntry,
   useFields,
   useLedgerCategories,
   useLedgerEntries,
   useReport,
+  useUpdateLedgerEntry,
 } from "@/lib/api/hooks";
 import { ledgerApi } from "@/lib/api/resources";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { NavIcons } from "@/components/layout/icons";
-import type { LedgerEntryType } from "@/lib/api/types";
+import { toLocalIso, todayIso } from "@/components/ui/TimeWindowPicker";
+import type { LedgerEntry, LedgerEntryType } from "@/lib/api/types";
 
 // select-only addition to INPUT_CLASS: resets native OS chrome (the
 // double-arrow stepper Safari renders on an unstyled <select>) in favor of
@@ -75,11 +78,22 @@ export default function LedgerPage() {
   const [amount, setAmount] = useState("");
   const [quantity, setQuantity] = useState("");
   const [note, setNote] = useState("");
+  const [entryDate, setEntryDate] = useState(todayIso());
   const [fieldId, setFieldId] = useState(selectedFieldId ?? "");
   const [newHead, setNewHead] = useState("");
   const [addingHead, setAddingHead] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  const updateEntry = useUpdateLedgerEntry();
+  const deleteEntry = useDeleteLedgerEntry();
+  const [editingEntry, setEditingEntry] = useState<LedgerEntry | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDetail, setEditDetail] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editEntryType, setEditEntryType] = useState<LedgerEntryType>("expense");
+  const [editAmount, setEditAmount] = useState("");
+  const [editDate, setEditDate] = useState("");
 
   const idPrefix = useId();
   const categoryFieldId = `${idPrefix}category`;
@@ -89,6 +103,12 @@ export default function LedgerPage() {
   const amountFieldId = `${idPrefix}amount`;
   const quantityFieldId = `${idPrefix}quantity`;
   const noteFieldId = `${idPrefix}note`;
+  const entryDateFieldId = `${idPrefix}entry-date`;
+  const editTitleFieldId = `${idPrefix}edit-title`;
+  const editDetailFieldId = `${idPrefix}edit-detail`;
+  const editCategoryFieldId = `${idPrefix}edit-category`;
+  const editAmountFieldId = `${idPrefix}edit-amount`;
+  const editDateFieldId = `${idPrefix}edit-date`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,10 +123,45 @@ export default function LedgerPage() {
       category,
       amount: parsed != null && Number.isFinite(parsed) ? parsed : null,
       entry_type: entryType,
+      entry_date: entryDate || undefined,
     });
     setAmount("");
     setQuantity("");
     setNote("");
+    setEntryDate(todayIso());
+  }
+
+  function openEdit(entry: LedgerEntry) {
+    setEditingEntry(entry);
+    setEditTitle(entry.title);
+    setEditDetail(entry.detail);
+    setEditCategory(entry.category);
+    setEditEntryType(entry.entry_type);
+    setEditAmount(entry.amount != null ? String(entry.amount) : "");
+    setEditDate(toLocalIso(new Date(entry.timestamp)));
+  }
+
+  async function handleEditSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingEntry) return;
+    const parsed = editAmount.trim() === "" ? null : Number(editAmount);
+    await updateEntry.mutateAsync({
+      id: editingEntry.id,
+      entry: {
+        title: editTitle,
+        detail: editDetail,
+        category: editCategory,
+        amount: parsed != null && Number.isFinite(parsed) ? parsed : null,
+        entry_type: editEntryType,
+        entry_date: editDate || undefined,
+      },
+    });
+    setEditingEntry(null);
+  }
+
+  async function handleDeleteEntry(entry: LedgerEntry) {
+    if (!window.confirm(`Delete "${entry.title}"? This can't be undone.`)) return;
+    await deleteEntry.mutateAsync(entry.id);
   }
 
   async function handleAddHead() {
@@ -297,6 +352,17 @@ export default function LedgerPage() {
                 onChange={(e) => setNote(e.target.value)}
                 className={`${INPUT_CLASS} min-w-[160px] flex-1`}
               />
+              <label htmlFor={entryDateFieldId} className="sr-only">
+                Date
+              </label>
+              <input
+                id={entryDateFieldId}
+                type="date"
+                value={entryDate}
+                max={todayIso()}
+                onChange={(e) => setEntryDate(e.target.value)}
+                className={`${INPUT_CLASS} w-[150px]`}
+              />
               <Button type="submit" disabled={createEntry.isPending} className="h-10">
                 Log action
               </Button>
@@ -332,6 +398,27 @@ export default function LedgerPage() {
                   <span className="flex-none text-[10.5px] text-ink-400">
                     {new Date(entry.timestamp).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                   </span>
+                  <button
+                    onClick={() => openEdit(entry)}
+                    aria-label={`Edit ${entry.title}`}
+                    title="Edit entry"
+                    className="flex-none cursor-pointer rounded-lg p-1.5 text-ink-400 opacity-60 hover:bg-mint-100 hover:text-forest-700 hover:opacity-100"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9.5 1.5 L12.5 4.5 L4.5 12.5 L1.5 12.5 L1.5 9.5 Z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEntry(entry)}
+                    disabled={deleteEntry.isPending}
+                    aria-label={`Delete ${entry.title}`}
+                    title="Delete entry"
+                    className="flex-none cursor-pointer rounded-lg p-1.5 text-ink-400 opacity-60 hover:bg-alert-red-bg hover:text-alert-red-text hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                      <path d="M2.5 3.5 H11.5 M5 3.5 V2 a1 1 0 0 1 1-1 h2 a1 1 0 0 1 1 1 V3.5 M5.5 6.5 V10.5 M8.5 6.5 V10.5 M3.5 3.5 L4 12 a1 1 0 0 0 1 1 h4 a1 1 0 0 0 1-1 L10.5 3.5" />
+                    </svg>
+                  </button>
                 </div>
               ))}
               {entries?.length === 0 && <div className="text-xs text-ink-400">No ledger entries yet.</div>}
@@ -475,6 +562,127 @@ export default function LedgerPage() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {editingEntry && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-6"
+          onClick={() => setEditingEntry(null)}
+        >
+          <form
+            onSubmit={handleEditSubmit}
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-[420px] max-w-full flex-col gap-3 rounded-2xl bg-cream-card p-7 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
+          >
+            <div className="text-[15px] font-extrabold text-forest-ink-900">Edit entry</div>
+            <div className="text-[11px] text-ink-400">
+              Field: {fields?.find((f) => f.id === editingEntry.field_id)?.name ?? "—"}
+            </div>
+
+            <label htmlFor={editTitleFieldId} className="text-xs font-semibold text-ink-600">
+              Title
+            </label>
+            <input
+              id={editTitleFieldId}
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className={INPUT_CLASS}
+            />
+
+            <label htmlFor={editDetailFieldId} className="text-xs font-semibold text-ink-600">
+              Detail
+            </label>
+            <input
+              id={editDetailFieldId}
+              value={editDetail}
+              onChange={(e) => setEditDetail(e.target.value)}
+              className={INPUT_CLASS}
+            />
+
+            <div className="flex gap-2.5">
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor={editCategoryFieldId} className="text-xs font-semibold text-ink-600">
+                  Category
+                </label>
+                <div className="relative">
+                  <select
+                    id={editCategoryFieldId}
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className={`${INPUT_CLASS} ${SELECT_CLASS} w-full`}
+                  >
+                    {categoryList.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-400">
+                    {NavIcons.chevron}
+                  </span>
+                </div>
+              </div>
+              <div
+                role="group"
+                aria-label="Entry type"
+                className="flex items-end rounded-lg bg-cream-inset p-0.5 text-[12.5px] font-semibold"
+              >
+                {(["expense", "income"] as LedgerEntryType[]).map((tp) => (
+                  <button
+                    key={tp}
+                    type="button"
+                    onClick={() => setEditEntryType(tp)}
+                    aria-pressed={editEntryType === tp}
+                    className="h-10 cursor-pointer rounded-md px-3"
+                    style={editEntryType === tp ? { background: "var(--color-forest-900)", color: "#fff" } : undefined}
+                  >
+                    {tp === "expense" ? "Expense" : "Sold"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2.5">
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor={editAmountFieldId} className="text-xs font-semibold text-ink-600">
+                  Amount (PKR)
+                </label>
+                <input
+                  id={editAmountFieldId}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className={`${INPUT_CLASS} w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor={editDateFieldId} className="text-xs font-semibold text-ink-600">
+                  Date
+                </label>
+                <input
+                  id={editDateFieldId}
+                  type="date"
+                  value={editDate}
+                  max={todayIso()}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className={`${INPUT_CLASS} w-full`}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-1.5">
+              <Button type="submit" className="flex-1" disabled={updateEntry.isPending}>
+                {updateEntry.isPending ? "Saving…" : "Save changes"}
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setEditingEntry(null)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
         </div>
       )}
     </div>
