@@ -151,10 +151,6 @@ export default function DashboardPage() {
             <Card className="flex flex-col items-center gap-2 hover:border-[#C9DECE]">
               <div className="self-start text-[13px] font-bold text-ink-900">Crop health</div>
               <HealthGauge score={health?.health_score ?? 0} label={(health?.status_label ?? "—").toUpperCase()} />
-              <div className="text-center text-[11.5px] leading-snug text-ink-500">
-                Projected <b className="text-ink-900">{health?.yield_t_per_ha ?? "—"} t/ha</b> ·{" "}
-                {health?.yield_maund_per_acre ?? "—"} maund/acre
-              </div>
             </Card>
           </Link>
           {/* Full 7-day forecast — this is now the home for weather (the old

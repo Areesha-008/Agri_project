@@ -43,8 +43,6 @@ const MOCK_CROP_HEALTH = {
   field_id: MOCK_FIELD.id,
   health_score: 60,
   status_label: "Healthy",
-  yield_maund_per_acre: 26.18,
-  yield_t_per_ha: 2.11,
   baseline_district: "DEFAULT",
   baseline_crop: "DEFAULT",
   ndvi_trend: [],

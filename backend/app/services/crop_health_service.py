@@ -1,16 +1,17 @@
 """
-Crop health score + yield projection.
+Crop health score.
 
 Transparent baseline formula (flagged in GAPS.md for the agronomy team to
 refine once real models exist):
 
     health_score = clamp(round(latest_ndvi_mean / baseline_ndvi * 100), 0, 100)
-    yield        = baseline_yield * (health_score / 100)
 
 i.e. a field performing exactly at its district+crop's historical baseline
-NDVI scores 100 and projects the full baseline yield; below/above that
-scales proportionally, clamped to [0, 100] for the score (yield itself is
-not clamped — a field can out-yield its baseline).
+NDVI scores 100; below/above that scales proportionally, clamped to [0, 100].
+
+Yield projection is intentionally not computed here — there is no validated
+yield model yet, so we don't fabricate a t/ha number. DistrictYieldBaseline
+still carries baseline_yield_* columns for when that model exists.
 """
 
 import uuid
@@ -61,14 +62,6 @@ def compute_health_score(latest_ndvi_mean: float, baseline_ndvi: float) -> int:
     return max(0, min(100, raw))
 
 
-def project_yield(baseline: DistrictYieldBaseline, health_score: int) -> tuple[float, float]:
-    factor = health_score / 100
-    return (
-        round(baseline.baseline_yield_maund_per_acre * factor, 2),
-        round(baseline.baseline_yield_t_per_ha * factor, 2),
-    )
-
-
 def get_crop_health(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> CropHealthResponse:
     field = db.query(Field).filter(Field.id == field_id, Field.user_id == user_id).first()
     if field is None:
@@ -94,14 +87,11 @@ def get_crop_health(db: Session, user_id: uuid.UUID, field_id: uuid.UUID) -> Cro
         latest_ndvi_mean = 0.0
 
     health_score = compute_health_score(latest_ndvi_mean, baseline.baseline_ndvi)
-    yield_maund, yield_t_ha = project_yield(baseline, health_score)
 
     return CropHealthResponse(
         field_id=str(field.id),
         health_score=health_score,
         status_label=_healthy_status_label(health_score),
-        yield_maund_per_acre=yield_maund,
-        yield_t_per_ha=yield_t_ha,
         baseline_district=baseline.district,
         baseline_crop=baseline.crop,
         ndvi_trend=[

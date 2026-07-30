@@ -118,8 +118,6 @@ export interface CropHealthResponse {
   field_id: string;
   health_score: number;
   status_label: string;
-  yield_maund_per_acre: number;
-  yield_t_per_ha: number;
   baseline_district: string;
   baseline_crop: string;
   ndvi_trend: NdviTrendPoint[];
