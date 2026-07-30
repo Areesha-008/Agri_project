@@ -155,16 +155,54 @@ def _history_fields(result: NdviAnalyzeResponse) -> dict:
 
 def upsert_history_row(db: Session, field_id: uuid.UUID, fields: dict) -> uuid.UUID:
     """
-    Writes one NdviHistory row for (field_id, fields["satellite_image_date"]),
-    updating it in place if a row for that field+date already exists instead
-    of inserting a duplicate. A real INSERT ... ON CONFLICT upsert (not a
-    select-then-branch) against uq_ndvi_history_field_id_satellite_image_date
-    (migration 8a5201e2041d), so two callers committing for the same week at
-    the same instant can't both see "no existing row" and both insert.
+    Writes one NdviHistory row for the tile [date_range_start,
+    satellite_image_date] covers, updating an existing row in place if one
+    already falls in that window instead of inserting a near-duplicate.
+
+    This is a RANGE match, not just an exact-date one: compute_weekly_tiles
+    anchors its 7-day grid to whatever end_date a given run happens to
+    request, so re-running analysis on a different day shifts every tile's
+    end date by however much time passed. Two runs of "the same real week"
+    then produce different exact satellite_image_date values a few days
+    apart, which an exact-date-only upsert can't tell apart from a genuinely
+    new week — that's what let one field accumulate pairs of near-duplicate
+    points a day or two apart instead of one point every 7 days. The
+    exact-date ON CONFLICT below still runs as a fallback (real simultaneous
+    same-date writes, e.g. two overlapping tiles), backed by
+    uq_ndvi_history_field_id_satellite_image_date (migration 8a5201e2041d).
+
+    The matched row's own satellite_image_date is left untouched — only its
+    computed data is refreshed — so a point already on the chart doesn't
+    jump position just because a later run's grid landed a few days off.
+
+    # ponytail: select-then-branch (not atomic) for the range-match path;
+    # safe because jobs for one field already run sequentially in practice
+    # (see get_job_history_items) — add row locking if that guarantee ever
+    # changes.
+
     Extracted from run_ndvi_job so this — the actual duplicate-prevention
     guarantee — is exercised directly by test_ndvi_history_upsert.py without
     needing a real satellite call.
     """
+    window_start = fields.get("date_range_start", fields["satellite_image_date"])
+    existing = (
+        db.query(NdviHistory)
+        .filter(
+            NdviHistory.field_id == field_id,
+            NdviHistory.satellite_image_date >= window_start,
+            NdviHistory.satellite_image_date <= fields["satellite_image_date"],
+        )
+        .order_by(NdviHistory.satellite_image_date.asc())
+        .first()
+    )
+    if existing is not None:
+        for key, value in fields.items():
+            if key != "satellite_image_date":
+                setattr(existing, key, value)
+        existing.computed_at = datetime.now(timezone.utc)
+        db.commit()
+        return existing.id
+
     stmt = (
         pg_insert(NdviHistory)
         .values(field_id=field_id, **fields)

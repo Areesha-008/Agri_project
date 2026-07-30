@@ -82,3 +82,59 @@ def test_repeated_upsert_for_same_date_never_duplicates():
             db.query(User).filter(User.id == field.user_id).delete()
             db.commit()
         db.close()
+
+
+def test_upsert_collapses_drifted_duplicate_into_existing_row():
+    """
+    Two analysis runs of "the same real week" whose tile grids drifted by a
+    day (different exact satellite_image_date, but overlapping date ranges)
+    must land on the SAME row, not two rows a day or two apart — this is the
+    exact bug that produced pairs of near-duplicate points on the NDVI chart
+    instead of one point every 7 days.
+    """
+    db = SessionLocal()
+    field = None
+    try:
+        field = _make_field(db)
+        db.commit()
+
+        first_id = upsert_history_row(
+            db,
+            field.id,
+            {
+                "ndvi_mean": 0.1,
+                "ndvi_min": 0.05,
+                "ndvi_max": 0.15,
+                "date_range_start": "2099-06-24",
+                "satellite_image_date": "2099-06-30",
+                "source_collection": "TEST",
+            },
+        )
+        # A later run's grid drifted a day forward — a different exact date,
+        # but its 7-day window still contains the existing row's date.
+        second_id = upsert_history_row(
+            db,
+            field.id,
+            {
+                "ndvi_mean": 0.9,
+                "ndvi_min": 0.85,
+                "ndvi_max": 0.95,
+                "date_range_start": "2099-06-25",
+                "satellite_image_date": "2099-07-01",
+                "source_collection": "TEST",
+            },
+        )
+
+        assert first_id == second_id
+
+        rows = db.query(NdviHistory).filter(NdviHistory.field_id == field.id).all()
+        assert len(rows) == 1
+        # Original bucket date kept stable — the point doesn't jump position.
+        assert str(rows[0].satellite_image_date) == "2099-06-30"
+        # But the data itself is refreshed to the latest run's values.
+        assert rows[0].ndvi_mean == 0.9
+    finally:
+        if field is not None:
+            db.query(User).filter(User.id == field.user_id).delete()
+            db.commit()
+        db.close()

@@ -81,9 +81,10 @@ export function MeasureDetailChart({ history, selected }: MeasureDetailChartProp
               content={<ChartTooltip />}
               cursor={{ stroke: "var(--color-ink-400)", strokeDasharray: "3 3", strokeOpacity: 0.7 }}
             />
-            <Area dataKey="min" stackId="range" stroke="none" fill="transparent" connectNulls={false} isAnimationActive={false} />
+            <Area dataKey="min" type="monotone" stackId="range" stroke="none" fill="transparent" connectNulls={false} isAnimationActive={false} />
             <Area
               dataKey="spread"
+              type="monotone"
               stackId="range"
               stroke="none"
               fill={color}
@@ -93,6 +94,7 @@ export function MeasureDetailChart({ history, selected }: MeasureDetailChartProp
             />
             <Line
               dataKey="mean"
+              type="monotone"
               stroke={color}
               strokeWidth={2}
               dot={{ r: 2.5, fill: color, strokeWidth: 0 }}
