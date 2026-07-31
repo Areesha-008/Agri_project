@@ -64,14 +64,14 @@ NDVI_PALETTE = [
 NDVI_MIN_DISPLAY = -0.2
 NDVI_MAX_DISPLAY = 0.9
 
-# Dark blue -> light blue -> yellow palette for NDMI (moisture) visualization,
-# per the design tokens (design_handoff/README.md NDMI ramp): wet -> dry.
+# Yellow/tan -> light blue -> dark blue palette for NDMI (moisture)
+# visualization: dry -> wet, matching every other index's low-to-high order.
 NDMI_PALETTE = [
-    "08519C",  # dark blue - very moist
-    "4292C6",
-    "9ECAE1",
+    "FEC44F",  # yellow/tan - dry soil
     "FEE391",
-    "FEC44F",  # yellow/tan - dry
+    "9ECAE1",
+    "4292C6",
+    "08519C",  # dark blue - very moist
 ]
 NDMI_MIN_DISPLAY = -0.5
 NDMI_MAX_DISPLAY = 0.5

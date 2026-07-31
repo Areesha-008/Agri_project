@@ -362,6 +362,7 @@ export function FieldsMap({
         paint: {
           "raster-opacity": 0,
           "raster-opacity-transition": { duration: 0, delay: 0 },
+          "raster-resampling": "nearest",
         },
       });
       // The fade has to start only once the PNG has actually decoded. Kicking

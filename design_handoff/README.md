@@ -38,7 +38,7 @@ The files in `designs/` are **design references created in HTML** — interactiv
 | info-blue | `#4E8DBF` | Irrigation category (tag bg `#E7F0F7`, text `#3A719B`) |
 | down-red | `#C1512F` | Negative price change |
 | NDVI ramp | `#8B4513 → #D2B48C → #F0E68C → #9ACD32 → #228B22 → #006400` | brown→green vegetation scale |
-| NDMI ramp | `#08519C → #4292C6 → #9ECAE1 → #FEE391 → #FEC44F` | wet→dry moisture scale |
+| NDMI ramp | `#FEC44F → #FEE391 → #9ECAE1 → #4292C6 → #08519C` | dry→wet moisture scale |
 
 ### Typography
 - **Inter** (Google Fonts) 400/500/600/700/800 — all Latin text

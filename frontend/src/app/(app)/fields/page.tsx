@@ -37,6 +37,7 @@ export default function FieldsPage() {
 
   const selectedFieldId = useAppStore((s) => s.selectedFieldId);
   const setSelectedFieldId = useAppStore((s) => s.setSelectedFieldId);
+  const clearReanalysisPeriod = useAppStore((s) => s.clearReanalysisPeriod);
   const mapLayer = useAppStore((s) => s.mapLayer);
   const setMapLayer = useAppStore((s) => s.setMapLayer);
 
@@ -104,6 +105,7 @@ export default function FieldsPage() {
       return;
     }
     await deleteField.mutateAsync(field.id);
+    clearReanalysisPeriod(field.id);
     if (selectedFieldId === field.id) setSelectedFieldId(null);
   }
 

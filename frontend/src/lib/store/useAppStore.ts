@@ -12,6 +12,12 @@ export type MapLayer =
   | "savi"
   | "satellite";
 
+/** A re-analysis range belongs to a field, rather than to the mounted panel. */
+export interface ReanalysisPeriod {
+  start_date: string;
+  end_date: string;
+}
+
 interface AppState {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -29,6 +35,14 @@ interface AppState {
   // every caller already assumed a single tracked job at a time.
   activeJob: { fieldId: string; jobId: string } | null;
   setActiveJob: (job: { fieldId: string; jobId: string } | null) => void;
+
+  // The Fields route's re-analysis panel unmounts while the user visits
+  // another app tab (and when they choose another field). Keep the last
+  // deliberate range per field so returning to that panel does not silently
+  // fall back to its 30-day default.
+  reanalysisPeriodByField: Record<string, ReanalysisPeriod>;
+  setReanalysisPeriod: (fieldId: string, period: ReanalysisPeriod) => void;
+  clearReanalysisPeriod: (fieldId: string) => void;
 
   notifOpen: boolean;
   fieldMenuOpen: boolean;
@@ -51,6 +65,18 @@ export const useAppStore = create<AppState>((set) => ({
 
   activeJob: null,
   setActiveJob: (job) => set({ activeJob: job }),
+
+  reanalysisPeriodByField: {},
+  setReanalysisPeriod: (fieldId, period) =>
+    set((state) => ({
+      reanalysisPeriodByField: { ...state.reanalysisPeriodByField, [fieldId]: period },
+    })),
+  clearReanalysisPeriod: (fieldId) =>
+    set((state) => {
+      const reanalysisPeriodByField = { ...state.reanalysisPeriodByField };
+      delete reanalysisPeriodByField[fieldId];
+      return { reanalysisPeriodByField };
+    }),
 
   notifOpen: false,
   fieldMenuOpen: false,

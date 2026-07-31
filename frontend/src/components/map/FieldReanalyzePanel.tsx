@@ -17,10 +17,12 @@ interface FieldReanalyzePanelProps {
 }
 
 export function FieldReanalyzePanel({ fieldId, history, onActiveEntryChange }: FieldReanalyzePanelProps) {
-  // Default: last 30 days. Lands activeTileIndex 0 (most recent tile) on
-  // "this week" without scanning `history` for a min/max span, which could
-  // be arbitrarily wide/sparse for an old field.
-  const [period, setPeriod] = useState<DateRange>(() => ({ start_date: isoDaysAgo(30), end_date: todayIso() }));
+  // Default: last 30 days. A deliberately chosen range is kept in shared
+  // state by field so it survives route changes and this panel's keyed
+  // remount on field switch.
+  const savedPeriod = useAppStore((s) => s.reanalysisPeriodByField[fieldId]);
+  const setReanalysisPeriod = useAppStore((s) => s.setReanalysisPeriod);
+  const period = savedPeriod ?? { start_date: isoDaysAgo(30), end_date: todayIso() };
   const [activeTileIndex, setActiveTileIndex] = useState(0);
 
   // Shared across modules (see useAppStore), not local state — this panel
@@ -59,7 +61,7 @@ export function FieldReanalyzePanel({ fieldId, history, onActiveEntryChange }: F
   }, [activeEntry, onActiveEntryChange]);
 
   function handlePeriodChange(range: DateRange) {
-    setPeriod(range);
+    setReanalysisPeriod(fieldId, range);
     setActiveTileIndex(0); // most recent tile of the new period
     // Drop tracking of this field's previous-period job so its stale
     // analyzing/failed state can't bleed into the newly picked period —
