@@ -11,8 +11,9 @@ services:
       POSTGRES_DB: jadeed_kashtkar_db
     volumes:
       - jadeed_postgres_data:/var/lib/postgresql/data
-    # No ports exposed at all - only reachable by 'backend', inside the
-    # private jadeed_network, using the hostname "db"
+    # NO ports section at all - db is never reachable from outside this
+    # compose stack, not even from the server itself. Only 'backend' can
+    # reach it, using the internal network, by name ("db").
     networks:
       - jadeed_network
     mem_limit: 1g
@@ -34,8 +35,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Localhost-only - reachable by Nginx (same server) but not the public
-    # internet directly. Port 8001 avoids clashing with other apps' 8000.
+    # Bound ONLY to localhost, on an unlikely-to-clash port (8001, not 8000).
+    # Reachable only from inside the server itself (e.g. by Nginx),
+    # never directly from the internet.
     ports:
       - "127.0.0.1:8001:8000"
     volumes:
@@ -55,10 +57,10 @@ services:
     build:
       context: ./frontend
       args:
-        # No domain yet - replace <SERVER_PUBLIC_IP> with the actual
-        # public IP of the company server. Plain http, since HTTPS/SSL
-        # certificates require a domain name, which we don't have yet.
-        NEXT_PUBLIC_API_URL: http://<SERVER_PUBLIC_IP>/api/v1
+        # IMPORTANT: update this to wherever Nginx will actually expose
+        # your API publicly - see explanation below, this can no longer
+        # be localhost:8000 once db/backend aren't directly public.
+        NEXT_PUBLIC_API_URL: https://jadeedkashtkar.company.com/api/v1
         NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
     container_name: jadeed_frontend
     restart: unless-stopped
@@ -72,24 +74,6 @@ services:
       - jadeed_network
     mem_limit: 1g
     cpus: 1.0
-
-  nginx:
-    image: nginx:alpine
-    container_name: jadeed_nginx
-    restart: unless-stopped
-    # The only public-facing service - reachable by anyone with the
-    # server's IP address, since there's no domain yet
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - backend
-      - frontend
-    networks:
-      - jadeed_network
-    mem_limit: 256m
-    cpus: 0.5
 
 networks:
   jadeed_network:
