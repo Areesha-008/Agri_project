@@ -11,9 +11,6 @@ services:
       POSTGRES_DB: jadeed_kashtkar_db
     volumes:
       - jadeed_postgres_data:/var/lib/postgresql/data
-    # NO ports section at all - db is never reachable from outside this
-    # compose stack, not even from the server itself. Only 'backend' can
-    # reach it, using the internal network, by name ("db").
     networks:
       - jadeed_network
     mem_limit: 1g
@@ -35,15 +32,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Bound ONLY to localhost, on an unlikely-to-clash port (8001, not 8000).
-    # Reachable only from inside the server itself (e.g. by Nginx),
-    # never directly from the internet.
-    ports:
-      - "127.0.0.1:8001:8000"
     volumes:
       - jadeed_backend_static:/app/static
     networks:
       - jadeed_network
+      - shared_proxy_network
     mem_limit: 1g
     cpus: 1.0
     healthcheck:
@@ -57,21 +50,17 @@ services:
     build:
       context: ./frontend
       args:
-        # IMPORTANT: update this to wherever Nginx will actually expose
-        # your API publicly - see explanation below, this can no longer
-        # be localhost:8000 once db/backend aren't directly public.
-        NEXT_PUBLIC_API_URL: https://jadeedkashtkar.company.com/api/v1
+        # TODO: confirm this before building - see note below
+        NEXT_PUBLIC_API_URL: http://<server-ip>/api/v1
         NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
     container_name: jadeed_frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
-    # Also localhost-only, unlikely-to-clash port (3001, not 3000)
-    ports:
-      - "127.0.0.1:3001:3000"
     networks:
       - jadeed_network
+      - shared_proxy_network
     mem_limit: 1g
     cpus: 1.0
 
@@ -79,6 +68,8 @@ networks:
   jadeed_network:
     name: jadeed_network
     driver: bridge
+  shared_proxy_network:
+    external: true
 
 volumes:
   jadeed_postgres_data:
