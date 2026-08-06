@@ -1,15 +1,22 @@
+name: jadeed-kashtkar
+
 services:
   db:
     image: postgis/postgis:16-3.4
+    container_name: jadeed_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: jadeed
       POSTGRES_PASSWORD: jadeed
       POSTGRES_DB: jadeed_kashtkar_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - jadeed_postgres_data:/var/lib/postgresql/data
+    # No ports exposed at all - only reachable by 'backend', inside the
+    # private jadeed_network, using the hostname "db"
+    networks:
+      - jadeed_network
+    mem_limit: 1g
+    cpus: 1.0
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jadeed -d jadeed_kashtkar_db"]
       interval: 5s
@@ -18,20 +25,25 @@ services:
 
   backend:
     build: ./backend
+    container_name: jadeed_backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
-      # Overrides .env's localhost DATABASE_URL to point at the `db`
-      # service's Docker network hostname instead.
       DATABASE_URL: postgresql://jadeed:jadeed@db:5432/jadeed_kashtkar_db
     depends_on:
       db:
         condition: service_healthy
+    # Localhost-only - reachable by Nginx (same server) but not the public
+    # internet directly. Port 8001 avoids clashing with other apps' 8000.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8001:8000"
     volumes:
-      - backend_static:/app/static
+      - jadeed_backend_static:/app/static
+    networks:
+      - jadeed_network
+    mem_limit: 1g
+    cpus: 1.0
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
@@ -43,18 +55,49 @@ services:
     build:
       context: ./frontend
       args:
-        # The *browser* calls this (via the host-published port below), not
-        # container-to-container — http://backend:8000 would only resolve
-        # inside the compose network, not from the user's machine.
-        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+        # No domain yet - replace <SERVER_PUBLIC_IP> with the actual
+        # public IP of the company server. Plain http, since HTTPS/SSL
+        # certificates require a domain name, which we don't have yet.
+        NEXT_PUBLIC_API_URL: http://<SERVER_PUBLIC_IP>/api/v1
         NEXT_PUBLIC_MAP_TILES_KEY: ${NEXT_PUBLIC_MAP_TILES_KEY}
+    container_name: jadeed_frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
+    # Also localhost-only, unlikely-to-clash port (3001, not 3000)
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3001:3000"
+    networks:
+      - jadeed_network
+    mem_limit: 1g
+    cpus: 1.0
+
+  nginx:
+    image: nginx:alpine
+    container_name: jadeed_nginx
+    restart: unless-stopped
+    # The only public-facing service - reachable by anyone with the
+    # server's IP address, since there's no domain yet
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - jadeed_network
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  jadeed_network:
+    name: jadeed_network
+    driver: bridge
 
 volumes:
-  postgres_data:
-  backend_static:
+  jadeed_postgres_data:
+    name: jadeed_postgres_data
+  jadeed_backend_static:
+    name: jadeed_backend_static
